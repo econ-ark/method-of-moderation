@@ -1,0 +1,111 @@
+/* ===== ECON-ARK METHOD OF MODERATION - SIMPLE NOTEBOOK STYLES ===== */
+
+/* ===== ECON-ARK BRAND VARIABLES ===== */
+:root {
+  /* Official ECON-ARK brand colors - ONLY APPROVED DEFINITIONS */
+  --ark-blue: #1f476b;
+  --ark-lightblue: #00aeef;
+  --ark-pink: #ed217c;
+  --ark-green: #39b54a;
+  --ark-yellow: #fcb040;
+  --ark-grey: #676470;
+}
+
+/* ===== HEADER FORMATTING ===== */
+h1 {
+  color: var(--ark-blue) !important;
+  text-shadow: 0.5px 0.5px 2px var(--ark-grey) !important;
+}
+
+h2 {
+  color: var(--ark-lightblue) !important;
+  position: relative !important;
+  text-shadow: 0.5px 0.5px 2px var(--ark-grey) !important;
+}
+
+h2::after {
+  content: "" !important;
+  position: absolute !important;
+  left: 0 !important;
+  bottom: -6px !important;
+  width: 100% !important;
+  height: 2px !important;
+  background: var(--ark-lightblue) !important;
+  opacity: 0.9 !important;
+}
+
+h3 {
+  color: var(--ark-yellow) !important;
+  -webkit-text-stroke: 0.5px var(--ark-grey) !important;
+}
+
+h4,
+h5,
+h6 {
+  color: var(--ark-grey) !important;
+}
+
+/* ===== CODE ELEMENTS ===== */
+code {
+  color: var(--ark-pink) !important;
+}
+
+/* ===== SECONDARY TEXT ===== */
+small,
+blockquote {
+  color: var(--ark-grey) !important;
+}
+
+/* ===== BOLD TEXT COLOR ===== */
+strong,
+b {
+  color: var(--ark-green) !important;
+}
+
+/* ===== ARK HEADER ===== */
+.ark-header {
+  display: grid !important;
+  grid-template-columns: 1fr auto 1fr !important;
+  align-items: center !important;
+  background: var(--ark-blue) !important;
+  padding: 16px 20px !important;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 1000 !important;
+  box-shadow: 0 2px 8px var(--ark-grey) !important;
+}
+
+.ark-header-left {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+}
+
+.ark-header-left img {
+  height: 48px !important;
+}
+
+.ark-header-center {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.ark-header-center span {
+  color: white !important;
+  font:
+    600 1.35rem/1 system-ui,
+    sans-serif !important;
+  letter-spacing: -0.01em !important;
+  text-align: center !important;
+}
+
+.ark-header-right {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-end !important;
+}
+
+.ark-header-right img {
+  height: 48px !important;
+}

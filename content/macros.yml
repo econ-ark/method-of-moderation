@@ -1,0 +1,153 @@
+version: 1
+project:
+  math:
+    # ----------------------------
+    # Mathematical operators and helpers
+    "\\Ex": "\\mathbf{\\mathbb{E}}" # time-t conditional expectation
+    "\\Nrml": "\\mathcal{N}" # normal distribution symbol
+    "\\PDV": "\\operatorname{PDV}" # present discounted value operator
+    "\\PDVCoverc": "\\mathcal{C}" # PDV of consumption
+    "\\std": "\\sigma" # standard deviation
+
+    # ----------------------------
+    # Economic parameters
+    "\\DiscFac": "\\beta" # pure time-discount factor
+    "\\CRRA": "\\rho" # coefficient of relative risk aversion
+    "\\rfree": "\\text{r}" # net risk-free interest rate
+    "\\Rfree": "\\text{R}" # gross risk-free interest factor
+    "\\risky": "\\mathbf{r}" # net risky return
+    "\\Risky": "\\mathbf{R}" # gross risky return
+    "\\RNrmByG": "\\mathcal{R}" # shorthand for R/𝒢 (note: in MPC_max context, use R/𝒢^ρ)
+    "\\AbsPatFac": "\\Phi"
+
+    # ----------------------------
+    # Income process
+    "\\PermGroFac": "G" # deterministic permanent growth factor
+    "\\PermGroShk": "\\mathcal{G}" # permanent growth shock
+    "\\permShk": "\\psi" # permanent earnings shock
+    "\\permShkMin": "\\underline{\\permShk}" # lower bound of permanent shock
+    "\\permShkMax": "\\bar{\\permShk}" # upper bound of permanent shock
+    "\\tranShk": "\\xi" # transitory shock (Friedman-Muth process)
+    "\\tranShkEmp": "\\theta" # employment shock parameter
+    "\\tranShkMin": "\\underline{\\tranShk}" # minimal transitory shock
+    "\\tranShkEmpMin": "\\underline{\\tranShkEmp}" # lower bound of transitory shock
+    "\\tranShkEmpMax": "\\bar{\\tranShkEmp}" # upper bound of transitory shock
+    "\\WorstProb": "\\wp" # unemployment probability in Friedman-Muth process
+
+    # ----------------------------
+    # Level variables
+    "\\aLvl": "\\mathbf{a}" # assets after consumption
+    "\\bLvl": "\\mathbf{b}" # beginning-of-period bank balances
+    "\\cLvl": "\\mathbf{c}" # consumption level
+    "\\mLvl": "\\mathbf{m}" # market resources (cash-on-hand)
+    "\\pLvl": "\\mathbf{p}" # permanent labor income level
+    "\\yLvl": "\\mathbf{y}" # non-capital income
+
+    # ----------------------------
+    # Normalized variables
+    "\\aNrm": "a" # normalized assets
+    "\\bNrm": "b" # normalized bank balances
+    "\\cNrm": "c" # normalized consumption
+    "\\hNrm": "h" # normalized human wealth
+    "\\mNrm": "m" # normalized market resources
+    "\\pNrm": "p" # normalized permanent income
+    "\\yNrm": "y" # normalized non-capital income
+
+    # ----------------------------
+    # Bounds and constraints
+    "\\aNrmMin": "\\underline{\\aNrm}" # natural borrowing constraint (assets)
+    "\\mNrmMin": "\\underline{\\mNrm}" # lower bound for market resources
+    "\\hNrmOpt": "\\bar{\\hNrm}" # optimist human wealth
+    "\\hNrmPes": "\\underline{\\hNrm}" # pessimist human wealth
+
+    # ----------------------------
+    # Excess variables and special points
+    "\\mNrmEx": "\\ddot{\\mNrm}" # excess market resources (m − mMin)
+    "\\hNrmEx": "\\ddot{\\hNrm}" # excess human wealth (h − hPes)
+    "\\logmNrmEx": "\\boldsymbol{\\mu}" # log-excess resources (μ ≡ log m̈)
+    "\\mNrmCusp": "\\mNrm^*" # cusp point of realist consumption rule
+    "\\mNrmCuspEx": "\\ddot{\\mNrm}^*" # excess cusp point
+
+    # ----------------------------
+    # Utility function
+    "\\uFunc": "\\mathbf{u}" # utility function
+    "\\uPrime": "\\uFunc'" # first derivative of utility function
+    "\\uDoublePrime": "\\uFunc''" # second derivative of utility function
+    "\\uTriplePrime": "\\uFunc'''" # third derivative of utility function
+
+    # ----------------------------
+    # Value function
+    "\\vFunc": "\\mathbf{v}" # value function
+    "\\vFuncOpt": "\\bar{\\vFunc}" # optimist value function
+    "\\vFuncPes": "\\underline{\\vFunc}" # pessimist value function
+    "\\vFuncReal": "\\hat{\\vFunc}" # realist value function
+
+    "\\vFuncDerivmNrm": "\\vFunc^{\\mNrm}" # first derivative of vFunc wrt mNrm
+    "\\vFuncRealDeriv": "\\vFuncReal^{\\mNrm}" # first derivative of vFuncReal wrt m
+    "\\vFuncRealDerivSecond": "\\vFuncReal^{\\mNrm\\mNrm}" # second derivative of vFuncReal wrt m
+
+    # ----------------------------
+    # Inverse value function
+    "\\vInv": "{\\scriptsize \\boldsymbol{\\Lambda}}" # inverse value transformation (small)
+    "\\vInvOpt": "\\bar{\\vInv}" # optimist inverse value function
+    "\\vInvPes": "\\underline{\\vInv}" # pessimist inverse value function
+    "\\vInvReal": "\\hat{\\vInv}" # realist inverse value function
+
+    "\\vInvOptDeriv": "\\vInvOpt^{\\mNrm}" # first derivative of vInvOpt wrt m
+    "\\vInvRealDeriv": "\\vInvReal^{\\mNrm}" # first derivative of vInvReal wrt m
+    "\\vInvRealDerivSecond": "\\vInvReal^{\\mNrm\\mNrm}" # second derivative of vInvReal wrt m
+
+    # ----------------------------
+    # Consumption function
+    "\\cFunc": "\\mathbf{c}" # generic consumption function (base)
+    "\\cFuncOpt": "\\bar{\\cFunc}" # optimist consumption
+    "\\cFuncPes": "\\underline{\\cFunc}" # pessimist consumption
+    "\\cFuncReal": "\\hat{\\cFunc}" # realist consumption
+    "\\cFuncApprox": "\\grave{\\cFunc}" # generic approximated consumption
+    "\\cFuncLoTightUpBd": "\\grave{\\check{\\cFunc}}" # tighter upper bound - low region
+    "\\cFuncMidTightUpBd": "\\grave{\\tilde{\\cFunc}}" # tighter upper bound - middle region
+    "\\cFuncHiTightUpBd": "\\grave{\\hat{\\cFunc}}" # tighter upper bound - high region
+
+    # ----------------------------
+    # Marginal propensity to consume
+    "\\MPC": "\\boldsymbol{\\kappa}" # generic MPC symbol
+    "\\MPCmin": "\\underline{\\MPC}" # minimal MPC
+    "\\MPCmax": "\\bar{\\MPC}" # maximal MPC
+
+    # ----------------------------
+    # modRte (omega) - consumption moderation ratio
+    "\\modRte": "\\boldsymbol{\\bar{\\omega}}" # omega-bar moderation factor
+    "\\modRteOpt": "\\bar{\\modRte}" # optimist version of koppa ratio (asymptotic limit)
+    "\\modRtePes": "\\boldsymbol{\\underline{\\omega}}" # pessimist version of koppa ratio
+    "\\modRteMu": "\\modRte^{\\logmNrmEx}" # first derivative of consumption modRte wrt mu
+
+    # ----------------------------
+    # logitModRte (chi) - consumption logit transformation
+    "\\logitModRte": "\\boldsymbol{\\chi}"
+    "\\logitModRteFunc": "\\bar{\\logitModRte}" # chi function (macro name)
+    "\\logitModRteFuncApprox": "\\grave{\\logitModRteFunc}" # approximated chi function
+    "\\logitModRteMu": "\\logitModRte^{\\logmNrmEx}" # first derivative of consumption chi wrt mu
+
+    # ----------------------------
+    # valModRte (Omega) - value function moderation ratio
+    "\\valModRte": "\\boldsymbol{\\Omega}" # auxiliary Omega-function
+    "\\valModRteReal": "\\hat{\\valModRte}" # realist Koppa modulation factor
+    "\\valModRteApprox": "\\grave{\\valModRte}" # approximated Koppa function
+    "\\valModRteRealDerivmNrm": "\\valModRteReal^{\\mNrm}" # first derivative of KoppaReal wrt mNrm
+    "\\valModRteRealDerivmu": "\\valModRteReal^{\\logmNrmEx}" # first derivative of KoppaReal wrt mu
+
+    # ----------------------------
+    # logitValModRte (Chi) - value function logit transformation
+    "\\logitValModRte": "\\boldsymbol{X}"
+    "\\logitValModRteReal": "\\hat{\\logitValModRte}" # realist Chi modulation factor
+    "\\logitValModRteApprox": "\\grave{\\logitValModRte}" # approximated Chi function
+    "\\logitValModRteRealDerivmu": "\\logitValModRteReal^{\\logmNrmEx}" # first derivative of ChiReal wrt mu
+
+    # ----------------------------
+    # Grid points and special values
+    "\\mNrmLoTightUpBd": "\\grave{\\check{\\mNrm}}" # lo region grid boundary
+    "\\mNrmHiTightUpBd": "\\grave{\\hat{\\mNrm}}" # hi region grid boundary
+
+    # ----------------------------
+    # Other helper functions
+    "\\wFuncCont": "\\mathbf{w}" # optimist continuation-value helper
