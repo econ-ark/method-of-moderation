@@ -54,7 +54,7 @@ project:
     This work was supported by the Alfred P. Sloan Foundation under grant G-2017-9832 (https://sloan.org/grant-detail/g-2017-9832).
   acknowledgments: |
     The views presented in this paper are those of the authors, and should not be attributed to the International Monetary Fund, its Executive Board, or management, or to the European Central Bank.
-  github: alanlujan91/MethodOfModeration
+  github: econ-ark/method-of-moderation
   venue: REMARK
   subject: Economics
   open_access: true

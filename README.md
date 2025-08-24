@@ -55,7 +55,7 @@ conda install -c conda-forge moderation
 For development and interactive use:
 
 ```bash
-git clone https://github.com/alanlujan91/MethodOfModeration.git
+git clone https://github.com/econ-ark/method-of-moderation.git
 cd MethodOfModeration
 pip install -e .
 ```
@@ -67,7 +67,7 @@ pip install -e .
   title={The Method of Moderation},
   author={Carroll, Christopher D. and Lujan, Alan and Tokuoka, Kiichi and Wu, Weifeng},
   year={2024},
-  url={https://github.com/alanlujan91/MethodOfModeration}
+  url={https://github.com/econ-ark/method-of-moderation}
 }
 ```
 
@@ -83,12 +83,12 @@ This work was supported by the Alfred P. Sloan Foundation under grant G-2017-983
 <!-- SPHINX-START -->
 
 <!-- prettier-ignore-start -->
-[actions-badge]:            https://github.com/alanlujan91/MethodOfModeration/workflows/CI/badge.svg
-[actions-link]:             https://github.com/alanlujan91/MethodOfModeration/actions
+[actions-badge]:            https://github.com/econ-ark/method-of-moderation/workflows/CI/badge.svg
+[actions-link]:             https://github.com/econ-ark/method-of-moderation/actions
 [conda-badge]:              https://img.shields.io/conda/vn/conda-forge/moderation
 [conda-link]:               https://github.com/conda-forge/moderation-feedstock
 [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
-[github-discussions-link]:  https://github.com/alanlujan91/MethodOfModeration/discussions
+[github-discussions-link]:  https://github.com/econ-ark/method-of-moderation/discussions
 [pypi-link]:                https://pypi.org/project/moderation/
 [pypi-platforms]:           https://img.shields.io/pypi/pyversions/moderation
 [pypi-version]:             https://img.shields.io/pypi/v/moderation

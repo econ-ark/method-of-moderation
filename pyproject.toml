@@ -22,10 +22,10 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/alanlujan91/MethodOfModeration"
-"Bug Tracker" = "https://github.com/alanlujan91/MethodOfModeration/issues"
-Discussions = "https://github.com/alanlujan91/MethodOfModeration/discussions"
-Changelog = "https://github.com/alanlujan91/MethodOfModeration/releases"
+Homepage = "https://github.com/econ-ark/method-of-moderation"
+"Bug Tracker" = "https://github.com/econ-ark/method-of-moderation/issues"
+Discussions = "https://github.com/econ-ark/method-of-moderation/discussions"
+Changelog = "https://github.com/econ-ark/method-of-moderation/releases"
 
 [dependency-groups]
 test = [
