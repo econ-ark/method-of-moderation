@@ -19,15 +19,15 @@ CONSISTENT COLOR ASSIGNMENTS FOR ECONOMIC CONCEPTS:
 - Pessimist (Worst Case): ARK_YELLOW (warning color)
 - Tight (Upper Bound): ARK_GREY (neutral, secondary bound)
 
-CONSISTENT LINE STYLE ASSIGNMENTS FOR FIGURES 1 & 3:
-- EGM in Figure 1 (failure case): Dashed line ("--")
-- MoM in Figure 3 (success case): Dashed line ("--")
-- All other methods: Solid line ("-")
+CONSISTENT LINE STYLE ASSIGNMENTS:
+- EGM Approximation: Always dashed line ("--") to distinguish from truth
+- MoM Approximation: Always dashed line ("--") to distinguish from truth
+- Truth and bounds: Solid line ("-")
 
 The get_concept_color() and get_concept_linestyle() functions automatically assign
-consistent colors and line styles based on method names and figure context,
-ensuring visual consistency across all plots in both plotting.py and dashboard.md.
-This creates a unified visual language for the research.
+consistent colors and line styles based on method names, ensuring visual
+consistency across all plots. This creates a unified visual language where
+approximation methods are always dashed and truth/bounds are always solid.
 """
 
 from __future__ import annotations
@@ -41,17 +41,14 @@ from style import (
     ALPHA_MEDIUM,
     ALPHA_MEDIUM_LOW,
     ALPHA_OPAQUE,
-    ALPHA_VERY_HIGH,
     ARK_BLUE,
     ARK_GREEN,
     ARK_GREY,
     ARK_LIGHTBLUE,
     ARK_PINK,
     ARK_YELLOW,
-    BBOX_PADDING,
     CONCEPT_COLORS,
     FONT_SIZE_LARGE,
-    FONT_SIZE_SMALL,
     FONT_SIZE_XLARGE,
     GRID_ALPHA,
     LINE_STYLE_DASHDOT,
@@ -62,9 +59,7 @@ from style import (
     LINE_WIDTH_THICK,
     LINE_WIDTH_THIN,
     MARKER_EDGE_COLOR,
-    MARKER_EDGE_WIDTH_THICK,
     MARKER_EDGE_WIDTH_THIN,
-    MARKER_SIZE_LARGE,
     MARKER_SIZE_STANDARD,
     PADDING_RATIO,
     REFERENCE_LINE_ALPHA,
@@ -439,14 +434,14 @@ def get_concept_color(method_name: str) -> str:
 
 
 def get_concept_linestyle(method_name: str, figure_num: int) -> str:
-    """Get appropriate line style for economic concept/method in specific figure.
+    """Get appropriate line style for economic concept/method.
 
     Parameters
     ----------
     method_name : str
         Name of the method/concept (case-insensitive)
     figure_num : int
-        Figure number (1 or 3 for precautionary gaps plots)
+        Figure number (unused, kept for compatibility)
 
     Returns
     -------
@@ -456,12 +451,16 @@ def get_concept_linestyle(method_name: str, figure_num: int) -> str:
     """
     name_lower = method_name.lower()
 
-    # Specific dashed line requirements for Figures 1 and 3
-    if figure_num == 1 and ("egm" in name_lower or "endogenous" in name_lower):
-        return "--"  # EGM dashed in Figure 1
-    if figure_num == 3 and ("mom" in name_lower or "moderation" in name_lower):
-        return "--"  # MoM dashed in Figure 3
-    return "-"  # Default solid line for all other cases
+    # Both EGM and MoM approximations always use dashed lines to distinguish from truth
+    if (
+        "egm" in name_lower
+        or "endogenous" in name_lower
+        or "mom" in name_lower
+        or "moderation" in name_lower
+        or "approximation" in name_lower
+    ):
+        return "--"  # Dashed line for all approximations
+    return "-"  # Default solid line for truth and bounds
 
 
 def plot_precautionary_gaps(
@@ -715,14 +714,19 @@ def plot_consumption_bounds(
             alpha=ALPHA_HIGH,
         )
 
-    # Plot main consumption function with appropriate color based on label
+    # Plot main consumption function with appropriate color and line style based on label
     main_color = get_concept_color(legend)
+    main_linestyle = get_concept_linestyle(
+        legend,
+        figure_num=4,
+    )  # Figure 4 for consumption bounds
     ax.plot(
         m_grid,
         c_main,
         label=legend,
         color=main_color,
         linewidth=LINE_WIDTH_EXTRA_THICK,
+        linestyle=main_linestyle,
     )
 
     # Extract and plot interpolation grid points if requested
@@ -862,14 +866,16 @@ def plot_mom_mpc(
         linestyle=LINE_STYLE_DASHDOT,
     )
 
-    # Plot main MPC with appropriate color based on label
+    # Plot main MPC with appropriate color and line style based on label
     main_color = get_concept_color(mpc_label)
+    main_linestyle = get_concept_linestyle(mpc_label, figure_num=5)  # Figure 5 for MPC
     ax.plot(
         m_grid,
         mpc_values,
         label=mpc_label,
         color=main_color,
         linewidth=LINE_WIDTH_EXTRA_THICK,
+        linestyle=main_linestyle,
     )
 
     # Extract and plot interpolation grid points if requested
@@ -1029,25 +1035,27 @@ def plot_value_functions(
 
     # Plot sparse EGM approximation if provided
     if v_egm_sparse is not None:
+        egm_linestyle = get_concept_linestyle("EGM Approximation", figure_num)
         ax.plot(
             m_grid,
             v_egm_sparse,
             label="EGM Approximation",
             color=CONCEPT_COLORS["egm"],
             linewidth=LINE_WIDTH_THICK,
-            linestyle=LINE_STYLE_DASHED,  # Dashed line to distinguish as approximation
+            linestyle=egm_linestyle,
             alpha=ALPHA_HIGH,
         )
 
     # Plot sparse MoM approximation if provided
     if v_mom_sparse is not None:
+        mom_linestyle = get_concept_linestyle("MoM Approximation", figure_num)
         ax.plot(
             m_grid,
             v_mom_sparse,
             label="MoM Approximation",
             color=CONCEPT_COLORS["mom"],
             linewidth=LINE_WIDTH_THICK,
-            linestyle=LINE_STYLE_DASHED,  # Dashed line to distinguish as approximation
+            linestyle=mom_linestyle,
             alpha=ALPHA_HIGH,
         )
 
@@ -1143,142 +1151,4 @@ def plot_value_functions(
         alpha=REFERENCE_LINE_ALPHA,
     )
 
-    plt.tight_layout()
-
-
-def plot_mom_value_debug(
-    m_grid: np.ndarray,
-    v_mom_sparse: np.ndarray,
-    v_optimist: np.ndarray | None = None,
-    v_pessimist: np.ndarray | None = None,
-    grid_points_m: np.ndarray | None = None,
-    grid_points_v: np.ndarray | None = None,
-    figure_num: int = 7,
-) -> None:
-    """Debug plot for MoM value function with bounds to see actual scale and values.
-
-    Parameters
-    ----------
-    m_grid : np.ndarray
-        Wealth grid for evaluation
-    v_mom_sparse : np.ndarray
-        MoM value function values (sparse grid)
-    v_optimist : np.ndarray | None, optional
-        Optimist value function values, by default None
-    v_pessimist : np.ndarray | None, optional
-        Pessimist value function values, by default None
-    grid_points_m : np.ndarray | None, optional
-        Market resource values at interpolation grid points, by default None
-    grid_points_v : np.ndarray | None, optional
-        Value function values at interpolation grid points, by default None
-    figure_num : int, optional
-        Figure number, by default 7
-
-    """
-    fig, ax = setup_figure(
-        title=f"Figure {figure_num}: MoM Value Function Debug with Bounds",
-    )
-
-    # Plot optimist bound if provided
-    if v_optimist is not None:
-        ax.plot(
-            m_grid,
-            v_optimist,
-            label="Optimist",
-            color=CONCEPT_COLORS["optimist"],
-            linewidth=LINE_WIDTH_THIN,
-            linestyle="-",
-            alpha=ALPHA_HIGH,
-        )
-
-    # Plot pessimist bound if provided
-    if v_pessimist is not None:
-        ax.plot(
-            m_grid,
-            v_pessimist,
-            label="Pessimist",
-            color=CONCEPT_COLORS["pessimist"],
-            linewidth=LINE_WIDTH_THIN,
-            linestyle="-",
-            alpha=ALPHA_HIGH,
-        )
-
-    # Plot interpolation grid points if provided
-    if grid_points_m is not None and grid_points_v is not None:
-        ax.scatter(
-            grid_points_m,
-            grid_points_v,
-            label="Grid Points",
-            color=CONCEPT_COLORS["mom"],
-            s=MARKER_SIZE_LARGE,
-            zorder=5,
-            edgecolors=MARKER_EDGE_COLOR,
-            linewidths=MARKER_EDGE_WIDTH_THICK,
-        )
-
-    # Plot MoM value function (main focus)
-    ax.plot(
-        m_grid,
-        v_mom_sparse,
-        label="MoM Approximation",
-        color=CONCEPT_COLORS["mom"],
-        linewidth=LINE_WIDTH_EXTRA_THICK,
-        linestyle="-",
-    )
-
-    ax.set_xlabel("Normalized Market Resources (m)", fontsize=FONT_SIZE_LARGE)
-    ax.set_ylabel("Value Function (v)", fontsize=FONT_SIZE_LARGE)
-    ax.set_title(
-        "MoM Value Function: Full Scale View with Theoretical Bounds",
-        fontsize=FONT_SIZE_XLARGE,
-        fontweight="bold",
-    )
-
-    # Show actual value ranges
-    v_min, v_max = v_mom_sparse.min(), v_mom_sparse.max()
-    info_text = f"MoM range: [{v_min:.2e}, {v_max:.2e}]"
-
-    if v_optimist is not None:
-        opt_min, opt_max = v_optimist.min(), v_optimist.max()
-        info_text += f"\nOpt range: [{opt_min:.2e}, {opt_max:.2e}]"
-
-    if v_pessimist is not None:
-        pes_min, pes_max = v_pessimist.min(), v_pessimist.max()
-        info_text += f"\nPes range: [{pes_min:.2e}, {pes_max:.2e}]"
-
-    if grid_points_m is not None:
-        info_text += f"\nGrid points: {len(grid_points_m)}"
-
-    ax.text(
-        0.02,
-        0.98,
-        info_text,
-        transform=ax.transAxes,
-        fontsize=FONT_SIZE_SMALL,
-        verticalalignment="top",
-        bbox={
-            "boxstyle": f"round,pad={BBOX_PADDING}",
-            "facecolor": "white",
-            "alpha": ALPHA_VERY_HIGH,
-        },
-    )
-
-    ax.legend(loc="best")
-    ax.grid(True, alpha=GRID_ALPHA)
-
-    # Add reference lines at x=0 and y=0
-    ax.axhline(
-        y=0,
-        color=REFERENCE_LINE_COLOR,
-        linewidth=REFERENCE_LINE_WIDTH,
-        alpha=REFERENCE_LINE_ALPHA,
-    )
-    ax.axvline(
-        x=0,
-        color=REFERENCE_LINE_COLOR,
-        linewidth=REFERENCE_LINE_WIDTH,
-        alpha=REFERENCE_LINE_ALPHA,
-    )
-
-    # Don't set any axis limits - let matplotlib auto-scale
     plt.tight_layout()
