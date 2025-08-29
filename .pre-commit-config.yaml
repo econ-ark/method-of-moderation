@@ -5,6 +5,14 @@ ci:
 exclude: ^.cruft.json|.copier-answers.yml$
 
 repos:
+  - repo: https://github.com/astral-sh/uv-pre-commit
+    # uv version.
+    rev: 0.8.14
+    hooks:
+      - id: pip-compile
+        args: [pyproject.toml, --no-deps, --output-file, requirements.txt]
+        files: ^(pyproject\.toml|requirements\.txt)$
+
   - repo: https://github.com/adamchainz/blacken-docs
     rev: "1.19.1"
     hooks:
