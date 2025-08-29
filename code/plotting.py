@@ -293,7 +293,7 @@ def plot_moderation_ratio(
     plt.tight_layout()
 
 
-def plot_chi_function(
+def plot_logit_function(
     mu_grid: np.ndarray,
     chi_values: np.ndarray,
     title: str,
@@ -369,7 +369,7 @@ def plot_chi_function(
             )
 
     ax.set_xlabel("Log Excess Market Resources ($\\mu$)", fontsize=FONT_SIZE_LARGE)
-    ax.set_ylabel("Chi Function $\\chi(\\mu)$", fontsize=FONT_SIZE_LARGE)
+    ax.set_ylabel("Logit Transformation $\\chi(\\mu)$", fontsize=FONT_SIZE_LARGE)
     ax.set_title(subtitle, fontsize=FONT_SIZE_XLARGE, fontweight="bold")
     ax.legend(loc="lower right")
     ax.grid(True, alpha=GRID_ALPHA)
