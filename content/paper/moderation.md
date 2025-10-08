@@ -63,8 +63,8 @@ where the utility function is CRRA with risk aversion parameter $\CRRA > 0$:
 :label: eq:UtilityFunc
 \uFunc(\cNrm) = \begin{cases}
 \frac{\cNrm^{1-\CRRA}}{1-\CRRA} & \text{if } \CRRA \neq 1 \\
-\log \cNrm & \text{if } \CRRA = 1
-\end{cases}.
+\log \cNrm & \text{if } \CRRA = 1.
+\end{cases}
 ```
 
 This utility function satisfies prudence ($\uFunc''' > 0$), which ensures the consumer exhibits precautionary saving in response to income uncertainty. The optimization is subject to the budget constraints
@@ -403,12 +403,12 @@ $\PDVCoverc_{t}^{T}=\MPCmin_{t}^{-1}$[^identity], a similar function can be
 constructed recursively for earlier periods, yielding the general expression
 
 [^identity]:
-    Under perfect foresight, consumption grows at rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. Discounting yields $(\PDV_{t}^{T}(\cLvl)/\cLvl_{t})=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, so $\PDVCoverc_{t}^{T}=\MPCmin_{t}^{-1}$ (unchanged for normalized variables).
+    Under perfect foresight, consumption grows at rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. Discounting yields $(\PDV_{t}^{T}(\cLvl)/\cLvl_{t})=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, so $\PDVCoverc_{t}^{T}=\MPCmin_{t}^{-1}$ (unchanged for normalized variables). In the infinite-horizon limit, we write simply $\PDVCoverc = \MPCmin^{-1}$.
 
 ```{math}
 :label: eq:vFuncPF
 \begin{aligned}
-\vFuncOpt(\mNrm) &= \uFunc(\cFuncOpt(\mNrm))\PDVCoverc^{T} \\
+\vFuncOpt(\mNrm) &= \uFunc(\cFuncOpt(\mNrm))\PDVCoverc \\
 &= \uFunc(\cFuncOpt(\mNrm))\MPCmin^{-1} \\
 &= \uFunc((\mNrmEx+\hNrmEx)\MPCmin) \MPCmin^{-1} \\
 &= \left[(\mNrmEx+\hNrmEx)^{1-\CRRA}/(1-\CRRA)\right] \cdot \left[\MPCmin^{1-\CRRA} \cdot \MPCmin^{-1}\right] \\
@@ -421,7 +421,7 @@ This can be transformed as
 $$
 \begin{aligned}
 \vInvOpt &\equiv  \left((1-\CRRA)\vFuncOpt\right)^{1/(1-\CRRA)}   \\
-&= \cNrm(\PDVCoverc^{T})^{1/(1-\CRRA)} \\
+&= \cNrm\,\PDVCoverc^{1/(1-\CRRA)} \\
 &= (\mNrmEx+\hNrmEx)\MPCmin^{-\CRRA/(1-\CRRA)}.
 \end{aligned}
 $$
@@ -445,7 +445,7 @@ define an upper-case
 
 ```{math}
 :label: eq:valModRteReal
-\valModRteReal(\logmNrmEx) = \left(\frac{\vInvReal(\mNrmMin+e^{\logmNrmEx})-\vInvPes(\mNrmMin+e^{\logmNrmEx})}{\hNrmEx \MPCmin (\PDVCoverc^{T})^{1/(1-\CRRA)}}\right)
+\valModRteReal(\logmNrmEx) = \left(\frac{\vInvReal(\mNrmMin+e^{\logmNrmEx})-\vInvPes(\mNrmMin+e^{\logmNrmEx})}{\hNrmEx \MPCmin \,\PDVCoverc^{1/(1-\CRRA)}}\right)
 ```
 
 and an upper-case version of the $\logitModRte$ equation in {eq}`eq:chi`:
@@ -465,12 +465,10 @@ value function:
 
 ```{math}
 :label: eq:vInvHi
-\vInvReal = \vInvPes+\overbrace{\left(\frac{1}{1+\exp(-\logitValModRteReal)}\right)}^{=\valModRteReal} \hNrmEx \MPCmin (\PDVCoverc^{T})^{1/(1-\CRRA) }
+\vInvReal = \vInvPes+\overbrace{\left(\frac{1}{1+\exp(-\logitValModRteReal)}\right)}^{=\valModRteReal} \hNrmEx \MPCmin \,\PDVCoverc^{1/(1-\CRRA) }
 ```
 
 from which we obtain our approximation to the value function as $\vFuncReal = \uFunc(\vInvReal)$.
-
-
 
 # Extensions
 
@@ -573,8 +571,8 @@ Start with the fact that at the cusp point,
 
 $$
 \begin{aligned}
-\vFuncOpt(\mNrmCusp) &= \uFunc(\cFuncOpt(\mNrmCusp))\PDVCoverc^{T} \\
-&=  \uFunc(\mNrmCuspEx \MPCmax)\PDVCoverc^{T} .
+\vFuncOpt(\mNrmCusp) &= \uFunc(\cFuncOpt(\mNrmCusp))\PDVCoverc \\
+&=  \uFunc(\mNrmCuspEx \MPCmax)\PDVCoverc .
 \end{aligned}
 $$
 
@@ -646,20 +644,20 @@ where
 
 ```{math}
 :label: eq:MPCModerationWeight
-\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \frac{\partial \modRte}{\partial \logmNrmEx}.
+\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \partial \modRte / \partial \logmNrmEx.
 ```
 
 The weight $\MPCmod \in [0,1]$ at gridpoints by construction, since equation {eq}`eq:MPCModeration` can be rewritten as $\MPCmod = (\partial \cFuncReal/\partial \mNrm - \MPCmin)/(\MPCmax - \MPCmin)$ and theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at points where the Euler equation is solved. Between gridpoints, the interpolated moderation ratio derivative $\modRteMu$ should preserve this property when the grid is sufficiently refined. The weight reflects precautionary intensity: it increases when market resources are low relative to human wealth ($\hNrmEx/\mNrmEx$ large) and when the moderation ratio responds sharply to changes in log excess resources ($\modRteMu$ large). As $\mNrmEx \to \infty$, $\MPCmod \to 0$ and the MPC approaches the optimist's; as $\mNrmEx \to 0$, $\MPCmod \to 1$ and the MPC approaches the pessimist's.
 
 [^mpc-derivation]:
-    Differentiating {ref}`eq:cFuncHi` with respect to $\mNrm$ and applying the chain rule: $\partial \cFuncReal/\partial \mNrm = \MPCmin \left(1 + \hNrmEx/\mNrmEx \cdot \modRteMu\right)$. The moderation form follows by factoring: $\MPCmod(\MPCmax-\MPCmin) = \MPCmin \cdot \hNrmEx/\mNrmEx \cdot \modRteMu$. Note that $\modRteMu = \modRte(1-\modRte) \cdot \logitModRteMu$ from the chain rule, where $\modRte(1-\modRte) = d\modRte/d\logitModRte$ is the standard sigmoid derivative, but working directly with $\modRteMu$ provides superior numerical stability since the moderation ratio $\modRte \in [0,1]$ is naturally bounded.
+    Differentiating {ref}`eq:cFuncHi` with respect to $\mNrm$ and applying the chain rule: $\partial \cFuncReal/\partial \mNrm = \MPCmin \left(1 + \hNrmEx/\mNrmEx \cdot \modRteMu\right)$. The moderation form follows by factoring: $\MPCmod(\MPCmax-\MPCmin) = \MPCmin \cdot \hNrmEx/\mNrmEx \cdot \modRteMu$. Note that $\modRteMu = \modRte(1-\modRte) \cdot \logitModRteMu$ from the chain rule, where $\modRte(1-\modRte) = \partial\modRte/\partial\logitModRte$ is the standard sigmoid derivative, but working directly with $\modRteMu$ provides superior numerical stability since the moderation ratio $\modRte \in [0,1]$ is naturally bounded.
 
-We can apply analogous techniques to the value function. Under perfect foresight, consumption grows at a constant rate, making $\PDVCoverc^{T}$ constant. This implies that the inverse value function for the optimist has a constant slope with respect to cash-on-hand:
+We can apply analogous techniques to the value function. Under perfect foresight, consumption grows at a constant rate, making $\PDVCoverc$ constant. This implies that the inverse value function for the optimist has a constant slope with respect to cash-on-hand:
 
 ```{math}
 :label: eq:vInvOptDeriv
 \begin{aligned}
-\vInvOptDeriv &= (\PDVCoverc^{T})^{1/(1-\CRRA)} \MPCmin \\
+\vInvOptDeriv &= \PDVCoverc^{1/(1-\CRRA)} \MPCmin \\
 &= \MPCmin^{-\CRRA/(1-\CRRA)}.
 \end{aligned}
 ```

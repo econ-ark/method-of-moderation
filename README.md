@@ -25,15 +25,15 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 
 ## Content
 
-### 📄 Paper
+### Paper
 - [**Read the Paper**](content/paper/moderation.md) - Full paper in MyST Markdown format
 - [**Download PDF**](content/paper/moderation.pdf) - Paper in PDF format
 
-### 💻 Code & Interactive Content
+### Code & Interactive Content
 - [**Jupyter Notebook**](code/notebook.ipynb) - Complete computational notebook with examples
 - [**Interactive Dashboard**](code/dashboard.ipynb) - Interactive visualizations using Voila
 
-### 🔗 Links
+### Links
 - **Documentation**: [Read the Docs](https://moderation.readthedocs.io)
 - **Paper Repository**: [REMARK](https://github.com/econ-ark/REMARK)
 - **Package**: [PyPI](https://pypi.org/project/moderation/)

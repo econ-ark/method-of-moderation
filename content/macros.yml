@@ -97,9 +97,9 @@ project:
     "\\vFuncOpt": "\\bar{\\vFunc}" # optimist value function
     "\\vFuncPes": "\\underline{\\vFunc}" # pessimist value function
     "\\vFuncReal": "\\hat{\\vFunc}" # realist value function
-    "\\vFuncDerivmNrm": "\\vFunc^{\\mNrm}" # first derivative of vFunc wrt mNrm
-    "\\vFuncRealDeriv": "\\vFuncReal^{\\mNrm}" # first derivative of vFuncReal wrt m
-    "\\vFuncRealDerivSecond": "\\vFuncReal^{\\mNrm\\mNrm}" # second derivative of vFuncReal wrt m
+    "\\vFuncDerivmNrm": "\\vFunc'" # first derivative of vFunc wrt mNrm
+    "\\vFuncRealDeriv": "\\vFuncReal'" # first derivative of vFuncReal wrt m
+    "\\vFuncRealDerivSecond": "\\vFuncReal''" # second derivative of vFuncReal wrt m
 
     # ============================================================
     # INVERSE VALUE FUNCTION
@@ -108,9 +108,9 @@ project:
     "\\vInvOpt": "\\bar{\\vInv}" # optimist inverse value function
     "\\vInvPes": "\\underline{\\vInv}" # pessimist inverse value function
     "\\vInvReal": "\\hat{\\vInv}" # realist inverse value function
-    "\\vInvOptDeriv": "\\vInvOpt^{\\mNrm}" # first derivative of vInvOpt wrt m
-    "\\vInvRealDeriv": "\\vInvReal^{\\mNrm}" # first derivative of vInvReal wrt m
-    "\\vInvRealDerivSecond": "\\vInvReal^{\\mNrm\\mNrm}" # second derivative of vInvReal wrt m
+    "\\vInvOptDeriv": "\\vInvOpt'" # first derivative of vInvOpt wrt m
+    "\\vInvRealDeriv": "\\vInvReal'" # first derivative of vInvReal wrt m
+    "\\vInvRealDerivSecond": "\\vInvReal''" # second derivative of vInvReal wrt m
 
     # ============================================================
     # CONSUMPTION FUNCTION
