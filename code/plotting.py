@@ -59,7 +59,6 @@ __all__ = [
     "plot_value_functions",
 ]
 
-
 # =========================================================================
 # Plot-Specific Constants
 # =========================================================================
@@ -356,8 +355,6 @@ def extract_mom_grid_points(
             m_min = solution.cFunc.mNrmMin
             grid_points_m = exp_mu(mu_grid, m_min)
             grid_points_mpc = solution.cFunc.derivative(grid_points_m)
-            # Clip to theoretical bounds to avoid numerical issues near constraint
-            grid_points_mpc = np.clip(grid_points_mpc, solution.MPCmin, solution.MPCmax)
             return grid_points_m, grid_points_mpc
 
     except (AttributeError, KeyError, IndexError):
@@ -983,9 +980,8 @@ def plot_mom_mpc(
     m_min = solution.mNrmMin
     m_grid = np.linspace(m_min + 0.01, m_max, n_points)
 
-    # Evaluate MPC and clip to theoretical bounds to avoid numerical issues near constraint
+    # Evaluate MPC
     mpc_values = solution.cFunc.derivative(m_grid)
-    mpc_values = np.clip(mpc_values, solution.MPCmin, solution.MPCmax)
 
     # Get constant bounds
     mpc_opt_vals = np.full_like(m_grid, solution.MPCmin)

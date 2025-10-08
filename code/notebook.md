@@ -29,8 +29,6 @@ from style import (
 apply_ark_style()
 apply_notebook_css()
 
-
-
 # Display Econ-ARK header (for Jupyter notebooks)
 from IPython.display import HTML, display
 
@@ -39,7 +37,7 @@ display(HTML(HEADER_HTML_NOTEBOOK))
 
 **Author:** <span style="color: var(--ark-lightblue); font-weight: bold;">Alan Lujan</span>, <span style="color: var(--ark-blue); font-weight: bold;">Johns Hopkins University</span>
 
-This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves—the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
+This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves: the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
 
 ## Model Foundations: The Friedman-Muth Income Process
 
@@ -54,7 +52,7 @@ The model used in this notebook, drawn from {cite:t}`SolvingMicroDSOPs`, impleme
 
 At its core, the Method of Moderation (MoM) is designed to solve a persistent challenge in computational economics: the **extrapolation problem**. This issue is particularly pronounced in sparse-grid implementations of the Endogenous Grid Method (EGM), a widely-used technique for solving dynamic stochastic optimization problems.
 
-When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty—a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
+When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty. This is a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
 
 MoM addresses this problem by abandoning direct extrapolation of the consumption function. Instead, it operates in a transformed space defined by two analytical, theoretically-grounded bounds. This approach builds on a long literature on "buffer-stock" saving behavior {cite:p}`Carroll1997`, which has established theoretical properties of consumption functions under uncertainty {cite:p}`StachurskiToda2019JET,MST2020JET`. The two bounds are:
 
@@ -375,7 +373,7 @@ This mathematical elegance translates directly into superior numerical propertie
 
 ### Figure 8: MoM MPC Bounded by Theory
 
-Beyond the consumption function itself, its derivative—the **marginal propensity to consume (MPC)**—is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
+Beyond the consumption function itself, its derivative (the **marginal propensity to consume**, or MPC) is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
 
 * **Monetary policy transmission**: How interest rate changes affect spending
 * **Fiscal policy effectiveness**: How tax rebates stimulate consumption

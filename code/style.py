@@ -174,7 +174,6 @@ LINE_STYLE_DASHED = "--"
 LINE_STYLE_DASHDOT = "-."
 LINE_STYLE_DOTTED = ":"
 
-
 # =========================================================================
 # Concept-Based Theming Functions
 # =========================================================================
@@ -256,7 +255,6 @@ def get_concept_linestyle(method_name: str) -> str:
 # Matplotlib Style Configuration
 # =========================================================================
 
-
 # Matplotlib style configuration
 MATPLOTLIB_STYLE = {
     # --- Font & text ---
@@ -319,7 +317,6 @@ MATPLOTLIB_STYLE = {
     "ytick.minor.width": 0.6,
 }
 
-
 # =========================================================================
 # External CSS File Loading
 # =========================================================================
@@ -354,7 +351,6 @@ def _load_css_file(filename: str) -> str:
 
 # Simple notebook CSS (loaded from style.css)
 NOTEBOOK_CSS = _load_css_file("style.css")
-
 
 # Header HTML for notebook use only
 HEADER_HTML_NOTEBOOK = """
