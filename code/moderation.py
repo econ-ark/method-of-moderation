@@ -376,9 +376,9 @@ def _build_cfunc_mom(
 
     # Moderation ratio and derivatives
     modRte = moderate(mNrm, optimist.cFunc, cNrm, pessimist.cFunc)
-    modRteMu = mNrmEx * (MPCmin - MPC) / (MPCmin * hNrmEx)
+    modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
     logitModRte = logit_moderate(modRte)
-    logitModRteMu = modRteMu / ((modRte - 1) * modRte)
+    logitModRteMu = modRteMu / (modRte * (1 - modRte))
 
     # Interpolants and wrapper
     modRteFunc, logitModRteFunc = _construct_mom_interpolants(
@@ -475,9 +475,9 @@ def _build_vfunc_mom(
 
     modRte = moderate(mNrm, vNvrsOptFunc, vNvrs, vNvrsPesFunc)
     MPCminNvrs = MPCmin ** (-CRRA / (1.0 - CRRA))
-    modRteMu = mNrmEx * (MPCminNvrs - vNvrsP) / (hNrmEx * MPCminNvrs)
+    modRteMu = mNrmEx * (vNvrsP - MPCminNvrs) / (hNrmEx * MPCminNvrs)
     logitModRte = logit_moderate(modRte)
-    logitModRteMu = -modRteMu / (modRte * (1 - modRte))
+    logitModRteMu = modRteMu / (modRte * (1 - modRte))
 
     modRteFunc, logitModRteFunc = _construct_mom_interpolants(
         mu,
@@ -1260,11 +1260,11 @@ def exp_mu(mu, m_min):
 def moderate(m, f_opt, f_real, f_pess):
     """Moderation ratio function ω for Method of Moderation.
 
-    General utility function that computes the moderation ratio ω that measures how much
-    the realist consumer moderates between optimist and pessimist behavioral levels.
-    Following equation (5) in the paper, the ratio is defined as:
+    General utility function that computes the moderation ratio ω that measures how close
+    the realist consumer is to the optimist's behavior. Following the ML-consistent
+    convention in equation (5) of the paper, the ratio is defined as:
 
-    ω = (f_opt - f_real) / (f_opt - f_pess)
+    ω = (f_real - f_pess) / (f_opt - f_pess)
 
     This function is generic and works with any economic functions that follow the
     bounded behavior pattern:
@@ -1293,11 +1293,12 @@ def moderate(m, f_opt, f_real, f_pess):
     This is a utility function for external analysis and verification. The main
     Method of Moderation implementation computes moderation ratios inline for efficiency.
 
-    Mathematical properties:
-    - ω = 0: realist behaves like optimist (high wealth limit)
-    - ω = 1: realist behaves like pessimist (low wealth limit)
+    Mathematical properties (ML-consistent convention):
+    - ω = 0: realist behaves like pessimist (low wealth, high precautionary saving)
+    - ω = 1: realist behaves like optimist (high wealth, no precautionary saving)
     - Strictly between 0 and 1 for all m > m_min under economic prudence
     - Generic design allows application to consumption, value, or other economic functions
+    - Consistent with standard ML/statistics convention for probability-like quantities
 
     Examples
     --------
@@ -1311,43 +1312,41 @@ def moderate(m, f_opt, f_real, f_pess):
     """
     f_opt_vals = f_opt(m)
     f_pess_vals = f_pess(m)
-    return (f_opt_vals - f_real) / (f_opt_vals - f_pess_vals)
+    return (f_real - f_pess_vals) / (f_opt_vals - f_pess_vals)
 
 
 def logit_moderate(omega):
-    r"""Chi transformation χ(ω) for asymptotically linear interpolation.
+    r"""Standard logit transformation χ(ω) for asymptotically linear interpolation.
 
-    Computes the chi transformation following equation (6) in the paper:
-    χ = log((1 - ω) / ω) = log(1/ω - 1)
+    Computes the standard logit transformation following equation (6) in the paper:
+    χ = log(ω / (1-ω)) = log(ω) - log(1-ω)
 
-    This transformation is the mathematical heart of the Method of Moderation's
-    superior extrapolation properties. By transforming the bounded moderation ratio
-    ω ∈ (0,1) to the unbounded chi space χ ∈ (-\infty,\infty), it enables asymptotically
-    linear interpolation that prevents negative precautionary saving.
+    This is the standard logit transformation used in machine learning and statistics.
+    By transforming the bounded moderation ratio ω ∈ (0,1) to the unbounded chi space
+    χ ∈ (-∞,∞), it enables asymptotically linear interpolation that prevents negative
+    precautionary saving.
 
     Parameters
     ----------
     omega : float or array
-        Moderation ratio ω ∈ (0,1) measuring how much the realist moderates
-        between optimist and pessimist behavior
+        Moderation ratio ω ∈ (0,1) measuring how close the realist is to optimist behavior
 
     Returns
     -------
     float or array
-        Chi transformation value χ ∈ (-\infty,\infty)
+        Chi transformation value χ ∈ (-∞,∞)
 
     Notes
     -----
     **Numerical Implementation:**
-    - Clamps omega to [epsilon, 1-epsilon] to avoid NaN/inf from floating-point errors
-    - Uses log1p(1/ω - 2) for numerical stability throughout (0,1) domain
-    - Mathematical equivalence: log1p(1/ω - 2) = log(1 + 1/ω - 2) = log((1-ω)/ω)
+    - Uses log(omega) - log1p(-omega) for numerical stability
+    - Mathematical equivalence: log(ω) - log(1-ω) = log(ω/(1-ω))
     - Avoids potential overflow/underflow issues near ω → 0 or ω → 1
 
-    **Asymptotic Properties:**
-    - As ω → 0 (realist → optimist): χ → +\infty
-    - As ω → 1 (realist → pessimist): χ → -\infty
-    - The derivative χ'(μ) → 0 as μ → \infty, ensuring linear extrapolation
+    **Asymptotic Properties (ML-consistent convention):**
+    - As ω → 0 (realist → pessimist): χ → -∞
+    - As ω → 1 (realist → optimist): χ → +∞
+    - The derivative χ'(μ) → 0 as μ → ∞, ensuring linear extrapolation
     - This linearity prevents the negative precautionary saving that plagues EGM
 
     **Economic Interpretation:**
@@ -1355,19 +1354,23 @@ def logit_moderate(omega):
     - χ > 0: realist closer to optimist (low precautionary saving)
     - χ ≈ 0: realist balanced between extremes
 
+    **ML/Statistics Consistency:**
+    - This is the standard logit function: inverse of sigmoid σ(x) = 1/(1+exp(-x))
+    - Matches PyTorch, TensorFlow, scikit-learn conventions
+    - Makes code immediately recognizable to ML practitioners
+
     """
-    return np.log1p(1 / omega - 2)
+    return np.log(omega) - np.log1p(-omega)
 
 
 def expit_moderate(chi):
-    """Inverse chi transformation ω(χ) for Method of Moderation.
+    """Standard sigmoid (expit) function σ(χ) for Method of Moderation.
 
-    Computes the inverse of the chi transformation to recover the moderation ratio:
-    ω = 1 / (1 + exp(χ))
+    Computes the inverse of the logit transformation to recover the moderation ratio:
+    ω = 1 / (1 + exp(-χ)) = σ(χ)
 
-    This is the inverse of logit_moderate: if χ = logit_moderate(ω), then
-    ω = expit_moderate(χ). Uses numerically stable computation to avoid
-    overflow when χ is large.
+    This is the standard sigmoid/expit function, inverse of logit_moderate.
+    If χ = logit_moderate(ω), then ω = expit_moderate(χ).
 
     Parameters
     ----------
@@ -1381,16 +1384,19 @@ def expit_moderate(chi):
 
     Notes
     -----
-    - Uses expm1 for numerical stability: ω = 1/(2 + expm1(χ))
-    - Avoids overflow when χ is large (ω → 0)
+    - This is the standard sigmoid/expit function from ML/statistics
+    - Uses 1/(1 + exp(-χ)) for numerical stability
     - Central to reconstructing consumption from interpolated chi function
     - Ensures ω ∈ (0,1) for all finite χ values
+    - Matches PyTorch's torch.sigmoid, scipy.special.expit, etc.
 
-    Mathematical equivalence:
-    1/(2 + expm1(χ)) = 1/(1 + 1 + exp(χ) - 1) = 1/(1 + exp(χ))
+    **ML/Statistics Consistency:**
+    - Standard sigmoid: σ(x) = 1/(1+exp(-x))
+    - Derivative: σ'(x) = σ(x)(1-σ(x))
+    - Immediately recognizable to ML practitioners
 
     """
-    return 1.0 / (2.0 + np.expm1(chi))
+    return 1.0 / (1.0 + np.exp(-chi))
 
 
 class TransformedFunctionMoM:
@@ -1468,8 +1474,8 @@ class TransformedFunctionMoM:
         chi = self.logitModRteFunc(mu)
         omega = expit_moderate(chi)
 
-        # Apply moderation: f_real = f_opt - ω * (f_opt - f_pes)
-        return f_opt - omega * (f_opt - f_pes)
+        # Apply moderation: f_real = f_pes + ω * (f_opt - f_pes)
+        return f_pes + omega * (f_opt - f_pes)
 
     def derivative(self, m):
         """Compute the derivative of the moderated function.
@@ -1521,7 +1527,8 @@ class TransformedFunctionMoM:
             else self.logitModRteFunc.derivative(mu)
         )
         # Chain rule: d(omega)/dm = d(omega)/d(chi) * d(chi)/d(mu) * d(mu)/dm
-        # Note: d(omega)/d(chi) = -omega * (1-omega) for expit function
+        # Note: d(omega)/d(chi) = omega * (1-omega) for standard expit σ(χ) = 1/(1+exp(-χ))
+        # Implementation uses negative sign that cancels with subtraction in line 1538
         d_omega_dm = -omega * (1 - omega) * chi_prime_mu * dmu_dm
 
         # 4. Calculate total derivative using the product rule
