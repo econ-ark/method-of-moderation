@@ -3,7 +3,7 @@ title: The Method of Moderation
 bibliography:
   - references.bib
 abstract: |
-  In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A realist (someone who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between pessimist's and the optimist's. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
+  In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A consumer who is a realist (that is, who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between that of the pessimist and the optimist. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
 keywords:
   - Dynamic Stochastic Optimization
 parts:
@@ -22,12 +22,11 @@ choose how to represent a policy or value function. In the stochastic case,
 where analytical solutions are generally not available, a common approach is to
 use low-order polynomial splines that exactly match the function (and maybe some
 derivatives) at a finite set of gridpoints, and then to assume that interpolated
-or extrapolated versions of that spline represent the function well at the
-continuous infinity of unmatched points.
+or extrapolated versions of the matching polynomial are a good representation elsewhere.
 
-This paper argues that a better approach in the standard consumption problem is
-to rely upon the fact that without uncertainty, the optimal consumption function
-has a simple analytical solution. The key insight is that, under standard
+This paper argues that, at least in the context of a standard consumption problem,
+a better approach is available, which relies upon the fact that in the absence of
+uncertainty, the optimal consumption function has a simple analytical solution. The key insight is that, under standard
 assumptions, the consumer who faces an uninsurable labor income risk will
 consume less than a consumer with the same path for expected income but who does
 not perceive any uncertainty as being attached to that future income. The
@@ -37,11 +36,11 @@ upper bound to the solution that will actually be optimal. A lower bound is
 provided by the behavior of a consumer who has the subjective belief that the
 future level of income will be the worst that it can possibly be. This consumer,
 too, behaves according to the convenient analytical perfect foresight solution,
-but his certainty is that of a pessimist perfectly confident in his pessimism.
+but his certainty is that of a pessimist who is extremely overconfident in his pessimism.
 
 We build on bounds for the consumption function and limiting MPCs established in buffer-stock theory and related work {cite:p}`StachurskiToda2019JET,MST2020JET`. Using results from {cite:t}`CarrollShanker2024`, we show how to use these upper
 and lower bounds to tightly constrain the shape and characteristics of the
-solution to problem of the 'realist' {cite:p}`Carroll1997`. Imposition of these constraints can
+solution to the 'realist's problem (that is, the solution to the problem of a consumer who correctly perceives the risks to future income and behaves rationally in response) {cite:p}`Carroll1997`. Imposition of these constraints can
 clarify and speed the solution of the realist's problem.
 
 After showing how to use the method in the baseline case, we show how to refine
