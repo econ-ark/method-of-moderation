@@ -116,7 +116,7 @@ The proof is more difficult than might be imagined, but the necessary work is do
 $$
 \begin{array}{rcl}
 \cFuncOpt(\mNrmMin+\mNrmEx) > & \cFuncReal(\mNrmMin+\mNrmEx) & > \cFuncPes(\mNrmMin+\mNrmEx) \\
--\cFuncPes(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncPes(\mNrmMin+\mNrmEx) \\
+-\cFuncPes(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncOpt(\mNrmMin+\mNrmEx) \\
 0 < & \cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx) & < \hNrmEx \MPCmin \\
 0 < & \underbrace{\left(\frac{\cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx)}{\hNrmEx \MPCmin}\right)}_{\equiv \modRte} & < 1
 \end{array}
@@ -205,7 +205,7 @@ The numerical accuracy of the method of moderation depends critically on the qua
 \frac{\partial \cFuncReal}{\partial \mNrm} = (1-\MPCmod)\,\MPCmin + \MPCmod\,\MPCmax
 ```
 
-where the weight $\MPCmod = (\hNrmEx/\mNrmEx) \cdot \MPCmin/(\MPCmax-\MPCmin) \cdot \modRteMu$ and $\modRteMu = \partial \modRte/\partial \logmNrmEx$. Theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at gridpoints where the Euler equation holds. At very high wealth, $\MPCmod \to 0$ and the MPC approaches $\MPCmin$; near the borrowing constraint, $\MPCmod \to 1$ and the MPC approaches $\MPCmax$.
+where the weight $\MPCmod = (\hNrmEx/\mNrmEx) \cdot \MPCmin/(\MPCmax-\MPCmin) \cdot \modRteMu$. Theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at gridpoints where the Euler equation holds. At very high wealth, $\MPCmod \to 0$ and the MPC approaches $\MPCmin$; near the borrowing constraint, $\MPCmod \to 1$ and the MPC approaches $\MPCmax$.
 
 For Hermite interpolation, compute $\modRteMu$ at gridpoints, then derive $\logitModRteMu = \modRteMu/[\modRte(1-\modRte)]$ for slope data. By matching both the level and the derivative of the $\cFuncReal$ function at the gridpoints, {cite:t}`BenvenisteScheinkman1979` and {cite:t}`MilgromSegal2002` show that the consumption rule derived from such interpolation numerically satisfies the Euler equation at each gridpoint for which the problem has been solved.
 

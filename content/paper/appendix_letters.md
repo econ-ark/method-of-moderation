@@ -93,7 +93,7 @@ The logit transformation slope follows from the chain rule {cite:p}`Santos2000,J
 \frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
 ```
 
-where $\modRteMu = \partial \modRte/\partial \logmNrmEx$ from {eq}`eq:modRteMuFinal`. For monotone cubic Hermite schemes {cite:p}`Fritsch1980,FritschButland1984,deBoor2001`, theoretical slopes may be adjusted to enforce monotonicity {cite:p}`Hyman1983`. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
+where $\modRteMu$ is from {eq}`eq:modRteMuFinal`. For monotone cubic Hermite schemes {cite:p}`Fritsch1980,FritschButland1984,deBoor2001`, theoretical slopes may be adjusted to enforce monotonicity {cite:p}`Hyman1983`. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
 
 The MPC weight derivation starts from differentiating {eq}`eq:cFuncHi` from the main text with respect to $\mNrm$:
 
@@ -115,7 +115,7 @@ $$
 
 ## Value Function Derivation
 
-Under perfect foresight, consumption grows at constant rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. In the infinite-horizon limit, $\PDVCoverc = \MPCmin^{-1}$.
+Under perfect foresight, consumption grows at constant rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc = \MPCmin^{-1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
 
 The optimist's value function satisfies
 
@@ -191,12 +191,7 @@ $$
 \Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem) + (1-\CRRA)(1-2\CRRA)\std_{\risky}^2/2).
 $$
 
-For serially correlated returns following an AR(1) process $\log \Risky_{t+1} = \rho \log \Risky_t + \epsilon_{t+1}$ with $\epsilon \sim \Nrml(0,\sigma_\epsilon^2)$, the state space becomes two-dimensional: $(m,R)$ where $m$ is normalized market resources and $R$ is the current return. The moderation ratio becomes $\modRte(m,R)$, requiring two-dimensional interpolation. Human wealth now depends on the current return state since high past returns predict high future returns under positive serial correlation.
-
-
-## Endogenous Gridpoints Method Extensions
-
-The endogenous gridpoints method has been extended to handle numerous complications beyond the baseline problem. Extensions include multi-dimensional problems with multiple assets or state variables {cite:p}`BarillasFV2007`, occasionally binding constraints such as collateral requirements or borrowing limits that may or may not bind depending on the state {cite:p}`HintermaierKoeniger2010`, non-smooth and non-concave problems arising from kinks or non-convexities in the value function {cite:p}`Fella2014`, discrete-continuous choice models where consumers make both discrete decisions (such as whether to work) and continuous decisions (such as how much to consume) {cite:p}`IskhakovRustSchjerning2017`, and comprehensive treatments of theory and practice surveying the state of numerical methods for dynamic programming {cite:p}`White2015`. The method of moderation complements these approaches by addressing the extrapolation problem that arises when the solution must be evaluated outside the range of endogenous gridpoints.
+For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.
 
 ## Shock Discretization
 

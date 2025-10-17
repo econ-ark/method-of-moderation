@@ -14,10 +14,12 @@ authors:
     address: Baltimore, MD
     orcid: 0000-0002-5289-7054
     email: alujan@jhu.edu
+  - family-names: Chipeniuk
+    given-names: Karsten
+    affiliation: Reserve Bank of New Zealand
   - family-names: Tokuoka
     given-names: Kiichi
-    affiliation: European Central Bank
-    email: ktokuoka@imf.org
+    affiliation: Japanese Ministry of Finance
   - family-names: Wu
     given-names: Weifeng
     affiliation: Fannie Mae

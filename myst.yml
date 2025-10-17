@@ -17,33 +17,36 @@ project:
       orcid: 0000-0003-3732-9312
       affiliations:
         - jhu
+        - econ_ark
     - name: Alan Lujan
       email: alujan@jhu.edu
       orcid: 0000-0002-5289-7054
       corresponding: true
       affiliations:
         - jhu
-    - name: Kiichi Tokuoka
-      email: ktokuoka@imf.org
+        - econ_ark
+    - name: Karsten Chipeniuk
       affiliations:
-        - ecb
-        - imf
+        - rbnz
+    - name: Kiichi Tokuoka
+      affiliations:
+        - mof
     - name: Weifeng Wu
       affiliations:
         - fannie_mae
   affiliations:
     - id: jhu
       name: Johns Hopkins University
-      department: Department of Economics
+      department: Krieger School of Arts and Sciences
       address: Baltimore, MD
       url: http://econ.jhu.edu/people/ccarroll/
+    - id: econ_ark
+      name: Econ-ARK
+      url: https://econ-ark.org
     - id: rbnz
       name: Reserve Bank of New Zealand
-    - id: ecb
-      name: European Central Bank
-    - id: imf
-      name: International Monetary Fund
-      address: Washington, DC
+    - id: mof
+      name: Japanese Ministry of Finance
     - id: fannie_mae
       name: Fannie Mae
       address: Washington, DC

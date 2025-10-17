@@ -125,14 +125,16 @@
 \usepackage{authblk}
 \renewcommand*{\Authfont}{\bfseries}
 
-\author[1\thanks{\texttt{ccarroll@jhu.edu}}]{Christopher D. Carroll\href{https://orcid.org/0000-0003-3732-9312}{\orcidicon}}
-\author[1\thanks{\texttt{alujan@jhu.edu}}]{Alan Lujan\href{https://orcid.org/0000-0002-5289-7054}{\orcidicon}}
-\author[2, 3\thanks{\texttt{ktokuoka@imf.org}}]{Kiichi Tokuoka}
-\author[4]{Weifeng Wu}
+\author[1, 2\thanks{\texttt{ccarroll@jhu.edu}}]{Christopher D. Carroll\href{https://orcid.org/0000-0003-3732-9312}{\orcidicon}}
+\author[1, 2\thanks{\texttt{alujan@jhu.edu}}]{Alan Lujan\href{https://orcid.org/0000-0002-5289-7054}{\orcidicon}}
+\author[3]{Karsten Chipeniuk}
+\author[4]{Kiichi Tokuoka}
+\author[5]{Weifeng Wu}
 \affil[1]{Johns Hopkins University}
-\affil[2]{European Central Bank}
-\affil[3]{International Monetary Fund}
-\affil[4]{Fannie Mae}
+\affil[2]{Econ-ARK}
+\affil[3]{Reserve Bank of New Zealand}
+\affil[4]{Japanese Ministry of Finance}
+\affil[5]{Fannie Mae}
 
 %%%%%%%%%%%%%%    Front matter    %%%%%%%%%%%%%%
 \begin{document}
@@ -251,7 +253,7 @@ The proof is more difficult than might be imagined, but the necessary work is do
 \begin{equation}
 \begin{array}{rcl}
 \cFuncOpt(\mNrmMin+\mNrmEx) > & \cFuncReal(\mNrmMin+\mNrmEx) & > \cFuncPes(\mNrmMin+\mNrmEx) \\
--\cFuncPes(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncPes(\mNrmMin+\mNrmEx) \\
+-\cFuncPes(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncOpt(\mNrmMin+\mNrmEx) \\
 0 < & \cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx) & < \hNrmEx \MPCmin \\
 0 < & \underbrace{\left(\frac{\cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx)}{\hNrmEx \MPCmin}\right)}_{\equiv \modRte} & < 1
 \end{array}
@@ -336,7 +338,7 @@ The numerical accuracy of the method of moderation depends critically on the qua
 \frac{\partial \cFuncReal}{\partial \mNrm} = (1-\MPCmod)\,\MPCmin + \MPCmod\,\MPCmax
 \end{equation}
 
-where the weight $\MPCmod = (\hNrmEx/\mNrmEx) \cdot \MPCmin/(\MPCmax -\MPCmin) \cdot \modRteMu$ and $\modRteMu = \partial \modRte/\partial \logmNrmEx$. Theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at gridpoints where the Euler equation holds. At very high wealth, $\MPCmod \to 0$ and the MPC approaches $\MPCmin$; near the borrowing constraint, $\MPCmod \to 1$ and the MPC approaches $\MPCmax$.
+where the weight $\MPCmod = (\hNrmEx/\mNrmEx) \cdot \MPCmin/(\MPCmax -\MPCmin) \cdot \modRteMu$. Theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at gridpoints where the Euler equation holds. At very high wealth, $\MPCmod \to 0$ and the MPC approaches $\MPCmin$; near the borrowing constraint, $\MPCmod \to 1$ and the MPC approaches $\MPCmax$.
 
 For Hermite interpolation, compute $\modRteMu$ at gridpoints, then derive $\logitModRteMu = \modRteMu/[\modRte(1 -\modRte)]$ for slope data. By matching both the level and the derivative of the $\cFuncReal$ function at the gridpoints, \citet{BenvenisteScheinkman1979} and \citet{MilgromSegal2002} show that the consumption rule derived from such interpolation numerically satisfies the Euler equation at each gridpoint for which the problem has been solved.
 
