@@ -88,7 +88,7 @@ $$
 \cLvl_{t} &\text{ - consumption in period } t \\
 \mLvl_{t} &\text{ - `market resources' available for consumption} \\
 \pLvl_{t+1} &\text{ - `permanent labor income' in period } t+1 \\
-\Rfree_{t+1} &\text{ - interest factor } (1+\rfree_{t+1}) \text{ from period } t \text{ to } t+1 \\
+\Rfree_{t+1} &\text{ - gross interest rate from period } t \text{ to } t+1 \\
 \yLvl_{t+1} &\text{ - noncapital income in period } t+1.
 \end{aligned}
 $$
@@ -106,7 +106,10 @@ The exogenous variables evolve according to the _Friedman-Muth Income Process_[^
 \end{aligned}
 ```
 
-where $\PermGroFac_{t+1}$ is the deterministic permanent income growth factor, and the permanent shocks to income $\permShk_{t+1}$ are independently and identically distributed with mean $\Ex[\permShk_{t+1}] = 1$ and support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$, and the transitory shocks to income $\tranShkEmp_{t+1}$ are independently distributed with mean $\Ex[\tranShkEmp_{t+1}] = 1$ and bounded support $\tranShkEmpMin \leq \tranShkEmp_{t+1} \leq \tranShkEmpMax$ where $0 \leq \tranShkEmpMin \leq 1 \leq \tranShkEmpMax < \infty$.
+where $\PermGroFac_{t+1}$ is the deterministic permanent income growth factor, and the permanent shocks to income $\permShk_{t+1}$ are independently and identically distributed with mean $\Ex[\permShk_{t+1}] = 1$ and support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$,[^bounded-support] and the transitory shocks to income $\tranShkEmp_{t+1}$ are independently distributed with mean $\Ex[\tranShkEmp_{t+1}] = 1$ and bounded support $\tranShkEmpMin \leq \tranShkEmp_{t+1} \leq \tranShkEmpMax$ where $0 \leq \tranShkEmpMin \leq 1 \leq \tranShkEmpMax < \infty$.
+
+[^bounded-support]:
+    Bounded support ($\permShkMax < \infty$) ensures existence of well-defined upper and lower bounds for the consumption function. Results in the literature also exist for unbounded distributions with finite moments (e.g., lognormal shocks), but establishing the moderation ratio bounds used in this paper requires bounded support. Extensions to unbounded shocks are beyond the scope of this paper.
 
 [^friedman-muth-formalization]:
     {cite:t}`Friedman1957` distinguished permanent (long-term earning capacity) from transitory (temporary fluctuations) income components. {cite:t}`Muth1960` provided the stochastic framework for modeling these as random processes. Our specification combines both insights to model unemployment risk and permanent income growth.
@@ -136,7 +139,10 @@ the Euler equation
 
 We define the absolute patience factor as $\AbsPatFac\equiv(\DiscFac\Rfree)^{1/\CRRA}$. A finite solution requires {cite:p}`CarrollShanker2024`: (i) the finite-value-of-autarky condition (FVAC) $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$; (ii) the absolute-impatience condition (AIC) $\AbsPatFac<1$; (iii) the return-impatience condition (RIC) $\AbsPatFac/\Rfree<1$; (iv) the growth-impatience condition (GIC) $\AbsPatFac/\PermGroFac<1$; and (v) the finite-human-wealth condition (FHWC) $\PermGroFac/\Rfree<1$. These conditions ensure existence of upper and lower bounds on consumption {cite:p}`Carroll2001MPCBound,StachurskiToda2019JET` and pin down limiting MPCs {cite:p}`MaToda2021SavingRateRich`.
 
-For expositional simplicity in what follows, we set $\PermGroShk=1$ (no permanent income growth) and drop time subscripts, working with the infinite-horizon formulation. Under these simplifications, FVAC becomes $0<\DiscFac<1$, the GIC coincides with the AIC, and the FHWC reduces to $\Rfree>1$. All results apply equally to finite-horizon models via backward recursion from terminal period $T$, and to models with permanent income growth by appropriately adjusting the patience conditions above.
+For expositional simplicity in what follows, we set $\PermGroFac=1$ and assume $\permShk_{t+n}=1$ with probability 1 for all $n>0$ (no permanent income growth or shocks), and drop time subscripts except where context requires, working with the infinite-horizon formulation.[^crra-not-one] Under these simplifications, FVAC becomes $0<\DiscFac<1$, the GIC coincides with the AIC, and the FHWC reduces to $\Rfree>1$. All results apply equally to finite-horizon models via backward recursion from terminal period $T$, and to models with permanent income growth by appropriately adjusting the patience conditions above.
+
+[^crra-not-one]:
+    For notational simplicity, we henceforth assume $\CRRA \neq 1$. Most subsequent derivations involving transformations of the value function (such as $\vInvOpt$ and $\vInvReal$) contain expressions with denominators $(1-\CRRA)$ that are undefined when $\CRRA=1$. The case $\CRRA=1$ (logarithmic utility) requires parallel derivations that exploit the simplifications arising from $\log$ utility; the economic insights remain analogous.
 
 # Benchmark: The Method of Endogenous Gridpoints
 
@@ -209,8 +215,7 @@ foresight problem of this kind takes the form[^derivation]
 \cFuncOpt(\mNrm) = (\mNrm + \hNrmOpt)\MPCmin
 ```
 
-for a constant minimal marginal propensity to consume $\MPCmin$ given
-below.[^mpc-min-definition] We similarly define
+for a constant minimal marginal propensity to consume $\MPCmin$ (defined in footnote [^mpc-min-definition]). We similarly define
 $\hNrmPes$[^pessimist-human-wealth] as 'minimal human wealth,' the present
 discounted value of labor income if the shocks were to take on their worst
 value in every future period
@@ -233,19 +238,20 @@ would require the consumer to set $\cNrm$ to zero in order to guarantee that the
 intertemporal budget constraint holds. Since consumption of zero yields negative
 infinite utility, the solution to the realist consumer's problem is not well
 defined for values of $\mNrm < \mNrmMin$ {cite:p}`Zeldes1989,Deaton1991`, and the limiting value of the
-realist's $\cNrm$ is zero as $\mNrm \downarrow \mNrmMin$.
+realist's $\cNrm$ is zero as $\mNrm \downarrow \mNrmMin$, where $\modRte(\logmNrmEx) \to 0$ as $\logmNrmEx \to -\infty$ (established in {cite:t}`CarrollShanker2024`).
 
 Given this result, it will be convenient to define 'excess' market resources as
 the amount by which actual resources exceed the lower bound, and 'excess' human
 wealth as the amount by which mean expected human wealth exceeds guaranteed
 minimum human wealth:[^delta-notation]
 
-$$
+```{math}
+:label: eq:ExcessDef
 \begin{aligned}
 \mNrmEx &= \mNrm+\overbrace{\hNrmPes}^{=-\mNrmMin} \\
 \hNrmEx &= \hNrmOpt-\hNrmPes.
 \end{aligned}
-$$
+```
 
 [^delta-notation]:
     Here $\Delta$ denotes excess above minimum, not a time difference.
@@ -256,23 +262,25 @@ perfect foresight problems, those of the 'optimist' and the 'pessimist.' The
 $\hNrmPes$ with certainty, so consumption is given by the perfect foresight
 solution
 
-$$
+```{math}
+:label: eq:cFuncPes
 \begin{aligned}
 \cFuncPes(\mNrm) &= (\mNrm+\hNrmPes)\MPCmin \\
 &= \mNrmEx\MPCmin .
 \end{aligned}
-$$
+```
 
 The 'optimist,' on the other hand, pretends that there is no uncertainty about
 future income, and therefore consumes
 
-$$
+```{math}
+:label: eq:cFuncOptExcess
 \begin{aligned}
 \cFuncOpt(\mNrm) &= (\mNrm +\hNrmPes - \hNrmPes + \hNrmOpt )\MPCmin \\
 &= (\mNrmEx + \hNrmEx)\MPCmin \\
 &= \cFuncPes(\mNrm)+\hNrmEx \MPCmin .
 \end{aligned}
-$$
+```
 
 ## The Consumption Function
 
@@ -341,7 +349,7 @@ as $\modRte \to 0$ (realist approaches pessimist), $\logitModRte \to -\infty$.[^
     The method uses standard ML transformations for unbounded domains: logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, \infty)$ with inverse sigmoid $\modRte = 1/(1+\exp(-\logitModRte))$; log maps $(\mNrm - \mNrmMin) \in (0, \infty)$ to $\logmNrmEx \in (-\infty, \infty)$. These transformations enable accurate interpolation and are familiar to ML practitioners.
 
 [^asymptotically-linear]:
-    Under the GIC, $\logitModRte(\logmNrmEx)$ is asymptotically linear with slope $\asympSlope \ge 0$ as $\logmNrmEx \to +\infty$ (may equal zero in theory, but strictly positive on finite grids). Practical implications: (i) we extrapolate $\logitModRte$ linearly using the positive boundary slope; (ii) this preserves $\modRte\in(0,1)$ and hence $\cFuncPes < \cFuncApprox < \cFuncOpt$ throughout the extrapolation domain, even if the theoretical limiting slope vanishes.
+    Under the GIC, $\logitModRte(\logmNrmEx)$ is asymptotically linear with slope $\asympSlope = \lim_{\logmNrmEx \to +\infty} \frac{\partial \logitModRte}{\partial \logmNrmEx} \geq 0$ as $\logmNrmEx \to +\infty$ (may equal zero in theory, but strictly positive on finite grids). Practical implications: (i) we extrapolate $\logitModRte$ linearly using the positive boundary slope; (ii) this preserves $\modRte\in(0,1)$ and hence $\cFuncPes < \cFuncApprox < \cFuncOpt$ throughout the extrapolation domain, even if the theoretical limiting slope vanishes.
 
 Given $\logitModRte$, the consumption function can be recovered from
 
@@ -495,15 +503,16 @@ approximation that always satisfies the constraint.
 Defining $\mNrmCusp$ as the _cusp_ point where the two upper bounds intersect
 (where $\mNrmCuspEx\equiv\mNrmCusp-\mNrmMin$):
 
-$$
+```{math}
+:label: eq:mNrmCusp
 \begin{array}{rclcll}
 \bigl(\mNrmCuspEx + \hNrmEx\bigr)\,\MPCmin &= & \MPCmax\,\mNrmCuspEx & & \\
 \mNrmCuspEx &= & \dfrac{\MPCmin\,\hNrmEx}{\MPCmax-\MPCmin} & & \\
 \mNrmCusp &= & -\hNrmPes + \dfrac{\MPCmin\,\bigl(\hNrmOpt-\hNrmPes\bigr)}{\MPCmax-\MPCmin},
 \end{array}
-$$
+```
 
-we want to construct a consumption function for
+this intersection occurs in the feasible region (i.e., $\mNrmCusp > \mNrmMin$) since $\MPCmax > \MPCmin$ under the stated conditions, ensuring $\mNrmCuspEx > 0$. We want to construct a consumption function for
 $\mNrm \in (\mNrmMin, \mNrmCusp]$ that respects the tighter upper
 bound:
 
@@ -705,7 +714,7 @@ These results provide the theoretical foundation for constructing high-quality c
     This would guarantee that the consumption function generated from the value function would match both the level of consumption and the marginal propensity to consume at the gridpoints, making the numerical differences between the newly constructed consumption function and the highly accurate one constructed earlier negligible within the grid.
 
 [^hermite-slopes]:
-    For cubic Hermite interpolation of the transformed moderation ratio, use node values from the transformation and node slopes $\logitModRteMu$. For improved shape preservation, a monotone cubic Hermite scheme {cite:p}`deBoor2001` can be used, where theoretical slopes serve as targets that may be adjusted to enforce monotonicity.
+    For cubic Hermite interpolation of the transformed moderation ratio, use node values from the transformation and node slopes $\logitModRteMu$. For improved shape preservation, a monotone cubic Hermite scheme {cite:p}`deBoor2001` can be used (such as the Fritsch-Carlson or Fritsch-Butland algorithms), where theoretical slopes serve as targets that may be adjusted to enforce monotonicity.
 
 [^vInvOpt-linearity]:
     This confirms that $\vInvOpt$ is linear in $\mNrm$ and highlights the role of $\MPCmin$ in scaling marginal utility in the perfect-foresight benchmark. The linearity property simplifies both theoretical analysis and numerical implementation.
