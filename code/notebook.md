@@ -29,6 +29,7 @@ from style import (
 apply_ark_style()
 apply_notebook_css()
 
+
 # Display Econ-ARK header (for Jupyter notebooks)
 from IPython.display import HTML, display
 
@@ -37,7 +38,7 @@ display(HTML(HEADER_HTML_NOTEBOOK))
 
 **Author:** <span style="color: var(--ark-lightblue); font-weight: bold;">Alan Lujan</span>, <span style="color: var(--ark-blue); font-weight: bold;">Johns Hopkins University</span>
 
-This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves: the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
+This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves—the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
 
 ## Model Foundations: The Friedman-Muth Income Process
 
@@ -52,7 +53,7 @@ The model used in this notebook, drawn from {cite:t}`SolvingMicroDSOPs`, impleme
 
 At its core, the Method of Moderation (MoM) is designed to solve a persistent challenge in computational economics: the **extrapolation problem**. This issue is particularly pronounced in sparse-grid implementations of the Endogenous Grid Method (EGM), a widely-used technique for solving dynamic stochastic optimization problems.
 
-When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty. This is a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
+When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty—a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
 
 MoM addresses this problem by abandoning direct extrapolation of the consumption function. Instead, it operates in a transformed space defined by two analytical, theoretically-grounded bounds. This approach builds on a long literature on "buffer-stock" saving behavior {cite:p}`Carroll1997`, which has established theoretical properties of consumption functions under uncertainty {cite:p}`StachurskiToda2019JET,MST2020JET`. The two bounds are:
 
@@ -66,7 +67,6 @@ The true, "realist" consumption function must lie between these two extremes. Mo
 ```python
 from __future__ import annotations
 
-import numpy as np
 from moderation import (
     IndShockEGMConsumerType,
     IndShockMoMConsumerType,
@@ -139,7 +139,7 @@ At the heart of any numerical solution to a consumption-saving problem lies the 
 This gap, defined as the difference between the consumption of a perfect-foresight "optimist" and that of a "realist" facing uncertainty, should always be positive. The presence of uninsurable income risk should lead consumers to save more (and thus consume less) than they would in a certain world. However, as {ref}`demonstrated in the paper <benchmark-the-method-of-endogenous-gridpoints>` and illustrated in [](#fig:egm-extrapolation-problem) (which corresponds to {ref}`Figure 1 <fig:ExtrapProblem>` in the academic paper), standard EGM struggles with this constraint when extrapolating {cite:p}`carrollEGM`.
 
 ```python
-#| label: fig:egm-extrapolation-problem
+# | label: fig:egm-extrapolation-problem
 
 # Figure 1: EGM Extrapolation Failure
 plot_precautionary_gaps(
@@ -169,7 +169,7 @@ Having established the extrapolation problem, we now turn to the theoretical fou
 This figure illustrates these theoretical bounds, demonstrating that the true, high-precision consumption function (our "Truth" solution) lies neatly between them. This provides the theoretical justification for the MoM's approach, as shown in [](#fig:truth-bounded-by-theory) (which corresponds to {ref}`Figure 2 <fig:IntExpFOCInvPesReaOptNeedHi>` in the academic paper).
 
 ```python
-#| label: fig:truth-bounded-by-theory
+# | label: fig:truth-bounded-by-theory
 
 # Figure 2: Truth Bounded by Theory
 plot_consumption_bounds(
@@ -191,7 +191,7 @@ With the theoretical bounds established, we can now demonstrate how the Method o
 Because this ratio is interpolated in a transformed space that guarantees it will respect the bounds, the resulting consumption function also respects them. As this figure shows, the MoM approximation of the precautionary saving gap remains positive and closely tracks the true solution, even far beyond the computed grid. The success of this approach is clearly demonstrated in [](#fig:mom-solution) (which corresponds to {ref}`Figure 3 <fig:ExtrapProblemSolved>` in the academic paper).
 
 ```python
-#| label: fig:mom-solution
+# | label: fig:mom-solution
 
 # Figure 3: Method of Moderation Success
 plot_precautionary_gaps(
@@ -238,7 +238,7 @@ Having shown that MoM produces a precautionary saving gap with the correct theor
 As expected, the MoM solution remains strictly between the optimist and pessimist bounds. The figure also introduces a **tighter upper bound**. This bound is derived from the maximum possible marginal propensity to consume ($\MPCmax$) as market resources approach the natural borrowing constraint. The existence of such a bound is a key result from the buffer-stock saving literature {cite:p}`Carroll2001MPCBound`, with explicit formulas for the limiting MPC derived in {cite:p}`MaToda2021SavingRateRich` and {cite:p}`CarrollToche2009`. The fact that the MoM solution respects this tighter bound as well, as shown in [](#fig:mom-consumption-function) (which corresponds to {ref}`Figure 4 <fig:IntExpFOCInvPesReaOptNeed45>` in the academic paper), demonstrates its robustness and theoretical consistency.
 
 ```python
-#| label: fig:mom-consumption-function
+# | label: fig:mom-consumption-function
 
 # Figure 4: MoM Consumption Function
 plot_consumption_bounds(
@@ -259,7 +259,7 @@ We now arrive at the decisive comparison between the Endogenous Grid Method and 
 All three solutions are generated from the same underlying economic parameters, and both the EGM and MoM approximations use the same 5-point sparse grid. The difference in their extrapolation behavior is therefore entirely attributable to the solution method itself. The results, presented in [](#fig:direct-comparison), clearly show the superiority of the Method of Moderation for problems where extrapolation is a concern.
 
 ```python
-#| label: fig:direct-comparison
+# | label: fig:direct-comparison
 
 # Figure 5: Direct Method Comparison
 plot_precautionary_gaps(
@@ -297,7 +297,7 @@ This figure plots the moderation ratio as a function of market resources, reveal
 ::::
 
 ```python
-#| label: fig:moderation-ratio
+# | label: fig:moderation-ratio
 
 # Figure 6: Moderation Ratio Function
 plot_moderation_ratio(
@@ -334,7 +334,7 @@ where $\logmNrmEx = \log(\mNrm - \mNrmMin)$ is the log of "excess" market resour
 ::::
 
 ```python
-#| label: fig:logit-transformation
+# | label: fig:logit-transformation
 
 # Figure 7: Logit Transformation Function
 plot_logit_function(
@@ -373,7 +373,7 @@ This mathematical elegance translates directly into superior numerical propertie
 
 ### Figure 8: MoM MPC Bounded by Theory
 
-Beyond the consumption function itself, its derivative (the **marginal propensity to consume**, or MPC) is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
+Beyond the consumption function itself, its derivative—the **marginal propensity to consume (MPC)**—is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
 
 * **Monetary policy transmission**: How interest rate changes affect spending
 * **Fiscal policy effectiveness**: How tax rebates stimulate consumption
@@ -386,7 +386,7 @@ In practice, bounded MPC estimates are crucial for policy analysis. If a DSGE mo
 ```
 
 ```python
-#| label: fig:mpc-bounds
+# | label: fig:mpc-bounds
 
 # Figure 8: MoM MPC Bounds
 plot_mom_mpc(
@@ -415,7 +415,7 @@ We now turn from the policy function, $c(m)$, to the **value function**, $v(m)$,
 This figure serves two purposes. First, it demonstrates that the value function, like the consumption function, is bounded by the optimist and pessimist solutions {cite:p}`Aiyagari1994,Huggett1993`. Second, it compares the value functions generated by the high-precision "truth" model, the sparse-grid EGM, and the sparse-grid MoM. This allows us to see how accurately each method approximates the true value function, as shown in [](#fig:value-functions).
 
 ```python
-#| label: fig:value-functions
+# | label: fig:value-functions
 
 # Figure 9: Value Functions
 plot_value_functions(
@@ -453,7 +453,7 @@ For numerical stability and easier interpretation, it is often convenient to wor
 This transformation is particularly useful because, as this figure shows, it tends to be much more linear than the value function itself, especially near the borrowing constraint. This makes it better suited for numerical interpolation and is a key reason for its use in HARK. This figure compares the inverse value functions from our three solutions, again demonstrating the accuracy of the MoM approximation, as shown in [](#fig:inverse-value-functions).
 
 ```python
-#| label: fig:inverse-value-functions
+# | label: fig:inverse-value-functions
 
 # Figure 10: Inverse Value Functions
 plot_value_functions(
@@ -493,7 +493,7 @@ $$
 This ratio measures how the realist's inverse value function relates to the theoretical bounds, with $\valModRte = 0$ at low wealth (pessimistic) and $\valModRte = 1$ at high wealth (optimistic). As the figure shows, the pattern is similar to that of the consumption moderation ratio, providing further evidence of the robustness of the Method of Moderation, as shown in [](#fig:value-moderation-ratio).
 
 ```python
-#| label: fig:value-moderation-ratio
+# | label: fig:value-moderation-ratio
 
 # Figure 11: Value Function Moderation Ratio
 plot_moderation_ratio(

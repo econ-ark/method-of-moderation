@@ -10,4 +10,4 @@ dependencies:
   - uv
   - pip
   - pip:
-    - -e ../.
+      - -e ../.

@@ -80,6 +80,9 @@ extend-select = [
 ignore = [
   "PLR09",    # Too many <...>
   "PLR2004",  # Magic value used in comparison
+  "E402",     # Module level import not at top (intentional for notebooks/circular imports)
+  "F404",     # __future__ import placement (notebooks can have special requirements)
+  "PLC0415",  # Import at top-level (intentional to avoid circular dependencies)
 ]
 isort.required-imports = ["from __future__ import annotations"]
 # Uncomment if using a _compat.typing backport

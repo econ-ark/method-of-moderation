@@ -40,7 +40,7 @@ decorator==5.2.1
     # via ipython
 defusedxml==0.7.1
     # via nbconvert
-econ-ark @ git+https://github.com/econ-ark/HARK@e2dde1ab9c7296bec61f08396c7826f172d66aca
+econ-ark @ git+https://github.com/econ-ark/HARK@66555f7c74742c87d98d11d2eea86d60d2dd1ec9
     # via moderation (pyproject.toml)
 executing==2.2.0
     # via stack-data

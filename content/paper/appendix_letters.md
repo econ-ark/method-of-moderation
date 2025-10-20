@@ -196,4 +196,3 @@ For serially correlated returns, the return state becomes an additional state va
 ## Shock Discretization
 
 Continuous shock distributions require discretization. The Tauchen method {cite:p}`tauchen1986` constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method {cite:p}`TauchenHussey1991` uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1-\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis. The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.
-

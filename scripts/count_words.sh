@@ -1,6 +1,6 @@
 #!/bin/bash
 # Word count script for academic papers
-# Excludes: YAML frontmatter, math blocks, inline math, code blocks, 
+# Excludes: YAML frontmatter, math blocks, inline math, code blocks,
 #           figure directives, citations, and footnotes
 
 if [ $# -eq 0 ]; then
@@ -56,12 +56,16 @@ awk '/^```\{figure\}/,/^```$/ {next} {print}' "$TEMP" > "$TEMP.tmp" && mv "$TEMP
 sed -i '/^\[\^[^]]*\]:/d' "$TEMP" 2>/dev/null || sed -i '' '/^\[\^[^]]*\]:/d' "$TEMP"
 
 # 10. Remove citation markers ({cite:...}) and backticked content after
+# shellcheck disable=SC2016
 sed -i 's/{cite[^}]*}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{cite[^}]*}`[^`]*`//g' "$TEMP"
 sed -i 's/{cite[^}]*}//g' "$TEMP" 2>/dev/null || sed -i '' 's/{cite[^}]*}//g' "$TEMP"
 
 # 11. Remove cross-references ({eq}`...`, {ref}`...`, etc.)
+# shellcheck disable=SC2016
 sed -i 's/{eq}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{eq}`[^`]*`//g' "$TEMP"
+# shellcheck disable=SC2016
 sed -i 's/{ref}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{ref}`[^`]*`//g' "$TEMP"
+# shellcheck disable=SC2016
 sed -i 's/{numref}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{numref}`[^`]*`//g' "$TEMP"
 
 # 12. Remove footnote references ([^...])
@@ -133,4 +137,3 @@ rm -f "$TEMP" "$TEMP.tmp" "$TEMP.tmp2"
 echo ""
 echo "================================================"
 echo "FINAL COUNT (body text only):         $BODY_WORDS words"
-

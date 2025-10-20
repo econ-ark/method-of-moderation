@@ -1577,15 +1577,14 @@ class TransformedFunctionMoM:
                 # Paper eq:MPCModeration: MPC = (1-MPCmod) * MPCmin + MPCmod * MPCmax
                 # This is GUARANTEED to satisfy MPCmin <= MPC <= MPCmax
                 return (1 - MPCmod) * MPCmin + MPCmod * self.MPCmax
-            else:
-                # Fallback: use omega'_mu directly in the footnote formula
-                omega_prime_mu = (
-                    self.modRteFunc.derivativeX(mu)
-                    if hasattr(self.modRteFunc, "derivativeX")
-                    else self.modRteFunc.derivative(mu)
-                )
-                # Paper footnote 659: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
-                return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
+            # Fallback: use omega'_mu directly in the footnote formula
+            omega_prime_mu = (
+                self.modRteFunc.derivativeX(mu)
+                if hasattr(self.modRteFunc, "derivativeX")
+                else self.modRteFunc.derivative(mu)
+            )
+            # Paper footnote 659: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
+            return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
 
         # 4. General case: use full product rule for functions with different bound slopes
         dmu_dm = 1.0 / m_ex

@@ -222,4 +222,3 @@ For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\ris
 # Conclusion
 
 The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the 'true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.
-

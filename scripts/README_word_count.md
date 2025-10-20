@@ -145,4 +145,3 @@ To manually verify the count:
 - Always check your target journal's specific word count policy
 - Some journals provide their own word count tools (e.g., Overleaf)
 - When in doubt, ask the journal editor for clarification
-

@@ -139,7 +139,7 @@ project:
     "\\modRte": "\\boldsymbol{\\omega}" # moderation ratio
     "\\modRteLoTightUpBd": "\\grave{\\check{\\modRte}}" # tighter upper bound - low region
     "\\modRteMu": "\\partial \\modRte / \\partial \\logmNrmEx" # first derivative of consumption modRte wrt mu
-    
+
     # Consumption logit transformation (chi)
     "\\logitModRte": "\\boldsymbol{\\chi}" # logit moderation ratio
     "\\logitModRteApprox": "\\grave{\\logitModRte}" # approximated logit moderation ratio
@@ -154,11 +154,12 @@ project:
     "\\valModRteReal": "\\hat{\\valModRte}" # realist value moderation ratio
     "\\valModRteApprox": "\\grave{\\valModRte}" # approximated value moderation ratio
     "\\valModRteRealDerivmu": "\\partial \\valModRteReal / \\partial \\logmNrmEx" # first derivative of valModRteReal wrt mu
-    
+
     # Value function logit transformation (Chi)
     "\\logitValModRteReal": "\\hat{\\boldsymbol{X}}" # realist logit value moderation ratio
     "\\logitValModRteApprox": "\\grave{\\boldsymbol{X}}" # approximated logit value moderation ratio
-    "\\logitValModRteRealDerivmu": "\\partial \\logitValModRteReal / \\partial \\logmNrmEx" # first derivative of logitValModRteReal wrt mu
+    "\\logitValModRteRealDerivmu": "\\partial \\logitValModRteReal / \\partial
+      \\logmNrmEx" # first derivative of logitValModRteReal wrt mu
 
     # ============================================================
     # INDICATOR FUNCTIONS
