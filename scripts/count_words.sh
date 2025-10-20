@@ -30,48 +30,54 @@ cp "$FILE" "$TEMP"
 # 1. Remove YAML frontmatter (between --- markers at start of file)
 sed -i '/^---$/,/^---$/d' "$TEMP" 2>/dev/null || sed -i '' '/^---$/,/^---$/d' "$TEMP"
 
-# 2. Remove math blocks (```{math} ... ```)
+# 2. Remove abstract section (counted separately by journals)
+sed -i '/^## Abstract$/,/^##/d' "$TEMP" 2>/dev/null || sed -i '' '/^## Abstract$/,/^##/d' "$TEMP"
+
+# 3. Remove acknowledgments section (typically excluded)
+sed -i '/^## Acknowledgments$/,/^##/d' "$TEMP" 2>/dev/null || sed -i '' '/^## Acknowledgments$/,/^##/d' "$TEMP"
+
+# 4. Remove math blocks (```{math} ... ```)
 # This handles multi-line math blocks
 awk '/^```\{math\}/,/^```$/ {next} {print}' "$TEMP" > "$TEMP.tmp" && mv "$TEMP.tmp" "$TEMP"
 
-# 3. Remove display math ($$...$$)
+# 5. Remove display math ($$...$$)
 sed -i '/^\$\$/,/^\$\$/d' "$TEMP" 2>/dev/null || sed -i '' '/^\$\$/,/^\$\$/d' "$TEMP"
 
-# 4. Remove inline math ($...$)
+# 6. Remove inline math ($...$)
 sed -i 's/\$[^$]*\$//g' "$TEMP" 2>/dev/null || sed -i '' 's/\$[^$]*\$//g' "$TEMP"
 
-# 5. Remove code blocks (```...```)
+# 7. Remove code blocks (```...```)
 awk '/^```[^{]/,/^```$/ {next} {print}' "$TEMP" > "$TEMP.tmp" && mv "$TEMP.tmp" "$TEMP"
 
-# 6. Remove figure directives (```{figure}...```)
+# 8. Remove figure directives (```{figure}...```)
 awk '/^```\{figure\}/,/^```$/ {next} {print}' "$TEMP" > "$TEMP.tmp" && mv "$TEMP.tmp" "$TEMP"
 
-# 7. Remove footnote definitions ([^...]: ...)
+# 9. Remove footnote definitions ([^...]: ...)
 sed -i '/^\[\^[^]]*\]:/d' "$TEMP" 2>/dev/null || sed -i '' '/^\[\^[^]]*\]:/d' "$TEMP"
 
-# 8. Remove citation markers ({cite:...}) and backticked content after
+# 10. Remove citation markers ({cite:...}) and backticked content after
 sed -i 's/{cite[^}]*}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{cite[^}]*}`[^`]*`//g' "$TEMP"
 sed -i 's/{cite[^}]*}//g' "$TEMP" 2>/dev/null || sed -i '' 's/{cite[^}]*}//g' "$TEMP"
 
-# 9. Remove cross-references ({eq}`...`, {ref}`...`, etc.)
+# 11. Remove cross-references ({eq}`...`, {ref}`...`, etc.)
 sed -i 's/{eq}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{eq}`[^`]*`//g' "$TEMP"
 sed -i 's/{ref}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{ref}`[^`]*`//g' "$TEMP"
 sed -i 's/{numref}`[^`]*`//g' "$TEMP" 2>/dev/null || sed -i '' 's/{numref}`[^`]*`//g' "$TEMP"
 
-# 10. Remove footnote references ([^...])
+# 12. Remove footnote references ([^...])
 sed -i 's/\[\^[^]]*\]//g' "$TEMP" 2>/dev/null || sed -i '' 's/\[\^[^]]*\]//g' "$TEMP"
 
-# 11. Remove equation labels (:label: ...)
+# 13. Remove equation labels (:label: ...)
 sed -i '/:label:/d' "$TEMP" 2>/dev/null || sed -i '' '/:label:/d' "$TEMP"
 
-# 12. Remove other MyST directives (:align:, :width:, :alt:, etc.)
+# 14. Remove other MyST directives (:align:, :width:, :alt:, etc.)
 sed -i '/^:[a-z_]*:/d' "$TEMP" 2>/dev/null || sed -i '' '/^:[a-z_]*:/d' "$TEMP"
 
-# 13. Remove markdown header symbols (#) but keep the text
+# 15. Remove markdown header symbols (#) but keep the text
 # This ensures "# Introduction" counts as 1 word, not 2
 sed -i 's/^#\+[[:space:]]*//' "$TEMP" 2>/dev/null || sed -i '' 's/^#\+[[:space:]]*//' "$TEMP"
 
-# 14. Remove section headers entirely (optional - uncomment if journal excludes headers)
+# 16. Remove section headers entirely (optional - uncomment if journal excludes headers)
 # Most journals COUNT headers, so this is commented out
 # sed -i '/^[A-Z]/d' "$TEMP" 2>/dev/null || sed -i '' '/^[A-Z]/d' "$TEMP"
 
