@@ -29,8 +29,6 @@ from style import (
 apply_ark_style()
 apply_notebook_css()
 
-
-
 # Display Econ-ARK header (for Jupyter notebooks)
 from IPython.display import HTML, display
 
@@ -39,7 +37,7 @@ display(HTML(HEADER_HTML_NOTEBOOK))
 
 **Author:** <span style="color: var(--ark-lightblue); font-weight: bold;">Alan Lujan</span>, <span style="color: var(--ark-blue); font-weight: bold;">Johns Hopkins University</span>
 
-This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves—the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
+This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves: the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
 
 ## Model Foundations: The Friedman-Muth Income Process
 
@@ -54,7 +52,7 @@ The model used in this notebook, drawn from {cite:t}`SolvingMicroDSOPs`, impleme
 
 At its core, the Method of Moderation (MoM) is designed to solve a persistent challenge in computational economics: the **extrapolation problem**. This issue is particularly pronounced in sparse-grid implementations of the Endogenous Grid Method (EGM), a widely-used technique for solving dynamic stochastic optimization problems.
 
-When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty—a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
+When EGM is used to solve a consumption-saving model, it computes the optimal consumption policy at a finite set of grid points. However, to simulate agent behavior or analyze policy implications, we often need to evaluate the consumption function at points that lie outside this pre-computed grid. Standard practice is to extrapolate from the grid, but this can lead to results that violate fundamental economic theory. Specifically, linear extrapolation can predict **negative precautionary saving**, which implies that consumers with greater income uncertainty would save *less* than those with no uncertainty. This is a direct contradiction of established economic principles {cite:p}`Leland1968,Sandmo1970,Kimball1990`.
 
 MoM addresses this problem by abandoning direct extrapolation of the consumption function. Instead, it operates in a transformed space defined by two analytical, theoretically-grounded bounds. This approach builds on a long literature on "buffer-stock" saving behavior {cite:p}`Carroll1997`, which has established theoretical properties of consumption functions under uncertainty {cite:p}`StachurskiToda2019JET,MST2020JET`. The two bounds are:
 
@@ -74,6 +72,7 @@ from moderation import (
     IndShockMoMConsumerType,
 )
 from plotting import (
+    GridType,
     plot_consumption_bounds,
     plot_logit_function,
     plot_moderation_ratio,
@@ -142,33 +141,12 @@ This gap, defined as the difference between the consumption of a perfect-foresig
 ```python
 #| label: fig:egm-extrapolation-problem
 
-# Define the precautionary saving gap functions
-def truth_gap(m):
-    """True precautionary saving gap."""
-    return TruthOpt.cFunc(m) - IndShockTruthSol.cFunc(m)
-
-
-def egm_approx_gap(m):
-    """EGM approximation gap."""
-    return TruthOpt.cFunc(m) - IndShockEGMApproxSol.cFunc(m)
-
-
-# Test extrapolation over a wide range including high wealth levels
-# Extend from near borrowing constraint to high wealth to capture all grid points
-m_grid_wide = np.linspace(IndShockEGMApproxSol.mNrmMin + 0.001, 30, 100)
-
 # Figure 1: EGM Extrapolation Failure
-# Grid points will be handled internally by plotting functions
-
 plot_precautionary_gaps(
-    m_grid=m_grid_wide,
-    truth_gap=truth_gap(m_grid_wide),
-    approx_gap=egm_approx_gap(m_grid_wide),
-    legend="EGM Approximation",
+    truth_solution=IndShockTruthSol,
+    approx_solutions=IndShockEGMApproxSol,
     title="Figure 1: EGM Extrapolation Failure",
     subtitle="EGM Extrapolation Failure: Negative Precautionary Saving",
-    solution=IndShockEGMApproxSol,
-    grid_points=True,
 )
 ```
 
@@ -193,24 +171,12 @@ This figure illustrates these theoretical bounds, demonstrating that the true, h
 ```python
 #| label: fig:truth-bounded-by-theory
 
-# Create wealth grid for evaluation and plotting (matches paper ranges)
-m_grid = np.linspace(IndShockTruthSol.mNrmMin + 0.01, 10, 100)
-
-# Evaluate consumption functions on the grid
-c_truth = IndShockTruthSol.cFunc(m_grid)  # True optimal consumption
-c_opt = TruthOpt.cFunc(m_grid)  # Optimist consumption
-c_pes = TruthPes.cFunc(m_grid)  # Pessimist consumption
-
 # Figure 2: Truth Bounded by Theory
 plot_consumption_bounds(
-    m_grid=m_grid,
-    c_main=c_truth,
-    c_opt=c_opt,
-    c_pes=c_pes,
+    solution=IndShockTruthSol,
     title="Figure 2: Truth Bounded by Economic Theory",
     subtitle="True Consumption Always Lies Between Theoretical Bounds",
-    legend="Truth",
-    grid_points=False,  # No grid points for theoretical bounds
+    show_grid_points=False,  # Truth solution has too many grid points to display clearly
 )
 ```
 
@@ -227,37 +193,13 @@ Because this ratio is interpolated in a transformed space that guarantees it wil
 ```python
 #| label: fig:mom-solution
 
-# Define MoM gap function
-def mom_approx_gap(m):
-    """MoM approximation gap."""
-    return TruthOpt.cFunc(m) - IndShockMoMApproxSol.cFunc(m)
-
-
 # Figure 3: Method of Moderation Success
-# Grid points will be handled internally by plotting functions
-
 plot_precautionary_gaps(
-    m_grid=m_grid_wide,
-    truth_gap=truth_gap(m_grid_wide),
-    approx_gap=mom_approx_gap(m_grid_wide),
-    legend="MoM Approximation",
+    truth_solution=IndShockTruthSol,
+    approx_solutions=IndShockMoMApproxSol,
     title="Figure 3: Method of Moderation Solves Extrapolation",
     subtitle="MoM Maintains Positive Precautionary Saving",
-    solution=IndShockMoMApproxSol,
-    grid_points=True,
 )
-
-# Optional: Example of plotting multiple methods on same figure
-# plot_precautionary_gaps(
-#     m_grid=m_grid_wide,
-#     truth_gap=truth_gap(m_grid_wide),
-#     approx_gap=[egm_approx_gap(m_grid_wide), mom_approx_gap(m_grid_wide)],
-#     legend=["EGM Approximation", "MoM Approximation"],
-#     title="Figure 3: Method Comparison",
-#     subtitle="EGM vs MoM Extrapolation Performance",
-#     solution=IndShockMoMApproxSol,  # Can use either solution for grid points
-#     grid_points=True,
-# )
 ```
 
 ```{important} Method of Moderation Success
@@ -274,10 +216,10 @@ The Method of Moderation builds on EGM's computational strengths while addressin
 Instead of extrapolating consumption directly (which can violate bounds), MoM follows these steps (notation matches the paper):
 1. **Solve standard EGM** to get realist consumption at gridpoints
 2. **Transform to log excess resources** $\logmNrmEx = \log(\mNrm - \mNrmMin)$ for convenient interpolation domain
-3. **Compute moderation ratio** $\modRte(\logmNrmEx) = \dfrac{\cFuncOpt - \cFuncReal}{\hNrmEx\,\MPCmin} = \dfrac{\cFuncOpt - \cFuncReal}{\cFuncOpt - \cFuncPes} \in [0,1]$ (paper Eq. {eq}`eq:koppa`)
-4. **Apply transformation** $\logitModRte(\logmNrmEx) = \log((1-\modRte)/\modRte)$ for asymptotic linearity
+3. **Compute moderation ratio** $\modRte(\logmNrmEx) = \dfrac{\cFuncReal - \cFuncPes}{\hNrmEx\,\MPCmin} = \dfrac{\cFuncReal - \cFuncPes}{\cFuncOpt - \cFuncPes} \in [0,1]$ (paper Eq. {eq}`eq:modRte`)
+4. **Apply standard logit transformation** $\logitModRte(\logmNrmEx) = \log(\modRte/(1-\modRte))$ for asymptotic linearity
 5. **Interpolate $\logitModRte(\logmNrmEx)$ function** with derivatives for smooth extrapolation
-6. **Reconstruct consumption** using $\cFuncReal = \cFuncOpt - \modRte \cdot (\cFuncOpt - \cFuncPes)$
+6. **Reconstruct consumption** using $\cFuncReal = \cFuncPes + \modRte \cdot (\cFuncOpt - \cFuncPes)$
 
 This approach ensures consumption always stays within economic bounds while achieving excellent extrapolation properties through the asymptotically linear transformation function, as {ref}`derived in the paper <the-consumption-function>`.
 
@@ -298,26 +240,13 @@ As expected, the MoM solution remains strictly between the optimist and pessimis
 ```python
 #| label: fig:mom-consumption-function
 
-# Create specific grid for Figure 4 with max point at 3.0
-m_grid_fig4 = np.linspace(IndShockTruthSol.mNrmMin + 0.01, 3.0, 100)
-
-# Evaluate consumption functions for comparison at Figure 4 grid points
-c_mom_fig4 = IndShockMoMApproxSol.cFunc(m_grid_fig4)  # MoM consumption
-c_opt_fig4 = TruthOpt.cFunc(m_grid_fig4)  # Optimist consumption
-c_pes_fig4 = TruthPes.cFunc(m_grid_fig4)  # Pessimist consumption
-c_tight_fig4 = TruthTight.cFunc(m_grid_fig4)  # Tight upper bound
-
 # Figure 4: MoM Consumption Function
 plot_consumption_bounds(
-    m_grid=m_grid_fig4,
-    c_main=c_mom_fig4,
-    c_opt=c_opt_fig4,
-    c_pes=c_pes_fig4,
+    solution=IndShockMoMApproxSol,
     title="Figure 4: MoM Consumption Function",
     subtitle="MoM Consumption Respects Theoretical Bounds",
-    legend="MoM Approximation",
-    c_tight=c_tight_fig4,  # Automatically shown since c_tight is provided
-    solution=IndShockMoMApproxSol,
+    m_max=3.0,
+    show_tight_bound=True,
 )
 ```
 
@@ -332,19 +261,12 @@ All three solutions are generated from the same underlying economic parameters, 
 ```python
 #| label: fig:direct-comparison
 
-# Use the same wide grid for consistent comparison
-m_grid_comparison = m_grid_wide
-
-# Combined comparison: Truth, EGM failure, and MoM success
+# Figure 5: Direct Method Comparison
 plot_precautionary_gaps(
-    m_grid=m_grid_comparison,
-    truth_gap=truth_gap(m_grid_comparison),
-    approx_gap=[egm_approx_gap(m_grid_comparison), mom_approx_gap(m_grid_comparison)],
-    legend=["EGM Approximation", "MoM Approximation"],
+    truth_solution=IndShockTruthSol,
+    approx_solutions=[IndShockEGMApproxSol, IndShockMoMApproxSol],
     title="Figure 5: Direct Method Comparison",
     subtitle="EGM vs MoM Extrapolation Performance",
-    solution=IndShockMoMApproxSol,  # Use MoM solution for grid points
-    grid_points=True,
 )
 ```
 
@@ -359,16 +281,16 @@ This single figure demonstrates MoM's core advantage: given identical sparse gri
 ::::{admonition} Definition: The Moderation Ratio
 :class: note
 
-The central element of the Method of Moderation is the **moderation ratio**, $\modRte(\mNrm)$, which precisely quantifies the realist consumer's behavior relative to the theoretical bounds. As defined in equation {eq}`eq:koppa` of the paper, it is:
+The central element of the Method of Moderation is the **moderation ratio**, $\modRte(\mNrm)$, which precisely quantifies the realist consumer's behavior relative to the theoretical bounds. Following the ML/statistics-consistent convention in equation {eq}`eq:modRte` of the paper, it is:
 
 $$
-\modRte(\mNrm) = \frac{\cFuncOpt(\mNrm) - \cFuncReal(\mNrm)}{\cFuncOpt(\mNrm) - \cFuncPes(\mNrm)}
+\modRte(\mNrm) = \frac{\cFuncReal(\mNrm) - \cFuncPes(\mNrm)}{\cFuncOpt(\mNrm) - \cFuncPes(\mNrm)}
 $$
 
-This ratio is guaranteed to be strictly between 0 and 1 for all valid levels of market resources, a property that follows from the consumer's prudence (i.e., a convex marginal utility function) and the presence of bounded income shocks {cite:p}`CarrollKimball1996`. It has the following interpretation:
+This ratio is guaranteed to be strictly between 0 and 1 for all valid levels of market resources, a property that follows from the consumer's prudence (i.e., a convex marginal utility function) and the presence of bounded income shocks {cite:p}`CarrollKimball1996`. It has the following ML-consistent interpretation:
 
-* **$\modRte = 0$**: The realist behaves like the optimist (at high levels of wealth).
-* **$\modRte = 1$**: The realist behaves like the pessimist (at low levels of wealth).
+* **$\modRte = 0$**: The realist behaves like the pessimist (at low levels of wealth, maximum precautionary saving).
+* **$\modRte = 1$**: The realist behaves like the optimist (at high levels of wealth, no precautionary saving).
 * **$0 < \modRte < 1$**: The realist engages in a balanced moderation, reflecting partial prudence.
 
 This figure plots the moderation ratio as a function of market resources, revealing the consumer's risk management strategy across the wealth distribution, as shown in [](#fig:moderation-ratio).
@@ -377,43 +299,24 @@ This figure plots the moderation ratio as a function of market resources, reveal
 ```python
 #| label: fig:moderation-ratio
 
-# Create grid mirroring paper's wide evaluation range
-m_grid_fig5 = np.linspace(IndShockMoMApproxSol.mNrmMin + 0.01, 50, 200)
-
-# Access the moderation functions from the MoM solution
-transformed_func = IndShockMoMApproxSol.cFunc  # TransformedFunctionMoM
-modRteFunc = transformed_func.modRteFunc  # $\modRte(\logmNrmEx)$ function
-logitModRteFunc = transformed_func.logitModRteFunc  # transformation function
-
-# Convert market resources to $\logmNrmEx$ ("mu" in the paper: $\logmNrmEx = \log(\mNrm-\mNrmMin)$)
-from moderation import expit_moderate, log_mnrm_ex
-
-m_min = transformed_func.mNrmMin
-mu_grid_fig5 = log_mnrm_ex(m_grid_fig5, m_min)
-
-# Evaluate moderation ratio $\modRte(\logmNrmEx)$ via transformation and inverse
-chi_values_fig5 = logitModRteFunc(mu_grid_fig5)
-omega_values_fig5 = expit_moderate(chi_values_fig5)
-
-# Figure 6: Moderation Ratio Function (paper Fig. 6 counterpart)
+# Figure 6: Moderation Ratio Function
 plot_moderation_ratio(
-    m_grid=m_grid_fig5,
-    omega_values=omega_values_fig5,
+    solution=IndShockMoMApproxSol,
     title=r"Figure 6: Consumption Moderation Ratio $\omega(m)$",
     subtitle="Wealth-Dependent Moderation Between Bounds",
-    solution=IndShockMoMApproxSol,
-    grid_type="consumption",
+    m_max=50,
+    grid_type=GridType.CONSUMPTION,
 )
 ```
 
-```{note} Economic Interpretation of $\modRte(\mNrm)$
+```{note} Economic Interpretation of $\modRte(\mNrm)$ (ML-Consistent Convention)
 The moderation ratio reveals the consumer's **risk management strategy**:
 
-- **High wealth** ($\mNrm > 10$): $\modRte \to 0$, realist approaches optimist behavior as uncertainty becomes less important
-- **Low wealth** ($\mNrm \approx \mNrmMin$): $\modRte \to 1$, realist approaches pessimist behavior due to high precautionary motives
+- **High wealth** ($\mNrm > 10$): $\modRte \to 1$, realist approaches optimist behavior as uncertainty becomes less important
+- **Low wealth** ($\mNrm \approx \mNrmMin$): $\modRte \to 0$, realist approaches pessimist behavior due to high precautionary motives
 - **Middle wealth**: $\modRte \in (0,1)$, balanced moderation reflecting partial prudence
 
-This intuitive pattern ensures that MoM consumption functions have proper economic behavior across the entire wealth distribution, unlike linear extrapolation methods that can violate economic bounds.
+This intuitive pattern (consistent with ML/statistics conventions) ensures that MoM consumption functions have proper economic behavior across the entire wealth distribution, unlike linear extrapolation methods that can violate economic bounds.
 ```
 
 ### Figure 7: The Logit Transformation
@@ -421,36 +324,24 @@ This intuitive pattern ensures that MoM consumption functions have proper econom
 ::::{admonition} Definition: The Logit Transformation
 :class: note
 
-While the moderation ratio, $\modRte(\mNrm)$, is economically intuitive, it is not ideal for numerical interpolation because it is bounded between 0 and 1. To address this, the Method of Moderation employs a **logit transformation**, which maps the bounded moderation ratio into an unbounded space. As defined in equation {eq}`eq:chi` of the paper, the transformed variable, $\logitModRte(\logmNrmEx)$, is:
+While the moderation ratio, $\modRte(\mNrm)$, is economically intuitive, it is not ideal for numerical interpolation because it is bounded between 0 and 1. To address this, the Method of Moderation employs a **standard logit transformation**, which maps the bounded moderation ratio into an unbounded space. As defined in equation {eq}`eq:chi` of the paper, the transformed variable, $\logitModRte(\logmNrmEx)$, is:
 
 $$
-\logitModRte(\logmNrmEx) = \log\left(\frac{1 - \modRte(\logmNrmEx)}{\modRte(\logmNrmEx)}\right)
+\logitModRte(\logmNrmEx) = \log\left(\frac{\modRte(\logmNrmEx)}{1 - \modRte(\logmNrmEx)}\right)
 $$
 
-where $\logmNrmEx = \log(\mNrm - \mNrmMin)$ is the log of "excess" market resources. This transformation is the key to MoM's numerical stability and superior extrapolation properties. As [](#fig:logit-transformation) will show, the $\logitModRte$ function is nearly linear, which makes it exceptionally well-suited for interpolation.
+where $\logmNrmEx = \log(\mNrm - \mNrmMin)$ is the log of "excess" market resources. This is the standard logit transformation used in machine learning and statistics. This transformation is the key to MoM's numerical stability and superior extrapolation properties. As [](#fig:logit-transformation) will show, the $\logitModRte$ function is nearly linear, which makes it exceptionally well-suited for interpolation.
 ::::
 
 ```python
 #| label: fig:logit-transformation
 
-# Create market resources grid from near constraint to high wealth to show full behavior
-m_grid_wide = np.linspace(m_min + 0.001, 50, 200)
-
-# Convert to mu grid for x-axis (this is the natural domain for logit function)
-mu_grid_chi = log_mnrm_ex(m_grid_wide, m_min)
-
-# Evaluate logit function over this extended range
-chi_values_fig6 = logitModRteFunc(mu_grid_chi)
-
-# Figure 7: Logit Transformation Function plotted over mu (log excess resources)
-# X-axis will be mu = log(m - mNrmMin), Y-axis will be logit(omega)
+# Figure 7: Logit Transformation Function
 plot_logit_function(
-    mu_grid=mu_grid_chi,  # mu values for x-axis (log excess market resources)
-    chi_values=chi_values_fig6,
+    solution=IndShockMoMApproxSol,
     title="Figure 7: Logit Transformation for Stable Extrapolation",
     subtitle="Unbounded Transformation for Stable Extrapolation",
-    solution=IndShockMoMApproxSol,
-    grid_points=True,
+    m_max=50,
 )
 ```
 
@@ -464,25 +355,25 @@ As $\logmNrmEx \to \infty$ (high wealth), the $\logitModRte(\logmNrmEx)$ curve b
 This asymptotic linearity with positive slope is what prevents the extrapolation errors that plague standard endogenous grid methods.
 ```
 
-```{note} Mathematical Properties of $\logitModRte(\logmNrmEx)$
-The logit transformation exhibits several key properties visible in the figure (with $\logitModRteMu>0$):
+```{note} Mathematical Properties of $\logitModRte(\logmNrmEx)$ (ML-Consistent Convention)
+The standard logit transformation exhibits several key properties visible in the figure (with $\logitModRteMu>0$):
 
 - **Unbounded domain**: $\logitModRte \in (-\infty, \infty)$ allows smooth interpolation without artificial constraints
-- **Monotonically decreasing**: Higher wealth (larger $\logmNrmEx$) corresponds to lower $\logitModRte$ values (closer to optimist behavior)
+- **Monotonically increasing**: Higher wealth (larger $\logmNrmEx$) corresponds to higher $\logitModRte$ values (closer to optimist behavior)
 - **Asymptotic linearity with positive slope**: $\logitModRteMu>0$ as $\logmNrmEx \to \infty$, ensuring stable extrapolation
-- **Economic interpretation**:
+- **Economic interpretation** (ML-consistent):
   - $\logitModRte > 0$: Realist closer to optimist (low precautionary saving)
   - $\logitModRte < 0$: Realist closer to pessimist (high precautionary saving)
   - $\logitModRte \approx 0$: Balanced between extremes
 
-This mathematical elegance translates directly into superior numerical properties for consumption function approximation.
+This mathematical elegance translates directly into superior numerical properties for consumption function approximation and matches standard ML/statistics conventions.
 ```
 
 ## Function Properties and Bounds
 
 ### Figure 8: MoM MPC Bounded by Theory
 
-Beyond the consumption function itself, its derivative—the **marginal propensity to consume (MPC)**—is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
+Beyond the consumption function itself, its derivative (the **marginal propensity to consume**, or MPC) is of central economic importance. The MPC, $\partial c / \partial m$, measures the change in consumption for a one-unit change in market resources and is a key input for macroeconomic models and policy analysis. It is crucial for understanding:
 
 * **Monetary policy transmission**: How interest rate changes affect spending
 * **Fiscal policy effectiveness**: How tax rebates stimulate consumption
@@ -497,27 +388,11 @@ In practice, bounded MPC estimates are crucial for policy analysis. If a DSGE mo
 ```python
 #| label: fig:mpc-bounds
 
-# Calculate MPCs - now using the implemented MoM MPC derivative
-m_grid_mpc = np.linspace(IndShockTruthSol.mNrmMin + 0.01, 10, 100)
-mpc_mom = IndShockMoMApproxSol.cFunc.derivative(m_grid_mpc)  # MoM MPC (varies with wealth)
-mpc_opt_const = IndShockTruthSol.MPCmin  # Optimist MPC (constant)
-mpc_tight_const = IndShockTruthSol.MPCmax  # Tight bound MPC (constant)
-
-# Create constant arrays for plotting
-mpc_opt_vals = np.full_like(m_grid_mpc, mpc_opt_const)
-mpc_tight_vals = np.full_like(m_grid_mpc, mpc_tight_const)
-
 # Figure 8: MoM MPC Bounds
 plot_mom_mpc(
-    m_grid=m_grid_mpc,
-    mpc_values=mpc_mom,
-    mpc_opt_vals=mpc_opt_vals,
-    mpc_tight_vals=mpc_tight_vals,
+    solution=IndShockMoMApproxSol,
     title="Figure 8: MoM MPC Bounded by Theory",
     subtitle="MoM MPC Stays Within Theoretical Bounds",
-    mpc_label="MoM MPC",
-    solution=IndShockMoMApproxSol,
-    grid_points=True,  # Explicitly enable grid points
 )
 ```
 
@@ -542,33 +417,13 @@ This figure serves two purposes. First, it demonstrates that the value function,
 ```python
 #| label: fig:value-functions
 
-# Create wealth grid specifically for value functions (starting from mNrmMin + 0.001)
-m_grid_vfunc = np.linspace(IndShockEGMApproxSol.mNrmMin + 0.001, 3.0, 100)
-
-# Evaluate value functions on the grid
-v_truth = IndShockTruthSol.vFunc(m_grid_vfunc)  # Truth
-v_opt = TruthOpt.vFunc(m_grid_vfunc)  # Optimist
-v_pes = TruthPes.vFunc(m_grid_vfunc)  # Pessimist
-v_tight = TruthTight.vFunc(m_grid_vfunc)  # Tight upper bound
-v_egm_sparse = IndShockEGMApproxSol.vFunc(
-    m_grid_vfunc,
-)  # EGM Approximation
-v_mom_sparse = IndShockMoMApproxSol.vFunc(m_grid_vfunc)  # MoM Approximation
-
-# Figure 9: Value Functions (truth, optimist, pessimist, tight, EGM, MoM)
+# Figure 9: Value Functions
 plot_value_functions(
-    m_grid=m_grid_vfunc,
+    truth_solution=IndShockTruthSol,
     title="Figure 9: Value Functions Bounded by Economic Theory",
     subtitle="Value Function: True Solution vs Sparse Approximations",
-    v_truth=v_truth,
-    v_opt=v_opt,
-    v_pes=v_pes,
-    v_tight=v_tight,
-    v_egm_sparse=v_egm_sparse,
-    v_mom_sparse=v_mom_sparse,
-    figure_num=7,
+    egm_solution=IndShockEGMApproxSol,
     mom_solution=IndShockMoMApproxSol,
-    egm_solution=None,
 )
 ```
 
@@ -600,31 +455,14 @@ This transformation is particularly useful because, as this figure shows, it ten
 ```python
 #| label: fig:inverse-value-functions
 
-# Evaluate inverse value functions on the same grid as Figure 8
-vNvrs_truth = IndShockTruthSol.vFunc.vFuncNvrs(m_grid_vfunc)  # Truth inverse value
-vNvrs_opt = TruthOpt.vFunc.vFuncNvrs(m_grid_vfunc)  # Optimist inverse value
-vNvrs_pes = TruthPes.vFunc.vFuncNvrs(m_grid_vfunc)  # Pessimist inverse value
-vNvrs_egm_sparse = IndShockEGMApproxSol.vFunc.vFuncNvrs(
-    m_grid_vfunc,
-)  # EGM inverse value
-vNvrs_mom_sparse = IndShockMoMApproxSol.vFunc.vFuncNvrs(
-    m_grid_vfunc,
-)  # MoM inverse value
-
 # Figure 10: Inverse Value Functions
 plot_value_functions(
-    m_grid=m_grid_vfunc,
+    truth_solution=IndShockTruthSol,
     title="Figure 10: Inverse Value Functions",
     subtitle="Inverse Value Function: Consumption-Equivalent Utility",
-    v_truth=vNvrs_truth,
-    v_opt=vNvrs_opt,
-    v_pes=vNvrs_pes,
-    v_tight=None,
-    v_egm_sparse=vNvrs_egm_sparse,
-    v_mom_sparse=vNvrs_mom_sparse,
-    figure_num=8,
-    mom_solution=IndShockMoMApproxSol,
+    inverse=True,
     egm_solution=IndShockEGMApproxSol,
+    mom_solution=IndShockMoMApproxSol,
 )
 ```
 
@@ -646,47 +484,24 @@ The ordering and gaps between inverse value functions mirror those in Figure 8, 
 
 The final figure demonstrates the versatility of the Method of Moderation. Because the method is built on the general principle of moderating between theoretical bounds, it can be applied not just to the consumption function, but to any function that is similarly bounded. Here, we apply it to the **inverse value function**.
 
-The moderation ratio for the inverse value function is defined analogously to the consumption moderation ratio:
+The moderation ratio for the inverse value function is defined analogously to the consumption moderation ratio (following the ML-consistent convention):
 
 $$
-\valModRte(\mNrm) = \frac{\vInvOpt(\mNrm) - \vInvReal(\mNrm)}{\vInvOpt(\mNrm) - \vInvPes(\mNrm)}
+\valModRte(\mNrm) = \frac{\vInvReal(\mNrm) - \vInvPes(\mNrm)}{\vInvOpt(\mNrm) - \vInvPes(\mNrm)}
 $$
 
-This ratio measures how the welfare cost of uncertainty (the gap between the optimist and realist inverse value functions) changes with the level of market resources. As the figure shows, the pattern is similar to that of the consumption moderation ratio, providing further evidence of the robustness of the Method of Moderation, as shown in [](#fig:value-moderation-ratio).
+This ratio measures how the realist's inverse value function relates to the theoretical bounds, with $\valModRte = 0$ at low wealth (pessimistic) and $\valModRte = 1$ at high wealth (optimistic). As the figure shows, the pattern is similar to that of the consumption moderation ratio, providing further evidence of the robustness of the Method of Moderation, as shown in [](#fig:value-moderation-ratio).
 
 ```python
 #| label: fig:value-moderation-ratio
 
-# Access the value function moderation functions from the MoM solution
-# Extract value function moderation functions
-vfunc_transformed = (
-    IndShockMoMApproxSol.vFunc.vFuncNvrs
-)  # TransformedFunctionMoM for value function
-vfunc_modRteFunc = (
-    vfunc_transformed.modRteFunc
-)  # $\valModRte(\logmNrmEx)$ function for value function
-vfunc_logitModRteFunc = (
-    vfunc_transformed.logitModRteFunc
-)  # $\logitValModRte(\logmNrmEx)$ function for value function
-
-# Create specific grid for Figure 10 with xlim at 10
-m_grid_vfunc_mod = np.linspace(IndShockMoMApproxSol.mNrmMin + 0.01, 10, 200)
-
-# Convert to $\logmNrmEx$ for evaluation
-mu_grid_vfunc = log_mnrm_ex(m_grid_vfunc_mod, m_min)
-
-# Evaluate value function moderation ratio $\valModRte(\logmNrmEx)$ by using chi function and inverse transformation
-vfunc_chi_values = vfunc_logitModRteFunc(mu_grid_vfunc)
-vfunc_omega_values = expit_moderate(vfunc_chi_values)
-
 # Figure 11: Value Function Moderation Ratio
 plot_moderation_ratio(
-    m_grid=m_grid_vfunc_mod,
-    omega_values=vfunc_omega_values,
+    solution=IndShockMoMApproxSol,
     title=r"Figure 11: Value Function Moderation Ratio $\Omega(m)$",
     subtitle="Value Function Moderation Between Bounds",
-    solution=IndShockMoMApproxSol,
-    grid_type="value",
+    m_max=10,
+    grid_type=GridType.VALUE,
 )
 ```
 

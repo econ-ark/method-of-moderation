@@ -1,5 +1,20 @@
 """Professional Econ-ARK branding and style definitions for Python applications.
 
+This module defines all visual constants, colors, fonts, matplotlib configuration,
+and theming logic used throughout the Method of Moderation project. It centralizes
+all style-related decisions to ensure consistency across plots and notebooks.
+
+Responsibilities
+----------------
+- Official ECON-ARK brand color definitions
+- Consistent color mapping for economic concepts (truth, MoM, EGM, optimist, etc.)
+- Matplotlib style configuration and theme application
+- Typography and font settings
+- Line styles, widths, alphas, and other visual constants
+- Grid type constants for data extraction
+- Helper functions for concept-based color and line style selection
+- External CSS loading for Jupyter notebook styling
+
 Built on normalize.css and HTML5 Boilerplate foundations for cross-browser
 consistency. Contains official ECON-ARK color schemes, plot styles, and modern
 HTML/CSS styling with responsive design and accessibility features. All CSS
@@ -39,6 +54,64 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from cycler import cycler
+
+# Public API exports
+__all__ = [
+    "ALPHA_HIGH",
+    # Alpha values
+    "ALPHA_LOW",
+    "ALPHA_MEDIUM",
+    "ALPHA_MEDIUM_LOW",
+    "ALPHA_OPAQUE",
+    # Official ECON-ARK brand colors
+    "ARK_BLUE",
+    "ARK_GREEN",
+    "ARK_GREY",
+    "ARK_GRID_SOFT",
+    "ARK_LIGHTBLUE",
+    # Refined styling colors
+    "ARK_PANEL_LIGHT",
+    "ARK_PINK",
+    "ARK_SPINE",
+    "ARK_TEXT",
+    "ARK_YELLOW",
+    # Concept colors mapping
+    "CONCEPT_COLORS",
+    # Font sizes
+    "FONT_SIZE_LARGE",
+    "FONT_SIZE_XLARGE",
+    # Grid and padding
+    "GRID_ALPHA",
+    "HEADER_HTML_NOTEBOOK",
+    "LINE_STYLE_DASHDOT",
+    # Line styles
+    "LINE_STYLE_DASHED",
+    "LINE_STYLE_DOTTED",
+    "LINE_WIDTH_EXTRA_THICK",
+    "LINE_WIDTH_MEDIUM",
+    "LINE_WIDTH_THICK",
+    # Line widths
+    "LINE_WIDTH_THIN",
+    "MARKER_EDGE_COLOR",
+    "MARKER_EDGE_WIDTH_THIN",
+    # Marker styling
+    "MARKER_SIZE_STANDARD",
+    # Matplotlib configuration
+    "MATPLOTLIB_STYLE",
+    # Notebook styling
+    "NOTEBOOK_CSS",
+    "PADDING_RATIO",
+    "REFERENCE_LINE_ALPHA",
+    # Reference line styling
+    "REFERENCE_LINE_COLOR",
+    "REFERENCE_LINE_WIDTH",
+    "apply_ark_style",
+    "apply_notebook_css",
+    # Theming functions
+    "get_concept_color",
+    "get_concept_linestyle",
+    "setup_figure",
+]
 
 # Official ECON-ARK brand colors - ONLY APPROVED DEFINITIONS
 ARK_BLUE = "#1f476b"
@@ -92,20 +165,95 @@ ALPHA_HIGH = 0.8
 ALPHA_OPAQUE = 1.0
 
 # Marker styling (unify edge color with global style)
-MARKER_SIZE_STANDARD = 60
-MARKER_EDGE_WIDTH_THIN = 1.2
-MARKER_EDGE_COLOR = "white"
+MARKER_SIZE_STANDARD = 100
+MARKER_EDGE_WIDTH_THIN = 1.5
+MARKER_EDGE_COLOR = ARK_GREY
 
 # Line styles
 LINE_STYLE_DASHED = "--"
 LINE_STYLE_DASHDOT = "-."
 LINE_STYLE_DOTTED = ":"
 
-# Y-axis limits for different plot types
-YLIM_MODERATION_RATIO = (-0.1, 1.1)
-YLIM_PRECAUTIONARY_GAPS = (-0.15, 0.35)
-YLIM_VALUE_FUNCTION = (-6, 0)
+# =========================================================================
+# Concept-Based Theming Functions
+# =========================================================================
 
+
+def get_concept_color(method_name: str) -> str:
+    """Get consistent color for economic concept/method.
+
+    Parameters
+    ----------
+    method_name : str
+        Name of the method/concept (case-insensitive)
+
+    Returns
+    -------
+    str
+        Hex color code for the concept
+
+    """
+    name_lower = method_name.lower()
+
+    # Map various method name variants to core concepts
+    if "truth" in name_lower or "high-precision" in name_lower:
+        return CONCEPT_COLORS["truth"]
+    if "mom" in name_lower or "moderation" in name_lower:
+        return CONCEPT_COLORS["mom"]
+    if "egm" in name_lower or "endogenous" in name_lower:
+        return CONCEPT_COLORS["egm"]
+    if "optimist" in name_lower or "perfect" in name_lower:
+        return CONCEPT_COLORS["optimist"]
+    if "pessimist" in name_lower or "worst" in name_lower:
+        return CONCEPT_COLORS["pessimist"]
+    if "tight" in name_lower:
+        return CONCEPT_COLORS["tight"]
+    # Fallback to cycling through remaining colors for unknown methods
+    fallback_colors = [
+        ARK_BLUE,
+        ARK_GREEN,
+        ARK_PINK,
+        ARK_LIGHTBLUE,
+        ARK_YELLOW,
+        ARK_GREY,
+    ]
+    return fallback_colors[hash(name_lower) % len(fallback_colors)]
+
+
+def get_concept_linestyle(method_name: str) -> str:
+    """Get appropriate line style for economic concept/method.
+
+    Both EGM and MoM approximations use dashed lines to distinguish from truth.
+    Truth and theoretical bounds use solid lines.
+
+    Parameters
+    ----------
+    method_name : str
+        Name of the method/concept (case-insensitive)
+
+    Returns
+    -------
+    str
+        Line style string ("-", "--", "-.", ":")
+
+    """
+    name_lower = method_name.lower()
+
+    # Both EGM and MoM approximations always use dashed lines to distinguish from truth
+    if (
+        "egm" in name_lower
+        or "endogenous" in name_lower
+        or "mom" in name_lower
+        or "moderation" in name_lower
+        or "approximation" in name_lower
+    ):
+        return "--"  # Dashed line for all approximations
+    return "-"  # Default solid line for truth and bounds
+
+
+# =========================================================================
+# Matplotlib Style Configuration
+# =========================================================================
 
 # Matplotlib style configuration
 MATPLOTLIB_STYLE = {
@@ -169,7 +317,6 @@ MATPLOTLIB_STYLE = {
     "ytick.minor.width": 0.6,
 }
 
-
 # =========================================================================
 # External CSS File Loading
 # =========================================================================
@@ -204,7 +351,6 @@ def _load_css_file(filename: str) -> str:
 
 # Simple notebook CSS (loaded from style.css)
 NOTEBOOK_CSS = _load_css_file("style.css")
-
 
 # Header HTML for notebook use only
 HEADER_HTML_NOTEBOOK = """

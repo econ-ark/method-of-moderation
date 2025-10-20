@@ -10,15 +10,15 @@ Mathematical Framework
 The Method of Moderation leverages the fact that the realist consumer's optimal
 consumption will always be bounded between two extreme cases:
 
-1. **Optimist**: Assumes all future shocks take their expected value (E[θ] = 1)
-   - Has analytical perfect-foresight solution: c_opt(m) = κ_min * (m + h)
-   - Where κ_min is the minimum MPC and h is expected human wealth
+1. **Optimist**: Assumes all future shocks take their expected value (E[theta] = 1)
+   - Has analytical perfect-foresight solution: c_opt(m) = kappa_min * (m + h)
+   - Where kappa_min is the minimum MPC and h is expected human wealth
 
 2. **Pessimist**: Assumes all future shocks take their worst possible value
-   - Has analytical perfect-foresight solution: c_pes(m) = κ_min * (m - m_min)
+   - Has analytical perfect-foresight solution: c_pes(m) = kappa_min * (m - m_min)
    - Where m_min is the natural borrowing constraint (= -h_pes)
 
-The realist solution c_real(m) satisfies: c_pes(m) ≤ c_real(m) ≤ c_opt(m)
+The realist solution c_real(m) satisfies: c_pes(m) <= c_real(m) <= c_opt(m)
 
 Core Algorithm: The Method of Moderation
 ----------------------------------------
@@ -26,17 +26,17 @@ The algorithm transforms the consumption function construction problem by workin
 in the space between these analytical bounds:
 
 1. **Solve standard EGM**: Use endogenous gridpoints to get consumption/resources pairs
-2. **Calculate moderation ratio**: ω(μ) = (c_opt - c_real) / (c_opt - c_pes)
-   where μ = log(m - m_min) is log excess market resources
-3. **Apply chi transformation**: χ(μ) = log((1-ω)/ω) for asymptotic linearity
-4. **Interpolate chi function**: Create smooth χ(μ) interpolant with derivatives
-5. **Reconstruct consumption**: c_real = c_opt - ω * (c_opt - c_pes)
+2. **Calculate moderation ratio**: omega(mu) = (c_opt - c_real) / (c_opt - c_pes)
+   where mu = log(m - m_min) is log excess market resources
+3. **Apply chi transformation**: chi(mu) = log((1-omega)/omega) for asymptotic linearity
+4. **Interpolate chi function**: Create smooth chi(mu) interpolant with derivatives
+5. **Reconstruct consumption**: c_real = c_opt - omega * (c_opt - c_pes)
 
 Key Mathematical Properties
 ---------------------------
-- **Asymptotic linearity**: χ'(μ) → 0 as μ → \infty (prevents negative precautionary saving)
-- **Moderation bounds**: ω ∈ [0,1] ensures consumption stays within theoretical bounds
-- **Log excess resources**: μ = log(m - m_min) maps domain (m_min, \infty) to (-\infty, \infty)
+- **Asymptotic linearity**: chi'(mu) -> 0 as mu -> \infty (prevents negative precautionary saving)
+- **Moderation bounds**: omega in [0,1] ensures consumption stays within theoretical bounds
+- **Log excess resources**: mu = log(m - m_min) maps domain (m_min, \infty) to (-\infty, \infty)
 - **Numerical stability**: Uses log1p/expm1 for robust floating-point arithmetic
 - **Smooth extrapolation**: Chi function provides excellent out-of-sample behavior
 
@@ -68,16 +68,16 @@ construct_value_functions : Build complete value functions with inverse utility 
 
 Mathematical Utility Functions
 ------------------------------
-log_mnrm_ex : Log excess market resources transformation μ = log(m - m_min)
-moderate : Moderation ratio calculation ω = (c_opt - c_real)/(c_opt - c_pes)
-logit_moderate : Asymptotically linear transformation χ = log((1-ω)/ω)
-expit_moderate : Inverse chi transformation ω = 1/(1 + exp(χ))
+log_mnrm_ex : Log excess market resources transformation mu = log(m - m_min)
+moderate : Moderation ratio calculation omega = (c_opt - c_real)/(c_opt - c_pes)
+logit_moderate : Asymptotically linear transformation chi = log((1-omega)/omega)
+expit_moderate : Inverse chi transformation omega = 1/(1 + exp(chi))
 TransformedFunctionMoM : Generalized function transformer using Method of Moderation
 
 Numerical Stability Features
 -----------------------------
 - **log1p/expm1**: Used throughout for accurate computation near 0
-- **Overflow protection**: Handles extreme values of μ, ω, and χ
+- **Overflow protection**: Handles extreme values of mu, omega, and chi
 - **Derivative augmentation**: Includes derivatives for smoother interpolation
 - **Boundary handling**: Robust extrapolation beyond computed gridpoints
 
@@ -272,7 +272,6 @@ def _create_interpolation(
 MOM_EXTRAP_GAP_LEFT = 0.05  # Small leftward extension (lower wealth)
 MOM_EXTRAP_GAP_RIGHT = 0.5  # Larger rightward extension (higher wealth direction)
 
-
 # =========================================================================
 # Shared helpers to organize common steps (EGM vs MoM)
 # =========================================================================
@@ -355,12 +354,13 @@ def _build_cfunc_mom(
     mNrmMin,
     hNrm,
     MPCmin,
+    MPCmax,
     CubicBool,
     optimist,
     pessimist,
 ):
-    """Construct consumption function for MoM path (χ/ω over μ + TransformedFunctionMoM)."""
-    # μ grid and derivative inputs
+    """Construct consumption function for MoM path (chi/omega over mu + TransformedFunctionMoM)."""
+    # mu grid and derivative inputs
     mNrmEx = mNrm - mNrmMin
     hNrmEx = hNrm + mNrmMin
     mu = log_mnrm_ex(mNrm, mNrmMin)
@@ -376,9 +376,9 @@ def _build_cfunc_mom(
 
     # Moderation ratio and derivatives
     modRte = moderate(mNrm, optimist.cFunc, cNrm, pessimist.cFunc)
-    modRteMu = mNrmEx * (MPCmin - MPC) / (MPCmin * hNrmEx)
+    modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
     logitModRte = logit_moderate(modRte)
-    logitModRteMu = modRteMu / ((modRte - 1) * modRte)
+    logitModRteMu = modRteMu / (modRte * (1 - modRte))
 
     # Interpolants and wrapper
     modRteFunc, logitModRteFunc = _construct_mom_interpolants(
@@ -395,6 +395,8 @@ def _build_cfunc_mom(
         logitModRteFunc,
         optimist.cFunc,
         pessimist.cFunc,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
     )
 
 
@@ -465,7 +467,7 @@ def _build_vfunc_mom(
     pessimist,
     CubicBool,
 ):
-    """Construct beginning-of-period value function for MoM path via χ/ω over μ."""
+    """Construct beginning-of-period value function for MoM path via chi/omega over mu."""
     mNrmEx = mNrm - mNrmMin
     hNrmEx = hNrm + mNrmMin
     mu = log_mnrm_ex(mNrm, mNrmMin)
@@ -475,9 +477,9 @@ def _build_vfunc_mom(
 
     modRte = moderate(mNrm, vNvrsOptFunc, vNvrs, vNvrsPesFunc)
     MPCminNvrs = MPCmin ** (-CRRA / (1.0 - CRRA))
-    modRteMu = mNrmEx * (MPCminNvrs - vNvrsP) / (hNrmEx * MPCminNvrs)
+    modRteMu = mNrmEx * (vNvrsP - MPCminNvrs) / (hNrmEx * MPCminNvrs)
     logitModRte = logit_moderate(modRte)
-    logitModRteMu = -modRteMu / (modRte * (1 - modRte))
+    logitModRteMu = modRteMu / (modRte * (1 - modRte))
 
     modRteFunc, logitModRteFunc = _construct_mom_interpolants(
         mu,
@@ -616,17 +618,17 @@ def make_behavioral_bounds(hNrm, mNrmMin, MPCmin, MPCmax, CRRA):
     The three behavioral bounds are:
 
     1. **Optimist**: Assumes all future income shocks take their expected value
-       - Perfect foresight consumption: c_opt(m) = κ_min * (m + h)
+       - Perfect foresight consumption: c_opt(m) = kappa_min * (m + h)
        - Represents the upper bound on consumption behavior
        - Used as intercept: hNrm, slope: MPCmin
 
     2. **Pessimist**: Assumes all future income shocks take worst possible value
-       - Perfect foresight consumption: c_pes(m) = κ_min * (m - m_min)
+       - Perfect foresight consumption: c_pes(m) = kappa_min * (m - m_min)
        - Represents the lower bound on consumption behavior
        - Used as intercept: -mNrmMin, slope: MPCmin
 
     3. **Tighter Upper Bound**: Pessimist constraint with maximum MPC
-       - Perfect foresight consumption: c_tight(m) = κ_max * (m - m_min)
+       - Perfect foresight consumption: c_tight(m) = kappa_max * (m - m_min)
        - Provides tighter bound near the borrowing constraint
        - Used as intercept: -mNrmMin, slope: MPCmax
 
@@ -637,9 +639,9 @@ def make_behavioral_bounds(hNrm, mNrmMin, MPCmin, MPCmax, CRRA):
     mNrmMin : float
         Minimum feasible market resources (effective borrowing constraint)
     MPCmin : float
-        Minimum marginal propensity to consume (κ_min)
+        Minimum marginal propensity to consume (kappa_min)
     MPCmax : float
-        Maximum marginal propensity to consume (κ_max)
+        Maximum marginal propensity to consume (kappa_max)
     CRRA : float
         Coefficient of relative risk aversion
 
@@ -653,7 +655,7 @@ def make_behavioral_bounds(hNrm, mNrmMin, MPCmin, MPCmax, CRRA):
 
     Notes
     -----
-    These bounds satisfy: c_pes(m) ≤ c_real(m) ≤ c_opt(m) for all m > m_min.
+    These bounds satisfy: c_pes(m) <= c_real(m) <= c_opt(m) for all m > m_min.
     The Method of Moderation constructs the realist solution by moderating
     between these analytical bounds using the chi transformation.
 
@@ -685,13 +687,13 @@ def solve_egm_step(
 
     Algorithm Steps:
     1. **Exogenous Assets Grid**: Start with aXtraGrid + natural borrowing constraint
-    2. **Backward Induction**: Calculate end-of-period marginal value E[βRu'(c_{t+1})]
-    3. **Euler Equation**: Invert FOC to find consumption: c_t = (u')^{-1}(E[βRu'(c_{t+1})])
+    2. **Backward Induction**: Calculate end-of-period marginal value E[betaRu'(c_{t+1})]
+    3. **Euler Equation**: Invert FOC to find consumption: c_t = (u')^{-1}(E[betaRu'(c_{t+1})])
     4. **Budget Constraint**: Back out market resources: m_t = c_t + a_t
 
     Mathematical Foundation:
     The Euler equation for optimal consumption is:
-        u'(c_t) = βR * E[u'(c_{t+1})]
+        u'(c_t) = betaR * E[u'(c_{t+1})]
     where the expectation is over income shocks. The EGM inverts this to solve
     for consumption given assets, then uses the budget constraint to find the
     corresponding market resources.
@@ -724,7 +726,7 @@ def solve_egm_step(
         - aNrm (np.array): End-of-period normalized assets grid
         - cNrm (np.array): Optimal consumption at each asset level
         - mNrm (np.array): Endogenous market resources grid
-        - EndOfPrdvP (np.array): End-of-period marginal value E[βRu'(c_{t+1})]
+        - EndOfPrdvP (np.array): End-of-period marginal value E[betaRu'(c_{t+1})]
 
     Notes
     -----
@@ -775,7 +777,7 @@ def construct_value_functions(
     The construction follows HARK's established methodology:
 
     **End-of-Period Value Function Construction:**
-    1. Calculate value function via backward induction: v(a) = βE[v_{t+1}(Ra + Y_{t+1})]
+    1. Calculate value function via backward induction: v(a) = betaE[v_{t+1}(Ra + Y_{t+1})]
     2. Transform through inverse utility: vNvrs = u^{-1}(v) for numerical stability
     3. Add boundary conditions (zero value at borrowing constraint)
     4. Construct interpolant (cubic or linear) with optional derivatives for approximation
@@ -788,7 +790,7 @@ def construct_value_functions(
 
     Mathematical Framework:
     The value function satisfies the Bellman equation:
-        v_t(m_t) = max_{c_t} {u(c_t) + β E[v_{t+1}(R(m_t - c_t) + Y_{t+1})]}
+        v_t(m_t) = max_{c_t} {u(c_t) + beta E[v_{t+1}(R(m_t - c_t) + Y_{t+1})]}
 
     HARK uses the inverse utility transformation vNvrs = u^{-1}(v) because it
     linearizes the problem near the borrowing constraint and provides superior
@@ -813,7 +815,7 @@ def construct_value_functions(
     vFuncNext : callable
         Next period's value function v_{t+1}(m_{t+1})
     EndOfPrdvP : np.array
-        End-of-period marginal value E[βRu'(c_{t+1})] from solve_egm_step
+        End-of-period marginal value E[betaRu'(c_{t+1})] from solve_egm_step
     uFunc : callable
         Current period CRRA utility function
     cNrm : np.array
@@ -1065,7 +1067,7 @@ def _endogenous_grid_method(
     # =========================================================================
     # Step 2: Execute core Endogenous Grid Method algorithm
     # =========================================================================
-    # Solve EGM step: assets grid → consumption grid → market resources grid
+    # Solve EGM step: assets grid -> consumption grid -> market resources grid
     aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step(
         aXtraGrid,
         mNrmMin,
@@ -1196,10 +1198,10 @@ class IndShockEGMConsumerType(IndShockConsumerType):
 def log_mnrm_ex(m, m_min):
     r"""Log excess market resources transformation for Method of Moderation.
 
-    Computes μ = log(m - m_min), the log-excess market resources transformation
+    Computes mu = log(m - m_min), the log-excess market resources transformation
     that maps the natural domain (m_min, \infty) to (-\infty, \infty). This transformation
     is central to the Method of Moderation as it provides a convenient space
-    for interpolating the chi function χ(μ).
+    for interpolating the chi function chi(mu).
 
     Parameters
     ----------
@@ -1212,7 +1214,7 @@ def log_mnrm_ex(m, m_min):
     Returns
     -------
     float or array
-        Log excess market resources: μ = log(m - m_min)
+        Log excess market resources: mu = log(m - m_min)
 
     Notes
     -----
@@ -1221,7 +1223,7 @@ def log_mnrm_ex(m, m_min):
 
     Implemented as log1p(m - m_min - 1) for stability.
 
-    This transformation is used as the input space for the chi function χ(μ)
+    This transformation is used as the input space for the chi function chi(mu)
     in the Method of Moderation. The log transformation ensures the chi function
     can be asymptotically linear, preventing negative precautionary saving.
 
@@ -1232,39 +1234,39 @@ def log_mnrm_ex(m, m_min):
 def exp_mu(mu, m_min):
     r"""Inverse log excess market resources transformation.
 
-    Computes m = exp(μ) + m_min, the inverse of the log-excess transformation
-    μ = log(m - m_min). This maps the unbounded domain (-\infty, \infty) back to the
+    Computes m = exp(mu) + m_min, the inverse of the log-excess transformation
+    mu = log(m - m_min). This maps the unbounded domain (-\infty, \infty) back to the
     natural domain (m_min, \infty).
 
     Parameters
     ----------
     mu : float or array
-        Log excess market resources μ = log(m - m_min)
+        Log excess market resources mu = log(m - m_min)
     m_min : float
         Minimum feasible market resources (effective borrowing constraint)
 
     Returns
     -------
     float or array
-        Market resources: m = exp(μ) + m_min
+        Market resources: m = exp(mu) + m_min
 
     Notes
     -----
-    Implementation uses np.expm1 for numerical stability when μ is close to 0.
-    Implemented as expm1(μ) + m_min + 1 which equals exp(μ) + m_min.
+    Implementation uses np.expm1 for numerical stability when mu is close to 0.
+    Implemented as expm1(mu) + m_min + 1 which equals exp(mu) + m_min.
 
     """
     return np.expm1(mu) + m_min + 1
 
 
 def moderate(m, f_opt, f_real, f_pess):
-    """Moderation ratio function ω for Method of Moderation.
+    """Moderation ratio function omega for Method of Moderation.
 
-    General utility function that computes the moderation ratio ω that measures how much
-    the realist consumer moderates between optimist and pessimist behavioral levels.
-    Following equation (5) in the paper, the ratio is defined as:
+    General utility function that computes the moderation ratio omega that measures how close
+    the realist consumer is to the optimist's behavior. Following the ML-consistent
+    convention in equation (5) of the paper, the ratio is defined as:
 
-    ω = (f_opt - f_real) / (f_opt - f_pess)
+    omega = (f_real - f_pess) / (f_opt - f_pess)
 
     This function is generic and works with any economic functions that follow the
     bounded behavior pattern:
@@ -1286,18 +1288,19 @@ def moderate(m, f_opt, f_real, f_pess):
     Returns
     -------
     float or array
-        Moderation ratio ω ∈ [0,1]
+        Moderation ratio omega in [0,1]
 
     Notes
     -----
     This is a utility function for external analysis and verification. The main
     Method of Moderation implementation computes moderation ratios inline for efficiency.
 
-    Mathematical properties:
-    - ω = 0: realist behaves like optimist (high wealth limit)
-    - ω = 1: realist behaves like pessimist (low wealth limit)
+    Mathematical properties (ML-consistent convention):
+    - omega = 0: realist behaves like pessimist (low wealth, high precautionary saving)
+    - omega = 1: realist behaves like optimist (high wealth, no precautionary saving)
     - Strictly between 0 and 1 for all m > m_min under economic prudence
     - Generic design allows application to consumption, value, or other economic functions
+    - Consistent with standard ML/statistics convention for probability-like quantities
 
     Examples
     --------
@@ -1311,86 +1314,91 @@ def moderate(m, f_opt, f_real, f_pess):
     """
     f_opt_vals = f_opt(m)
     f_pess_vals = f_pess(m)
-    return (f_opt_vals - f_real) / (f_opt_vals - f_pess_vals)
+    return (f_real - f_pess_vals) / (f_opt_vals - f_pess_vals)
 
 
 def logit_moderate(omega):
-    r"""Chi transformation χ(ω) for asymptotically linear interpolation.
+    r"""Standard logit transformation chi(omega) for asymptotically linear interpolation.
 
-    Computes the chi transformation following equation (6) in the paper:
-    χ = log((1 - ω) / ω) = log(1/ω - 1)
+    Computes the standard logit transformation following equation (6) in the paper:
+    chi = log(omega / (1-omega)) = log(omega) - log(1-omega)
 
-    This transformation is the mathematical heart of the Method of Moderation's
-    superior extrapolation properties. By transforming the bounded moderation ratio
-    ω ∈ (0,1) to the unbounded chi space χ ∈ (-\infty,\infty), it enables asymptotically
-    linear interpolation that prevents negative precautionary saving.
+    This is the standard logit transformation used in machine learning and statistics.
+    By transforming the bounded moderation ratio omega in (0,1) to the unbounded chi space
+    chi in (-infinity,infinity), it enables asymptotically linear interpolation that prevents negative
+    precautionary saving.
 
     Parameters
     ----------
     omega : float or array
-        Moderation ratio ω ∈ (0,1) measuring how much the realist moderates
-        between optimist and pessimist behavior
+        Moderation ratio omega in (0,1) measuring how close the realist is to optimist behavior
 
     Returns
     -------
     float or array
-        Chi transformation value χ ∈ (-\infty,\infty)
+        Chi transformation value chi in (-infinity,infinity)
 
     Notes
     -----
     **Numerical Implementation:**
-    - Clamps omega to [epsilon, 1-epsilon] to avoid NaN/inf from floating-point errors
-    - Uses log1p(1/ω - 2) for numerical stability throughout (0,1) domain
-    - Mathematical equivalence: log1p(1/ω - 2) = log(1 + 1/ω - 2) = log((1-ω)/ω)
-    - Avoids potential overflow/underflow issues near ω → 0 or ω → 1
+    - Uses log(omega) - log1p(-omega) for numerical stability
+    - Mathematical equivalence: log(omega) - log(1-omega) = log(omega/(1-omega))
+    - Avoids potential overflow/underflow issues near omega -> 0 or omega -> 1
 
-    **Asymptotic Properties:**
-    - As ω → 0 (realist → optimist): χ → +\infty
-    - As ω → 1 (realist → pessimist): χ → -\infty
-    - The derivative χ'(μ) → 0 as μ → \infty, ensuring linear extrapolation
+    **Asymptotic Properties (ML-consistent convention):**
+    - As omega -> 0 (realist -> pessimist): chi -> -infinity
+    - As omega -> 1 (realist -> optimist): chi -> +infinity
+    - The derivative chi'(mu) -> 0 as mu -> infinity, ensuring linear extrapolation
     - This linearity prevents the negative precautionary saving that plagues EGM
 
     **Economic Interpretation:**
-    - χ < 0: realist closer to pessimist (high precautionary saving)
-    - χ > 0: realist closer to optimist (low precautionary saving)
-    - χ ≈ 0: realist balanced between extremes
+    - chi < 0: realist closer to pessimist (high precautionary saving)
+    - chi > 0: realist closer to optimist (low precautionary saving)
+    - chi ~= 0: realist balanced between extremes
+
+    **ML/Statistics Consistency:**
+    - This is the standard logit function: inverse of sigmoid sigma(x) = 1/(1+exp(-x))
+    - Matches PyTorch, TensorFlow, scikit-learn conventions
+    - Makes code immediately recognizable to ML practitioners
 
     """
-    return np.log1p(1 / omega - 2)
+    return np.log(omega) - np.log1p(-omega)
 
 
 def expit_moderate(chi):
-    """Inverse chi transformation ω(χ) for Method of Moderation.
+    """Standard sigmoid (expit) function sigma(chi) for Method of Moderation.
 
-    Computes the inverse of the chi transformation to recover the moderation ratio:
-    ω = 1 / (1 + exp(χ))
+    Computes the inverse of the logit transformation to recover the moderation ratio:
+    omega = 1 / (1 + exp(-chi)) = sigma(chi)
 
-    This is the inverse of logit_moderate: if χ = logit_moderate(ω), then
-    ω = expit_moderate(χ). Uses numerically stable computation to avoid
-    overflow when χ is large.
+    This is the standard sigmoid/expit function, inverse of logit_moderate.
+    If chi = logit_moderate(omega), then omega = expit_moderate(chi).
 
     Parameters
     ----------
     chi : float or array
-        Chi transformation value χ
+        Chi transformation value chi
 
     Returns
     -------
     float or array
-        Moderation ratio ω ∈ (0,1)
+        Moderation ratio omega in (0,1)
 
     Notes
     -----
-    - Uses expm1 for numerical stability: ω = 1/(2 + expm1(χ))
-    - Avoids overflow when χ is large (ω → 0)
+    - This is the standard sigmoid/expit function from ML/statistics
+    - Uses 1/(1 + exp(-chi)) for numerical stability
     - Central to reconstructing consumption from interpolated chi function
-    - Ensures ω ∈ (0,1) for all finite χ values
+    - Ensures omega in (0,1) for all finite chi values
+    - Matches PyTorch's torch.sigmoid, scipy.special.expit, etc.
 
-    Mathematical equivalence:
-    1/(2 + expm1(χ)) = 1/(1 + 1 + exp(χ) - 1) = 1/(1 + exp(χ))
+    **ML/Statistics Consistency:**
+    - Standard sigmoid: sigma(x) = 1/(1+exp(-x))
+    - Derivative: sigma'(x) = sigma(x)(1-sigma(x))
+    - Immediately recognizable to ML practitioners
 
     """
-    return 1.0 / (2.0 + np.expm1(chi))
+    return 1.0 / (1.0 + np.exp(-chi))
 
 
 class TransformedFunctionMoM:
@@ -1398,15 +1406,15 @@ class TransformedFunctionMoM:
 
     This class provides the core moderation logic for functions bounded between
     two lines (optimist and pessimist bounds). It applies the MoM formula:
-    f_real(m) = f_opt(m) - ω(μ) * (f_opt(m) - f_pes(m))
+    f_real(m) = f_opt(m) - omega(mu) * (f_opt(m) - f_pes(m))
 
     This class can be used for any function that needs to be moderated between
     upper and lower bounds, including consumption functions, value functions, etc.
 
     The implementation uses the standard chi transformation approach:
-    - μ = log(m - m_min) is the log excess market resources
-    - χ(μ) is the interpolated chi function (asymptotically linear)
-    - ω(μ) = 1/(1 + exp(χ(μ))) is the moderation ratio
+    - mu = log(m - m_min) is the log excess market resources
+    - chi(mu) is the interpolated chi function (asymptotically linear)
+    - omega(mu) = 1/(1 + exp(chi(mu))) is the moderation ratio
     - Provides superior numerical stability for extrapolation
 
     Parameters
@@ -1416,7 +1424,7 @@ class TransformedFunctionMoM:
     modRteFunc : callable
         Interpolated moderation ratio function (reserved for future use)
     logitModRteFunc : callable
-        Interpolated chi function that maps μ → χ (core transformation)
+        Interpolated chi function that maps mu -> chi (core transformation)
     optimist_func : callable
         Function that computes the optimist (upper) bound f_opt(m)
     pessimist_func : callable
@@ -1436,12 +1444,16 @@ class TransformedFunctionMoM:
         logitModRteFunc,
         optimist_func,
         pessimist_func,
+        MPCmin=None,
+        MPCmax=None,
     ) -> None:
         self.mNrmMin = mNrmMin
         self.modRteFunc = modRteFunc
         self.logitModRteFunc = logitModRteFunc
         self.optimist_func = optimist_func
         self.pessimist_func = pessimist_func
+        self.MPCmin = MPCmin  # For bounded MPC formula
+        self.MPCmax = MPCmax  # For bounded MPC formula
 
     def __call__(self, m):
         """Evaluate the moderated function at market resources m.
@@ -1468,14 +1480,19 @@ class TransformedFunctionMoM:
         chi = self.logitModRteFunc(mu)
         omega = expit_moderate(chi)
 
-        # Apply moderation: f_real = f_opt - ω * (f_opt - f_pes)
-        return f_opt - omega * (f_opt - f_pes)
+        # Apply moderation: f_real = f_pes + omega * (f_opt - f_pes)
+        return f_pes + omega * (f_opt - f_pes)
 
     def derivative(self, m):
         """Compute the derivative of the moderated function.
 
-        This implements the chain rule for the moderated function:
-        f_real'(m) = f_opt'(m) - ω'(m) * (f_opt(m) - f_pes(m)) - ω(m) * (f_opt'(m) - f_pes'(m))
+        For consumption functions, implements the paper's equation {eq:MPCModeration}:
+        MPC = (1 - MPCmod) * MPCmin + MPCmod * MPCmax
+
+        where MPCmod in [0,1] ensures bounds are respected by construction.
+
+        For general moderated functions where bounds may have different slopes:
+        f_real'(m) = f_pes'(m) + omega'(m) * (f_opt(m) - f_pes(m)) + omega(m) * (f_opt'(m) - f_pes'(m))
 
         Parameters
         ----------
@@ -1493,43 +1510,92 @@ class TransformedFunctionMoM:
         f_opt = self.optimist_func(m)
         f_pes = self.pessimist_func(m)
 
-        # Get derivatives of bounding functions - now required to have derivative method
+        # Get derivatives of bounding functions
         try:
             f_opt_prime = self.optimist_func.derivative(m)
             f_pes_prime = self.pessimist_func.derivative(m)
         except AttributeError:
             msg = (
                 "Bounding functions must implement a 'derivative' method. "
-                "Use LinearFunc for linear bounding functions."
+                "Use PerfForesightFunc for linear bounding functions."
             )
             raise TypeError(
                 msg,
             ) from None
 
-        # 2. Calculate d(mu)/dm (Chain Rule Part 1)
-        # Protect against division by zero near the constraint
-        # mu = log(m - m_min)
-        dmu_dm = 1.0 / (m - self.mNrmMin)
+        # 2. Calculate excess resources and omega components
+        m_ex = m - self.mNrmMin
+        h_ex = (
+            f_opt - f_pes
+        )  # Excess human wealth times MPCmin for consumption functions
 
-        # 3. Calculate omega and d(omega)/dm (Chain Rule Part 2)
         chi = self.logitModRteFunc(mu)
         omega = expit_moderate(chi)
+
         # Support both HARK's derivativeX convention and standard derivative
         chi_prime_mu = (
             self.logitModRteFunc.derivativeX(mu)
             if hasattr(self.logitModRteFunc, "derivativeX")
             else self.logitModRteFunc.derivative(mu)
         )
-        # Chain rule: d(omega)/dm = d(omega)/d(chi) * d(chi)/d(mu) * d(mu)/dm
-        # Note: d(omega)/d(chi) = -omega * (1-omega) for expit function
-        d_omega_dm = -omega * (1 - omega) * chi_prime_mu * dmu_dm
 
-        # 4. Calculate total derivative using the product rule
-        # f_real' = f_opt' - [ d(omega)/dm * (f_opt - f_pes) + omega * (f_opt' - f_pes') ]
-        moderation_adjustment = d_omega_dm * (f_opt - f_pes)
+        # 3. Check if this is a consumption function (both bounds have same slope = MPCmin)
+        # In this case, use the paper's bounded formula if MPCmax is available
+        if np.allclose(f_opt_prime, f_pes_prime):
+            # This is a consumption function where both bounds have slope MPCmin
+            MPCmin = f_opt_prime
+
+            # For consumption functions: c_opt - c_pes = h_nrm_ex * MPCmin
+            # where h_nrm_ex is excess human wealth
+            h_nrm_ex = h_ex / MPCmin
+
+            # If MPCmax is available, use the bounded formula from eq:MPCModeration
+            # Express MPCmod in terms of omega'_mu directly instead of chi'_mu for better numerics
+            if self.MPCmax is not None:
+                # Get omega'_mu directly from the moderation ratio function
+                # Note: omega'_mu = omega(1-omega) * chi'_mu, so we can work with omega directly
+                omega_prime_mu = (
+                    self.modRteFunc.derivativeX(mu)
+                    if hasattr(self.modRteFunc, "derivativeX")
+                    else self.modRteFunc.derivative(mu)
+                )
+
+                # Paper eq:MPCModerationWeight, but using omega'_mu instead of chi'_mu:
+                # Since omega'_mu = omega(1-omega) * chi'_mu, we have:
+                # MPCmod = (MPCmin/(MPCmax-MPCmin)) * (h_nrm_ex/m_ex) * omega'_mu
+                MPCmod = (
+                    (MPCmin / (self.MPCmax - MPCmin))
+                    * (h_nrm_ex / m_ex)
+                    * omega_prime_mu
+                )
+
+                # Since omega in [0,1] by construction and we interpolate it directly,
+                # omega'_mu should naturally keep MPCmod reasonable. But we still clamp
+                # as a safety check for numerical edge cases.
+                MPCmod = np.clip(MPCmod, 0.0, 1.0)
+
+                # Paper eq:MPCModeration: MPC = (1-MPCmod) * MPCmin + MPCmod * MPCmax
+                # This is GUARANTEED to satisfy MPCmin <= MPC <= MPCmax
+                return (1 - MPCmod) * MPCmin + MPCmod * self.MPCmax
+            else:
+                # Fallback: use omega'_mu directly in the footnote formula
+                omega_prime_mu = (
+                    self.modRteFunc.derivativeX(mu)
+                    if hasattr(self.modRteFunc, "derivativeX")
+                    else self.modRteFunc.derivative(mu)
+                )
+                # Paper footnote 659: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
+                return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
+
+        # 4. General case: use full product rule for functions with different bound slopes
+        dmu_dm = 1.0 / m_ex
+        d_omega_dm = omega * (1 - omega) * chi_prime_mu * dmu_dm
+
+        base_slope = f_pes_prime
         slope_adjustment = omega * (f_opt_prime - f_pes_prime)
+        moderation_adjustment = d_omega_dm * (f_opt - f_pes)
 
-        return f_opt_prime - slope_adjustment - moderation_adjustment
+        return base_slope + slope_adjustment + moderation_adjustment
 
     # HARK compatibility: many interpolation utilities expect a 'derivativeX' method
     # that returns df/dx at x. Provide it as an alias to derivative.
@@ -1556,15 +1622,15 @@ def _construct_mom_interpolants(
     Parameters
     ----------
     mu : np.array
-        Log excess market resources grid μ = log(m - m_min)
+        Log excess market resources grid mu = log(m - m_min)
     modRte : np.array
-        Moderation ratio values ω at each gridpoint
+        Moderation ratio values omega at each gridpoint
     modRteMu : np.array
-        Derivatives of moderation ratio dω/dμ at each gridpoint
+        Derivatives of moderation ratio domega/dmu at each gridpoint
     logitModRte : np.array
-        Chi transformation values χ = log((1-ω)/ω) at each gridpoint
+        Chi transformation values chi = log((1-omega)/omega) at each gridpoint
     logitModRteMu : np.array
-        Derivatives of chi transformation dχ/dμ at each gridpoint
+        Derivatives of chi transformation dchi/dmu at each gridpoint
     CubicBool : bool
         Whether to use cubic spline interpolation (True) or linear interpolation (False)
 
@@ -1572,8 +1638,8 @@ def _construct_mom_interpolants(
     -------
     tuple
         Two interpolation objects (CubicInterp or LinearInterp):
-        - modRteFunc: ω(μ) interpolant
-        - logitModRteFunc: χ(μ) interpolant
+        - modRteFunc: omega(mu) interpolant
+        - logitModRteFunc: chi(mu) interpolant
 
     Notes
     -----
@@ -1581,10 +1647,10 @@ def _construct_mom_interpolants(
     for consistent extrapolation behavior across consumption and value functions.
 
     """
-    # Augmented μ grid with extrapolation points
+    # Augmented mu grid with extrapolation points
     muAug = np.r_[mu[0] - MOM_EXTRAP_GAP_LEFT, mu, mu[-1] + MOM_EXTRAP_GAP_RIGHT]
 
-    # Augmented ω (modRte) values - use derivative-based extrapolation if available
+    # Augmented omega (modRte) values - use derivative-based extrapolation if available
     if modRteMu is not None:
         # Use derivative-based linear extrapolation (consistent for both cubic/linear)
         modRteAug = np.r_[
@@ -1598,7 +1664,7 @@ def _construct_mom_interpolants(
         modRteAug = np.r_[modRte[0], modRte, modRte[-1]]
         modRteMuAug = None
 
-    # Augmented χ (logitModRte) values - use derivative-based extrapolation if available
+    # Augmented chi (logitModRte) values - use derivative-based extrapolation if available
     if logitModRteMu is not None:
         # Use derivative-based linear extrapolation (consistent for both cubic/linear)
         logitModRteAug = np.r_[
@@ -1665,9 +1731,9 @@ def _method_of_moderation(
     Algorithm Overview (following the paper):
     1. Compute analytical bounds: optimist c_opt(m) and pessimist c_pes(m)
     2. Solve standard EGM to get realist consumption at gridpoints
-    3. Calculate moderation ratio ω(μ) = (c_opt - c_real)/(c_opt - c_pes)
-    4. Apply chi transformation χ(μ) = log((1-ω)/ω) for asymptotic linearity
-    5. Interpolate χ(μ) function with derivatives for smooth extrapolation
+    3. Calculate moderation ratio omega(mu) = (c_opt - c_real)/(c_opt - c_pes)
+    4. Apply chi transformation chi(mu) = log((1-omega)/omega) for asymptotic linearity
+    5. Interpolate chi(mu) function with derivatives for smooth extrapolation
     6. Reconstruct consumption function using equation (7) from the paper
 
     Key advantages over standard EGM (addresses Figure 1 extrapolation problem):
@@ -1797,6 +1863,7 @@ def _method_of_moderation(
         mNrmMin=mNrmMin,
         hNrm=hNrm,
         MPCmin=MPCmin,
+        MPCmax=MPCmax,
         CubicBool=CubicBool,
         optimist=optimist,
         pessimist=pessimist,
@@ -1883,11 +1950,11 @@ class IndShockMoMConsumerType(IndShockConsumerType):
     Theoretical Framework:
     The Method of Moderation leverages the fact that realist optimal consumption
     is always bounded between two analytical perfect-foresight solutions:
-    - Optimist consumption: c_opt(m) = κ_min * (m + h) - assumes E[θ] = 1
-    - Pessimist consumption: c_pes(m) = κ_min * (m - m_min) - assumes θ = θ_min
+    - Optimist consumption: c_opt(m) = kappa_min * (m + h) - assumes E[theta] = 1
+    - Pessimist consumption: c_pes(m) = kappa_min * (m - m_min) - assumes theta = theta_min
 
     The realist solution is constructed by moderating between these bounds using
-    the asymptotically linear chi transformation χ(μ) = log((1-κ)/κ), which ensures
+    the asymptotically linear chi transformation chi(mu) = log((1-kappa)/kappa), which ensures
     excellent extrapolation behavior and prevents negative precautionary saving.
 
     Attributes

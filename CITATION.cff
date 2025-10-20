@@ -1,6 +1,7 @@
 cff-version: 1.2.0
 message: Please cite the following works when using this project.
 title: The Method of Moderation
+type: software
 authors:
   - family-names: Carroll
     given-names: Christopher D.
@@ -14,10 +15,12 @@ authors:
     address: Baltimore, MD
     orcid: 0000-0002-5289-7054
     email: alujan@jhu.edu
+  - family-names: Chipeniuk
+    given-names: Karsten
+    affiliation: Reserve Bank of New Zealand
   - family-names: Tokuoka
     given-names: Kiichi
-    affiliation: European Central Bank
-    email: ktokuoka@imf.org
+    affiliation: Japanese Ministry of Finance
   - family-names: Wu
     given-names: Weifeng
     affiliation: Fannie Mae
@@ -29,6 +32,28 @@ contact:
     address: Baltimore, MD
     orcid: 0000-0002-5289-7054
     email: alujan@jhu.edu
+abstract: >
+  In a risky world, a pessimist assumes the worst will happen. Someone who 
+  ignores risk altogether is an optimist. Consumption decisions are 
+  mathematically simple for both the pessimist and the optimist because both 
+  behave as if they live in a riskless world. A realist (someone who wants 
+  to respond optimally to risk) faces a much more difficult problem, but 
+  (under standard conditions) will choose a level of spending somewhere 
+  between pessimist's and the optimist's. We use this fact to redefine the 
+  space in which the realist searches for optimal consumption rules. The 
+  resulting solution accurately represents the numerical consumption rule 
+  over the entire interval of feasible wealth values with remarkably few 
+  computations.
+keywords:
+  - consumption
+  - saving
+  - dynamic stochastic optimization
+  - endogenous grid method
+  - computational economics
+  - Econ-ARK
+  - REMARK
 license: CC-BY-SA-3.0
 license-url: https://creativecommons.org/licenses/by-sa/3.0/
 repository: https://github.com/econ-ark/method-of-moderation
+repository-code: https://github.com/econ-ark/method-of-moderation
+url: https://github.com/econ-ark/method-of-moderation

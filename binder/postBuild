@@ -1,0 +1,16 @@
+#!/bin/bash
+# Post-build script for Binder
+# Uses uv to install all dependencies from pyproject.toml
+
+set -e
+
+# Navigate to repository root
+cd "${HOME}"
+
+# Install dependencies using uv (which reads from pyproject.toml)
+uv sync --all-extras
+
+# Ensure Jupyter extensions are enabled
+jupyter labextension list
+
+echo "Binder environment ready!"
