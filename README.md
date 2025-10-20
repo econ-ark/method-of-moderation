@@ -40,18 +40,20 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 
 ### Paper
 - [**Read the Paper**](content/paper/moderation.md) - Full paper in MyST Markdown format
-- [**Download PDF**](content/paper/moderation.pdf) - Paper in PDF format
+- [**Download PDF**](content/paper/moderation.pdf) - Full paper in PDF format
+- [**Letters Version**](content/paper/moderation_letters.md) - Economics Letters submission format
 
 ### Code & Interactive Content
 - [**Jupyter Notebook**](code/notebook.ipynb) - Complete computational notebook with examples
-- [**Interactive Dashboard**](code/dashboard.ipynb) - Interactive visualizations using Voila
 
 ### Links
-- **Documentation**: [Read the Docs](https://moderation.readthedocs.io)
-- **Paper Repository**: [REMARK](https://github.com/econ-ark/REMARK)
-- **Package**: [PyPI](https://pypi.org/project/moderation/)
+- **Documentation**: [MyST Build](_build/html/index.html) (local build)
+- **REMARK**: [Catalog Entry](https://github.com/econ-ark/REMARK/blob/master/REMARKs/MethodOfModeration.yml)
+- **Source Code**: [GitHub Repository](https://github.com/econ-ark/method-of-moderation)
 
 ## Installation
+
+### For Users (when published)
 
 ```bash
 pip install moderation
@@ -63,24 +65,33 @@ or
 conda install -c conda-forge moderation
 ```
 
-## Usage
+### For Development
 
-For development and interactive use:
+This project uses [uv](https://github.com/astral-sh/uv) for dependency management:
 
 ```bash
 git clone https://github.com/econ-ark/method-of-moderation.git
-cd MethodOfModeration
-pip install -e .
+cd method-of-moderation
+uv sync                    # Install dependencies
+uv run pytest              # Run tests
+uv run myst build --html   # Build documentation
 ```
+
+See [REMARK reproduction](#reproducibility) section above for full reproduction instructions.
 
 ## Citation
 
 ```bibtex
-@misc{carroll2024moderation,
+@software{carroll2025moderation,
   title={The Method of Moderation},
-  author={Carroll, Christopher D. and Lujan, Alan and Tokuoka, Kiichi and Wu, Weifeng},
-  year={2024},
-  url={https://github.com/econ-ark/method-of-moderation}
+  author={Carroll, Christopher D. and 
+          Lujan, Alan and 
+          Chipeniuk, Karsten and 
+          Tokuoka, Kiichi and 
+          Wu, Weifeng},
+  year={2025},
+  url={https://github.com/econ-ark/method-of-moderation},
+  license={CC-BY-SA-3.0}
 }
 ```
 
