@@ -1,3 +1,9 @@
+# Private directory 
+.private/
+
+# GitHub Copilot instructions (local configuration)
+.github/copilot-instructions.md
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

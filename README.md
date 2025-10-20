@@ -9,6 +9,19 @@
 
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 
+<!-- Uncomment after REMARK indexing:
+[![REMARK](https://img.shields.io/badge/REMARK-indexed-blue)](https://github.com/econ-ark/REMARK)
+-->
+
+## Reproducibility
+
+This project is structured as a [REMARK](https://github.com/econ-ark/REMARK) (Replications and Explorations Made using ARK). To reproduce all results:
+
+```bash
+./reproduce.sh      # Full reproduction (all tests, paper, notebooks)
+./reproduce_min.sh  # Quick validation (<5 minutes)
+```
+
 ## Authors
 
 - **Christopher D. Carroll** - Johns Hopkins University ([ORCID: 0000-0003-3732-9312](https://orcid.org/0000-0003-3732-9312))

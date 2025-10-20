@@ -1,0 +1,13 @@
+# Binder environment configuration
+# This file delegates to uv for dependency management from pyproject.toml
+# ensuring single-source-of-truth for dependencies
+
+name: moderation
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - uv
+  - pip
+  - pip:
+    - -e ../.
