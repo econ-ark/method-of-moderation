@@ -34,6 +34,10 @@ py-modules = ["moderation", "plotting", "style"]
 [tool.setuptools.package-dir]
 "" = "code"
 
+[tool.check-wheel-contents]
+# W009: Multiple top-level modules - intentional for research code organization
+ignore = ["W009"]
+
 [dependency-groups]
 test = [
   "pytest >=6",
