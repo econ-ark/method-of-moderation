@@ -761,7 +761,7 @@ wheels = [
 [[package]]
 name = "econ-ark"
 version = "0.16.1"
-source = { git = "https://github.com/econ-ark/HARK?rev=master#a98e751a2c3b1b4891a4ba0f660192db0733cebc" }
+source = { git = "https://github.com/econ-ark/HARK?rev=master#66555f7c74742c87d98d11d2eea86d60d2dd1ec9" }
 dependencies = [
     { name = "interpolation" },
     { name = "joblib" },
