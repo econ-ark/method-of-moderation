@@ -28,6 +28,12 @@ Homepage = "https://github.com/econ-ark/method-of-moderation"
 Discussions = "https://github.com/econ-ark/method-of-moderation/discussions"
 Changelog = "https://github.com/econ-ark/method-of-moderation/releases"
 
+[tool.setuptools]
+py-modules = ["moderation", "plotting", "style"]
+
+[tool.setuptools.package-dir]
+"" = "code"
+
 [dependency-groups]
 test = [
   "pytest >=6",
