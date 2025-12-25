@@ -82,36 +82,7 @@ $$
 \modRteLoTightUpBd(\logmNrmEx) = \frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})e^{-\logmNrmEx}-\MPCmin}{\MPCmax-\MPCmin},
 $$
 
-which measures how far consumption per unit of wealth exceeds the optimist's MPC relative to the maximum possible excess.
-
-## Hermite Interpolation: Slope Derivations
-
-The logit transformation slope follows from the chain rule {cite:p}`Santos2000,JuddMaliarMaliar2017`:
-
-```{math}
-:label: eq:logitModRteMu
-\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
-```
-
-where $\modRteMu$ is from {eq}`eq:modRteMuFinal`. For monotone cubic Hermite schemes {cite:p}`Fritsch1980,FritschButland1984,deBoor2001`, theoretical slopes may be adjusted to enforce monotonicity {cite:p}`Hyman1983`. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
-
-The MPC weight derivation starts from differentiating {eq}`eq:cFuncHi` from the main text with respect to $\mNrm$:
-
-$$
-\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
-$$
-
-Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
-
-$$
-\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
-$$
-
-Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives {eq}`eq:MPCModeration` from the main text, with weight
-
-$$
-\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
-$$
+which measures how far consumption per unit of wealth exceeds the pessimist's MPC ($\MPCmin$) relative to the maximum possible excess ($\MPCmax - \MPCmin$).
 
 ## Value Function Derivation
 
@@ -176,6 +147,35 @@ Inverting these approximations yields
 ```
 
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
+
+## Hermite Interpolation: Slope Derivations
+
+The logit transformation slope follows from the chain rule {cite:p}`Santos2000,JuddMaliarMaliar2017`:
+
+```{math}
+:label: eq:logitModRteMu
+\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
+```
+
+where $\modRteMu$ is from {eq}`eq:modRteMuFinal`. For monotone cubic Hermite schemes {cite:p}`Fritsch1980,FritschButland1984,deBoor2001`, theoretical slopes may be adjusted to enforce monotonicity {cite:p}`Hyman1983`. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
+
+The MPC weight derivation starts from differentiating {eq}`eq:cFuncHi` from the main text with respect to $\mNrm$:
+
+$$
+\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
+$$
+
+Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
+
+$$
+\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
+$$
+
+Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives {eq}`eq:MPCModeration` from the main text, with weight
+
+$$
+\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
+$$
 
 ## Stochastic Returns: MGF Derivation
 

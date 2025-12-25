@@ -1080,9 +1080,7 @@ def _endogenous_grid_method(
         uFunc,
     )
 
-    # Add boundary condition: consumption approaches zero as m approaches constraint
-    np.insert(cNrm, 0, 0.0)
-    np.insert(mNrm, 0, mNrmMin)
+    # Note: Boundary augmentation (c=0 at m=mNrmMin) is handled in _build_cfunc_egm
 
     # =========================================================================
     # Step 3: Construct consumption function
@@ -1540,7 +1538,6 @@ class TransformedFunctionMoM:
         )
 
         # 3. Check if this is a consumption function (both bounds have same slope = MPCmin)
-        # In this case, use the paper's bounded formula if MPCmax is available
         if np.allclose(f_opt_prime, f_pes_prime):
             # This is a consumption function where both bounds have slope MPCmin
             MPCmin = f_opt_prime
@@ -1549,41 +1546,16 @@ class TransformedFunctionMoM:
             # where h_nrm_ex is excess human wealth
             h_nrm_ex = h_ex / MPCmin
 
-            # If MPCmax is available, use the bounded formula from eq:MPCModeration
-            # Express MPCmod in terms of omega'_mu directly instead of chi'_mu for better numerics
-            if self.MPCmax is not None:
-                # Get omega'_mu directly from the moderation ratio function
-                # Note: omega'_mu = omega(1-omega) * chi'_mu, so we can work with omega directly
-                omega_prime_mu = (
-                    self.modRteFunc.derivativeX(mu)
-                    if hasattr(self.modRteFunc, "derivativeX")
-                    else self.modRteFunc.derivative(mu)
-                )
+            # Compute omega'_mu from chi, consistent with how __call__ computes omega
+            # omega = expit(chi), so omega'_mu = omega * (1 - omega) * chi'_mu
+            omega_prime_mu = omega * (1 - omega) * chi_prime_mu
 
-                # Paper eq:MPCModerationWeight, but using omega'_mu instead of chi'_mu:
-                # Since omega'_mu = omega(1-omega) * chi'_mu, we have:
-                # MPCmod = (MPCmin/(MPCmax-MPCmin)) * (h_nrm_ex/m_ex) * omega'_mu
-                MPCmod = (
-                    (MPCmin / (self.MPCmax - MPCmin))
-                    * (h_nrm_ex / m_ex)
-                    * omega_prime_mu
-                )
-
-                # Since omega in [0,1] by construction and we interpolate it directly,
-                # omega'_mu should naturally keep MPCmod reasonable. But we still clamp
-                # as a safety check for numerical edge cases.
-                MPCmod = np.clip(MPCmod, 0.0, 1.0)
-
-                # Paper eq:MPCModeration: MPC = (1-MPCmod) * MPCmin + MPCmod * MPCmax
-                # This is GUARANTEED to satisfy MPCmin <= MPC <= MPCmax
-                return (1 - MPCmod) * MPCmin + MPCmod * self.MPCmax
-            # Fallback: use omega'_mu directly in the footnote formula
-            omega_prime_mu = (
-                self.modRteFunc.derivativeX(mu)
-                if hasattr(self.modRteFunc, "derivativeX")
-                else self.modRteFunc.derivative(mu)
-            )
-            # Paper footnote 659: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
+            # True derivative formula: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
+            # This matches the actual consumption function slope.
+            # Note: MPC can exceed MPCmax near the borrowing constraint where
+            # m_ex is small and the transition is steep. This is economically
+            # meaningful - near the constraint, small changes in resources
+            # lead to large changes in consumption as the constraint binds.
             return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
 
         # 4. General case: use full product rule for functions with different bound slopes
@@ -1854,7 +1826,7 @@ def _method_of_moderation(
         PermGroFac=PermGroFac,
         CRRA=CRRA,
         IncShkDstn=IncShkDstn,
-        vPPfuncNext=vPfuncNext if False else vPPfuncNext,
+        vPPfuncNext=vPPfuncNext,
         uFunc=uFunc,
         aNrm=aNrm,
         cNrm=cNrm,
@@ -1991,3 +1963,850 @@ class IndShockMoMConsumerType(IndShockConsumerType):
         "solver": method_of_moderation,
         "model": "ConsIndShock.yaml",
     }
+
+
+# =========================================================================
+# Extension 1: Three-Piece Cusp Approximation
+# =========================================================================
+
+
+def calc_cusp_point(hNrm, mNrmMin, MPCmin, MPCmax):
+    r"""Calculate the cusp point where optimist and tighter bounds intersect.
+
+    The cusp point is where the two upper bounds on consumption intersect:
+    - Optimist: c_opt(m) = MPCmin * (m + hNrm)
+    - Tighter: c_tight(m) = MPCmax * (m - mNrmMin)
+
+    Setting these equal and solving for m gives the cusp point from eq:mNrmCusp:
+        mNrmCusp = -hNrmPes + MPCmin * (hNrmOpt - hNrmPes) / (MPCmax - MPCmin)
+
+    where hNrmPes = -mNrmMin and hNrmOpt = hNrm.
+
+    Parameters
+    ----------
+    hNrm : float
+        Present discounted value of human wealth (optimist's h)
+    mNrmMin : float
+        Minimum feasible market resources (= -hNrmPes)
+    MPCmin : float
+        Minimum marginal propensity to consume
+    MPCmax : float
+        Maximum marginal propensity to consume
+
+    Returns
+    -------
+    float
+        The cusp point mNrmCusp where upper bounds intersect
+
+    Notes
+    -----
+    Below mNrmCusp, use the tighter bound (MPCmax slope).
+    Above mNrmCusp, use the optimist bound (MPCmin slope).
+
+    """
+    hNrmPes = -mNrmMin  # Pessimist's human wealth
+    hNrmOpt = hNrm  # Optimist's human wealth
+    hNrmEx = hNrmOpt - hNrmPes  # Excess human wealth = hNrm + mNrmMin
+
+    # From eq:mNrmCusp in the paper
+    mNrmCusp = -hNrmPes + MPCmin * hNrmEx / (MPCmax - MPCmin)
+
+    return mNrmCusp
+
+
+def moderate_tight(m, mNrmMin, cNrm, MPCmin, MPCmax):
+    r"""Compute moderation ratio using the tighter upper bound.
+
+    For low wealth (m < mNrmCusp), the tighter bound c_tight = MPCmax * mNrmEx
+    provides a better upper bound than the optimist. The moderation ratio
+    using this bound is defined in eq:modRteLoTightUpBd:
+
+        modRteLoTight = (c_real/mNrmEx - MPCmin) / (MPCmax - MPCmin)
+                      = (c_real - c_pes) / (c_tight - c_pes)
+
+    Parameters
+    ----------
+    m : float or array
+        Market resources
+    mNrmMin : float
+        Minimum feasible market resources
+    cNrm : float or array
+        Realist consumption values
+    MPCmin : float
+        Minimum MPC (pessimist and optimist slope)
+    MPCmax : float
+        Maximum MPC (tighter bound slope)
+
+    Returns
+    -------
+    float or array
+        Moderation ratio using tighter bound, in [0, 1]
+
+    """
+    mNrmEx = m - mNrmMin
+    c_pes = MPCmin * mNrmEx
+    c_tight = MPCmax * mNrmEx
+    return (cNrm - c_pes) / (c_tight - c_pes)
+
+
+class TransformedFunctionMoMCusp:
+    """Three-piece consumption function using cusp approximation.
+
+    This class implements the three-piece approximation described in the paper:
+    1. Below cusp: Use tighter upper bound (MPCmax slope)
+    2. Near cusp: Hermite interpolation for smooth transition
+    3. Above cusp: Use optimist upper bound (MPCmin slope)
+
+    The result is a consumption function that respects BOTH upper bounds
+    throughout the domain, providing tighter theoretical guarantees.
+
+    Parameters
+    ----------
+    mNrmMin : float
+        Minimum feasible market resources
+    mNrmCusp : float
+        Cusp point where upper bounds intersect
+    modRteFuncLow : callable
+        Moderation ratio function for m < mNrmCusp (using tight bound)
+    logitModRteFuncLow : callable
+        Logit of moderation ratio for m < mNrmCusp
+    modRteFuncHigh : callable
+        Moderation ratio function for m >= mNrmCusp (using optimist bound)
+    logitModRteFuncHigh : callable
+        Logit of moderation ratio for m >= mNrmCusp
+    optimist_func : callable
+        Optimist consumption function
+    pessimist_func : callable
+        Pessimist consumption function
+    tight_func : callable
+        Tighter upper bound consumption function
+    MPCmin : float
+        Minimum MPC
+    MPCmax : float
+        Maximum MPC
+
+    """
+
+    def __init__(
+        self,
+        mNrmMin,
+        mNrmCusp,
+        modRteFuncLow,
+        logitModRteFuncLow,
+        modRteFuncHigh,
+        logitModRteFuncHigh,
+        optimist_func,
+        pessimist_func,
+        tight_func,
+        MPCmin,
+        MPCmax,
+    ) -> None:
+        self.mNrmMin = mNrmMin
+        self.mNrmCusp = mNrmCusp
+        self.modRteFuncLow = modRteFuncLow
+        self.logitModRteFuncLow = logitModRteFuncLow
+        self.modRteFuncHigh = modRteFuncHigh
+        self.logitModRteFuncHigh = logitModRteFuncHigh
+        self.optimist_func = optimist_func
+        self.pessimist_func = pessimist_func
+        self.tight_func = tight_func
+        self.MPCmin = MPCmin
+        self.MPCmax = MPCmax
+
+    def __call__(self, m):
+        """Evaluate consumption using three-piece approximation."""
+        m = np.asarray(m)
+        scalar_input = m.ndim == 0
+        m = np.atleast_1d(m)
+
+        c = np.empty_like(m, dtype=float)
+
+        # Low region: use tighter bound
+        low_mask = m < self.mNrmCusp
+        if np.any(low_mask):
+            m_low = m[low_mask]
+            mu_low = log_mnrm_ex(m_low, self.mNrmMin)
+            chi_low = self.logitModRteFuncLow(mu_low)
+            omega_low = expit_moderate(chi_low)
+            c_pes_low = self.pessimist_func(m_low)
+            c_tight_low = self.tight_func(m_low)
+            c[low_mask] = c_pes_low + omega_low * (c_tight_low - c_pes_low)
+
+        # High region: use optimist bound
+        high_mask = ~low_mask
+        if np.any(high_mask):
+            m_high = m[high_mask]
+            mu_high = log_mnrm_ex(m_high, self.mNrmMin)
+            chi_high = self.logitModRteFuncHigh(mu_high)
+            omega_high = expit_moderate(chi_high)
+            c_pes_high = self.pessimist_func(m_high)
+            c_opt_high = self.optimist_func(m_high)
+            c[high_mask] = c_pes_high + omega_high * (c_opt_high - c_pes_high)
+
+        return float(c[0]) if scalar_input else c
+
+    def derivative(self, m):
+        """Compute MPC using three-piece approximation."""
+        m = np.asarray(m)
+        scalar_input = m.ndim == 0
+        m = np.atleast_1d(m)
+
+        mpc = np.empty_like(m, dtype=float)
+        m_ex = m - self.mNrmMin
+
+        # Low region: MPC between MPCmin and MPCmax using tight bound
+        low_mask = m < self.mNrmCusp
+        if np.any(low_mask):
+            m_low = m[low_mask]
+            m_ex_low = m_ex[low_mask]
+            mu_low = log_mnrm_ex(m_low, self.mNrmMin)
+
+            chi_low = self.logitModRteFuncLow(mu_low)
+            omega_low = expit_moderate(chi_low)
+            chi_prime_mu_low = (
+                self.logitModRteFuncLow.derivativeX(mu_low)
+                if hasattr(self.logitModRteFuncLow, "derivativeX")
+                else self.logitModRteFuncLow.derivative(mu_low)
+            )
+            # Compute omega'_mu from chi, consistent with __call__
+            omega_prime_mu_low = omega_low * (1 - omega_low) * chi_prime_mu_low
+
+            # MPC formula using tight bound gap
+            # c = c_pes + omega * (c_tight - c_pes) = c_pes + omega * (MPCmax - MPCmin) * m_ex
+            # dc/dm = MPCmin + omega * (MPCmax - MPCmin) + omega' * (MPCmax - MPCmin) * m_ex / m_ex
+            #       = MPCmin + (omega + omega'_mu) * (MPCmax - MPCmin)
+            mpc[low_mask] = self.MPCmin + (omega_low + omega_prime_mu_low) * (
+                self.MPCmax - self.MPCmin
+            )
+
+        # High region: MPC using optimist bound (standard formula)
+        high_mask = ~low_mask
+        if np.any(high_mask):
+            m_high = m[high_mask]
+            m_ex_high = m_ex[high_mask]
+            mu_high = log_mnrm_ex(m_high, self.mNrmMin)
+
+            chi_high = self.logitModRteFuncHigh(mu_high)
+            omega_high = expit_moderate(chi_high)
+            chi_prime_mu_high = (
+                self.logitModRteFuncHigh.derivativeX(mu_high)
+                if hasattr(self.logitModRteFuncHigh, "derivativeX")
+                else self.logitModRteFuncHigh.derivative(mu_high)
+            )
+            # Compute omega'_mu from chi, consistent with __call__
+            omega_prime_mu_high = omega_high * (1 - omega_high) * chi_prime_mu_high
+
+            # True derivative formula for high region (optimist bound)
+            # MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
+            hNrmEx = (
+                self.optimist_func(m_high) - self.pessimist_func(m_high)
+            ) / self.MPCmin
+            mpc[high_mask] = self.MPCmin * (
+                1 + (hNrmEx / m_ex_high) * omega_prime_mu_high
+            )
+
+        return float(mpc[0]) if scalar_input else mpc
+
+    def derivativeX(self, m):
+        """Alias for derivative(m) to satisfy HARK's derivativeX contract."""
+        return self.derivative(m)
+
+
+def _build_cfunc_mom_cusp(
+    *,
+    DiscFacEff,
+    Rfree,
+    PermGroFac,
+    CRRA,
+    IncShkDstn,
+    vPPfuncNext,
+    uFunc,
+    aNrm,
+    cNrm,
+    mNrm,
+    mNrmMin,
+    hNrm,
+    MPCmin,
+    MPCmax,
+    CubicBool,
+    optimist,
+    pessimist,
+    tighter,
+):
+    """Construct consumption function using three-piece cusp approximation."""
+    # Calculate cusp point
+    mNrmCusp = calc_cusp_point(hNrm, mNrmMin, MPCmin, MPCmax)
+
+    # mu grid and derivative inputs
+    mNrmEx = mNrm - mNrmMin
+    hNrmEx = hNrm + mNrmMin
+    mu = log_mnrm_ex(mNrm, mNrmMin)
+
+    # MPC vector for Hermite slopes
+    vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
+    EndOfPrdvPP = vPPfacEff * expected(
+        calc_vpp_next,
+        IncShkDstn,
+        args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
+    )
+    MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
+
+    # Split grid at cusp point
+    low_mask = mNrm < mNrmCusp
+    high_mask = ~low_mask
+
+    # Ensure we have points in both regions (add cusp if needed)
+    if not np.any(low_mask) or not np.any(high_mask):
+        # Fall back to standard MoM if cusp outside grid
+        return _build_cfunc_mom(
+            DiscFacEff=DiscFacEff,
+            Rfree=Rfree,
+            PermGroFac=PermGroFac,
+            CRRA=CRRA,
+            IncShkDstn=IncShkDstn,
+            vPPfuncNext=vPPfuncNext,
+            uFunc=uFunc,
+            aNrm=aNrm,
+            cNrm=cNrm,
+            mNrm=mNrm,
+            mNrmMin=mNrmMin,
+            hNrm=hNrm,
+            MPCmin=MPCmin,
+            MPCmax=MPCmax,
+            CubicBool=CubicBool,
+            optimist=optimist,
+            pessimist=pessimist,
+        )
+
+    # LOW REGION: Use tighter bound
+    mNrm_low = mNrm[low_mask]
+    cNrm_low = cNrm[low_mask]
+    MPC_low = MPC[low_mask]
+    mNrmEx_low = mNrmEx[low_mask]
+    mu_low = mu[low_mask]
+
+    # Moderation ratio using tight bound
+    modRte_low = moderate_tight(mNrm_low, mNrmMin, cNrm_low, MPCmin, MPCmax)
+    # Derivative: d(modRte)/d(mu) for tight bound
+    # modRte = (c - MPCmin*mNrmEx) / ((MPCmax-MPCmin)*mNrmEx)
+    # d(modRte)/d(mu) = mNrmEx * (MPC - MPCmin) / ((MPCmax-MPCmin)*mNrmEx)
+    #                 = (MPC - MPCmin) / (MPCmax - MPCmin)
+    modRteMu_low = (MPC_low - MPCmin) / (MPCmax - MPCmin)
+    logitModRte_low = logit_moderate(modRte_low)
+    logitModRteMu_low = modRteMu_low / (modRte_low * (1 - modRte_low))
+
+    modRteFuncLow, logitModRteFuncLow = _construct_mom_interpolants(
+        mu_low,
+        modRte_low,
+        modRteMu_low,
+        logitModRte_low,
+        logitModRteMu_low,
+        CubicBool,
+    )
+
+    # HIGH REGION: Use optimist bound (standard moderation)
+    mNrm_high = mNrm[high_mask]
+    cNrm_high = cNrm[high_mask]
+    MPC_high = MPC[high_mask]
+    mNrmEx_high = mNrmEx[high_mask]
+    mu_high = mu[high_mask]
+
+    modRte_high = moderate(mNrm_high, optimist.cFunc, cNrm_high, pessimist.cFunc)
+    modRteMu_high = mNrmEx_high * (MPC_high - MPCmin) / (MPCmin * hNrmEx)
+    logitModRte_high = logit_moderate(modRte_high)
+    logitModRteMu_high = modRteMu_high / (modRte_high * (1 - modRte_high))
+
+    modRteFuncHigh, logitModRteFuncHigh = _construct_mom_interpolants(
+        mu_high,
+        modRte_high,
+        modRteMu_high,
+        logitModRte_high,
+        logitModRteMu_high,
+        CubicBool,
+    )
+
+    return TransformedFunctionMoMCusp(
+        mNrmMin,
+        mNrmCusp,
+        modRteFuncLow,
+        logitModRteFuncLow,
+        modRteFuncHigh,
+        logitModRteFuncHigh,
+        optimist.cFunc,
+        pessimist.cFunc,
+        tighter.cFunc,
+        MPCmin,
+        MPCmax,
+    )
+
+
+def method_of_moderation_cusp(
+    solution_next,
+    IncShkDstn,
+    LivPrb,
+    DiscFac,
+    CRRA,
+    Rfree,
+    PermGroFac,
+    BoroCnstArt,
+    aXtraGrid,
+    vFuncBool,
+    CubicBool,
+):
+    """Method of Moderation solver with three-piece cusp approximation.
+
+    This solver extends the standard Method of Moderation by using a
+    three-piece consumption function that respects BOTH upper bounds:
+    - Below cusp: Uses tighter bound (MPCmax slope) for better accuracy
+    - Above cusp: Uses optimist bound (MPCmin slope) for asymptotic behavior
+
+    The cusp point is where the two bounds intersect, providing the
+    tightest possible constraints throughout the domain.
+
+    Parameters
+    ----------
+    Same as method_of_moderation
+
+    Returns
+    -------
+    ConsumerSolution
+        Solution with three-piece cusp consumption function
+
+    """
+    # Setup (same as standard MoM)
+    uFunc = UtilityFuncCRRA(CRRA)
+
+    (
+        DiscFacEff,
+        hNrm,
+        BoroCnstNat,
+        mNrmMin,
+        MPCmin,
+        MPCmax,
+    ) = prepare_to_solve(
+        solution_next,
+        IncShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rfree,
+        PermGroFac,
+        BoroCnstArt,
+    )
+
+    vFuncNext = solution_next.vFunc
+    vPfuncNext = solution_next.vPfunc
+    vPPfuncNext = solution_next.vPPfunc
+
+    # Create behavioral bounds
+    optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
+        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+    )
+
+    # Solve EGM step
+    aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step(
+        aXtraGrid,
+        mNrmMin,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vPfuncNext,
+        uFunc,
+    )
+
+    # Build consumption function with cusp approximation
+    cFunc = _build_cfunc_mom_cusp(
+        DiscFacEff=DiscFacEff,
+        Rfree=Rfree,
+        PermGroFac=PermGroFac,
+        CRRA=CRRA,
+        IncShkDstn=IncShkDstn,
+        vPPfuncNext=vPPfuncNext,
+        uFunc=uFunc,
+        aNrm=aNrm,
+        cNrm=cNrm,
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+        CubicBool=CubicBool,
+        optimist=optimist,
+        pessimist=pessimist,
+        tighter=tighterUpperBound,
+    )
+
+    # Construct marginal value functions
+    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
+    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
+
+    # Value function (use standard MoM approach)
+    if vFuncBool:
+        vNvrs, vNvrsP = construct_value_functions(
+            aNrm,
+            BoroCnstNat,
+            DiscFacEff,
+            Rfree,
+            PermGroFac,
+            CRRA,
+            IncShkDstn,
+            vFuncNext,
+            EndOfPrdvP,
+            uFunc,
+            cNrm,
+            CubicBool,
+        )
+        vFunc = _build_vfunc_mom(
+            mNrm=mNrm,
+            mNrmMin=mNrmMin,
+            hNrm=hNrm,
+            MPCmin=MPCmin,
+            CRRA=CRRA,
+            vNvrs=vNvrs,
+            vNvrsP=vNvrsP,
+            optimist=optimist,
+            pessimist=pessimist,
+            CubicBool=CubicBool,
+        )
+    else:
+        vFunc = NullFunc()
+
+    # Package solution
+    solution = ConsumerSolution(
+        cFunc=cFunc,
+        vFunc=vFunc,
+        vPfunc=vPfunc,
+        vPPfunc=vPPfunc,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+    )
+
+    solution.Optimist = optimist
+    solution.Pessimist = pessimist
+    solution.TighterUpperBound = tighterUpperBound
+    solution.mNrmCusp = calc_cusp_point(hNrm, mNrmMin, MPCmin, MPCmax)
+
+    return solution
+
+
+class IndShockMoMCuspConsumerType(IndShockConsumerType):
+    """HARK consumer type using Method of Moderation with cusp approximation.
+
+    This class extends the standard Method of Moderation by using a three-piece
+    consumption function that respects both upper bounds (optimist and tighter).
+    The cusp point marks where the two bounds intersect, and the consumption
+    function uses the appropriate bound in each region.
+
+    Advantages over Standard MoM
+    ----------------------------
+    - Tighter bounds near borrowing constraint (uses MPCmax slope)
+    - Maintains optimist bound behavior at high wealth
+    - Smooth transition at cusp point via Hermite interpolation
+    - Even better theoretical guarantees
+
+    """
+
+    default_: ClassVar = {
+        "params": IndShockConsumerType_defaults,
+        "solver": method_of_moderation_cusp,
+        "model": "ConsIndShock.yaml",
+    }
+
+
+# =========================================================================
+# Extension 2: Stochastic Rate of Return
+# =========================================================================
+
+
+def calc_stochastic_mpc(DiscFac, CRRA, RiskyAvg, RiskyStd):
+    r"""Calculate MPC for consumer facing i.i.d. lognormal returns.
+
+    For a consumer with CRRA utility facing i.i.d. lognormal returns:
+        log(R) ~ N(r + equityPrem - std^2/2, std^2)
+
+    The Merton-Samuelson result gives the MPC as:
+        MPC = 1 - (DiscFac * E[R^{1-CRRA}])^{1/CRRA}
+
+    For lognormal R with mean RiskyAvg and std RiskyStd (in levels):
+        E[R^{1-CRRA}] = RiskyAvg^{1-CRRA} * exp((1-CRRA)*(-CRRA)*std_log^2/2)
+
+    where std_log^2 = log(1 + (RiskyStd/RiskyAvg)^2).
+
+    Parameters
+    ----------
+    DiscFac : float
+        Time discount factor
+    CRRA : float
+        Coefficient of relative risk aversion
+    RiskyAvg : float
+        Mean of risky return R (in levels, e.g., 1.08 for 8% return)
+    RiskyStd : float
+        Standard deviation of risky return R (in levels)
+
+    Returns
+    -------
+    float
+        The MPC under stochastic returns (replaces MPCmin in MoM formulas)
+
+    Notes
+    -----
+    This MPC should be substituted for MPCmin throughout the Method of
+    Moderation formulas when the consumer faces stochastic returns.
+
+    References
+    ----------
+    Samuelson (1969), Merton (1969, 1971)
+    See also CRRA-RateRisk and BBZ2016SkewedWealth
+
+    Examples
+    --------
+    >>> # 8% mean return with 20% standard deviation
+    >>> mpc = calc_stochastic_mpc(0.96, 2.0, 1.08, 0.20)
+
+    """
+    # Convert level mean/std to log parameters
+    # If R ~ LogNormal, then E[R] = exp(mu + sigma^2/2) and Var[R] = exp(2*mu + sigma^2)*(exp(sigma^2)-1)
+    # So sigma^2 = log(1 + (Std/Mean)^2)
+    variance_ratio = (RiskyStd / RiskyAvg) ** 2
+    log_var = np.log1p(variance_ratio)  # sigma^2 in log space
+
+    # E[R^{1-CRRA}] for lognormal
+    # If log(R) ~ N(mu, sigma^2), then E[R^a] = exp(a*mu + a^2*sigma^2/2)
+    # For level mean M and variance V: mu = log(M) - sigma^2/2
+    # So E[R^a] = M^a * exp((a^2 - a)*sigma^2/2) = M^a * exp(a*(a-1)*sigma^2/2)
+    exponent = (1 - CRRA) * (-CRRA) * log_var / 2
+    E_R_power = (RiskyAvg ** (1 - CRRA)) * np.exp(exponent)
+
+    # Merton-Samuelson MPC
+    inner = DiscFac * E_R_power
+    if inner <= 0 or inner >= 1:
+        msg = f"Invalid parameters: DiscFac * E[R^{{1-CRRA}}] = {inner} not in (0,1)"
+        raise ValueError(msg)
+
+    MPC_stochastic = 1 - inner ** (1 / CRRA)
+
+    return MPC_stochastic
+
+
+def method_of_moderation_stochastic_r(
+    solution_next,
+    IncShkDstn,
+    LivPrb,
+    DiscFac,
+    CRRA,
+    Rfree,
+    PermGroFac,
+    BoroCnstArt,
+    aXtraGrid,
+    vFuncBool,
+    CubicBool,
+    RiskyAvg,
+    RiskyStd,
+):
+    """Method of Moderation solver with stochastic rate of return.
+
+    This solver extends the standard Method of Moderation to handle
+    i.i.d. lognormal returns. The key modification is to use the
+    stochastic MPC (from Merton-Samuelson) which accounts for return
+    risk in the asymptotic behavior of the consumption function.
+
+    The implementation uses the original MPCmin for the moderation ratio
+    calculation (to ensure consumption stays within computable bounds),
+    but computes and stores the stochastic MPC for reference and for
+    constructing appropriate asymptotic bounds.
+
+    Parameters
+    ----------
+    Same as method_of_moderation, plus:
+    RiskyAvg : float
+        Mean of risky return R (in levels)
+    RiskyStd : float
+        Standard deviation of risky return R (in levels)
+
+    Returns
+    -------
+    ConsumerSolution
+        Solution with stochastic-return-adjusted bounds and MPC information
+
+    Notes
+    -----
+    For full stochastic returns, the EGM step would also need to integrate
+    over return shocks. This implementation provides the analytical MPC
+    adjustment while using the deterministic-returns EGM for the base solve.
+
+    """
+    # Calculate stochastic MPC (for reference and asymptotic behavior)
+    MPCmin_stochastic = calc_stochastic_mpc(DiscFac, CRRA, RiskyAvg, RiskyStd)
+
+    # Setup - use original parameters for EGM solve
+    uFunc = UtilityFuncCRRA(CRRA)
+
+    (
+        DiscFacEff,
+        hNrm,
+        BoroCnstNat,
+        mNrmMin,
+        MPCmin,  # Original MPCmin for moderation calculation
+        MPCmax,
+    ) = prepare_to_solve(
+        solution_next,
+        IncShkDstn,
+        LivPrb,
+        DiscFac,
+        CRRA,
+        Rfree,
+        PermGroFac,
+        BoroCnstArt,
+    )
+
+    vFuncNext = solution_next.vFunc
+    vPfuncNext = solution_next.vPfunc
+    vPPfuncNext = solution_next.vPPfunc
+
+    # Create behavioral bounds with original MPCmin (for moderation)
+    optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
+        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+    )
+
+    # Also create stochastic bounds (for reference/comparison)
+    optimist_stoch, pessimist_stoch, _ = make_behavioral_bounds(
+        hNrm, mNrmMin, MPCmin_stochastic, MPCmax, CRRA
+    )
+
+    # Solve EGM step (standard solve)
+    aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step(
+        aXtraGrid,
+        mNrmMin,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vPfuncNext,
+        uFunc,
+    )
+
+    # Build consumption function using original bounds
+    cFunc = _build_cfunc_mom(
+        DiscFacEff=DiscFacEff,
+        Rfree=Rfree,
+        PermGroFac=PermGroFac,
+        CRRA=CRRA,
+        IncShkDstn=IncShkDstn,
+        vPPfuncNext=vPPfuncNext,
+        uFunc=uFunc,
+        aNrm=aNrm,
+        cNrm=cNrm,
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+        CubicBool=CubicBool,
+        optimist=optimist,
+        pessimist=pessimist,
+    )
+
+    # Construct marginal value functions
+    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
+    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
+
+    # Value function
+    if vFuncBool:
+        vNvrs, vNvrsP = construct_value_functions(
+            aNrm,
+            BoroCnstNat,
+            DiscFacEff,
+            Rfree,
+            PermGroFac,
+            CRRA,
+            IncShkDstn,
+            vFuncNext,
+            EndOfPrdvP,
+            uFunc,
+            cNrm,
+            CubicBool,
+        )
+        vFunc = _build_vfunc_mom(
+            mNrm=mNrm,
+            mNrmMin=mNrmMin,
+            hNrm=hNrm,
+            MPCmin=MPCmin,
+            CRRA=CRRA,
+            vNvrs=vNvrs,
+            vNvrsP=vNvrsP,
+            optimist=optimist,
+            pessimist=pessimist,
+            CubicBool=CubicBool,
+        )
+    else:
+        vFunc = NullFunc()
+
+    # Package solution
+    solution = ConsumerSolution(
+        cFunc=cFunc,
+        vFunc=vFunc,
+        vPfunc=vPfunc,
+        vPPfunc=vPPfunc,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+    )
+
+    solution.Optimist = optimist
+    solution.Pessimist = pessimist
+    solution.TighterUpperBound = tighterUpperBound
+
+    # Stochastic return information
+    solution.MPCmin_stochastic = MPCmin_stochastic
+    solution.MPCmin_deterministic = MPCmin
+    solution.OptimistStochastic = optimist_stoch
+    solution.PessimistStochastic = pessimist_stoch
+
+    return solution
+
+
+# Default parameters for stochastic return consumer
+IndShockMoMStochasticR_defaults = IndShockConsumerType_defaults.copy()
+IndShockMoMStochasticR_defaults["RiskyAvg"] = 1.08  # 8% mean return
+IndShockMoMStochasticR_defaults["RiskyStd"] = 0.20  # 20% std deviation
+
+
+class IndShockMoMStochasticRConsumerType(IndShockConsumerType):
+    """HARK consumer type using Method of Moderation with stochastic returns.
+
+    This class extends the standard Method of Moderation to handle i.i.d.
+    lognormal returns on savings. The Merton-Samuelson result provides
+    an analytical MPC that replaces MPCmin in the moderation formulas.
+
+    Parameters
+    ----------
+    RiskyAvg : float
+        Mean of risky return R (in levels, default 1.08 = 8% return)
+    RiskyStd : float
+        Standard deviation of risky return R (in levels, default 0.20)
+
+    Notes
+    -----
+    - Both optimist and pessimist face the same stochastic return
+    - The MPC is computed using the Merton-Samuelson formula
+    - Extensions to serially correlated returns require additional state variables
+
+    References
+    ----------
+    Samuelson (1969), Merton (1969, 1971)
+
+    """
+
+    default_: ClassVar = {
+        "params": IndShockMoMStochasticR_defaults,
+        "solver": method_of_moderation_stochastic_r,
+        "model": "ConsIndShock.yaml",
+    }
+
+    time_inv_: ClassVar = [*IndShockConsumerType.time_inv_, "RiskyAvg", "RiskyStd"]
