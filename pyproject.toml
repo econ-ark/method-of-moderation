@@ -8,7 +8,7 @@ version = "0.1.0"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "econ-ark",
     "ipywidgets>=8.1.7",
@@ -16,8 +16,9 @@ dependencies = [
     "jupytext>=1.17.2",
     "matplotlib>=3.9.4",
     "mystmd>=1.7.1",
-    "numba>=0.59.0",  # Ensure Python 3.11 compatibility
+    "numba>=0.59.0", # Ensure Python 3.11 compatibility
     "numpy>=2.0.2",
+    "ruff>=0.12.8",
     "scipy>=1.15.3",
     "voila>=0.5.8",
 ]

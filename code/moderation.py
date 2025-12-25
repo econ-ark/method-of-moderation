@@ -2075,9 +2075,7 @@ def calc_cusp_point(hNrm, mNrmMin, MPCmin, MPCmax):
     hNrmEx = hNrmOpt - hNrmPes  # Excess human wealth = hNrm + mNrmMin
 
     # From eq:mNrmCusp in the paper
-    mNrmCusp = -hNrmPes + MPCmin * hNrmEx / (MPCmax - MPCmin)
-
-    return mNrmCusp
+    return -hNrmPes + MPCmin * hNrmEx / (MPCmax - MPCmin)
 
 
 def moderate_tight(m, mNrmMin, cNrm, MPCmin, MPCmax):
@@ -2224,7 +2222,7 @@ class TransformedFunctionMoMCusp:
         low_mask = m < self.mNrmCusp
         if np.any(low_mask):
             m_low = m[low_mask]
-            m_ex_low = m_ex[low_mask]
+            m_ex[low_mask]
             mu_low = log_mnrm_ex(m_low, self.mNrmMin)
 
             chi_low = self.logitModRteFuncLow(mu_low)
@@ -2340,7 +2338,7 @@ def _build_cfunc_mom_cusp(
     mNrm_low = mNrm[low_mask]
     cNrm_low = cNrm[low_mask]
     MPC_low = MPC[low_mask]
-    mNrmEx_low = mNrmEx[low_mask]
+    mNrmEx[low_mask]
     mu_low = mu[low_mask]
 
     # Moderation ratio using tight bound
@@ -2634,9 +2632,7 @@ def calc_stochastic_mpc(DiscFac, CRRA, RiskyAvg, RiskyStd):
         msg = f"Invalid parameters: DiscFac * E[R^{{1-CRRA}}] = {inner} not in (0,1)"
         raise ValueError(msg)
 
-    MPC_stochastic = 1 - inner ** (1 / CRRA)
-
-    return MPC_stochastic
+    return 1 - inner ** (1 / CRRA)
 
 
 def method_of_moderation_stochastic_r(
