@@ -36,7 +36,7 @@ upper bound to the solution that will actually be optimal. A lower bound is
 provided by the behavior of a consumer who has the subjective belief that the
 future level of income will be the worst that it can possibly be. This consumer,
 too, behaves according to the convenient analytical perfect foresight solution,
-but his certainty is that of a pessimist who is extremely overconfident in his pessimism.
+but his certainty is that of a pessimist perfectly confident in his pessimism.
 
 We build on bounds for the consumption function and limiting MPCs established in buffer-stock theory and related work {cite:p}`StachurskiToda2019JET,MST2020JET`. Using results from {cite:t}`CarrollShanker2024`, we show how to use these upper
 and lower bounds to tightly constrain the shape and characteristics of the
@@ -306,7 +306,7 @@ a fact and proceed by manipulating the inequality:
 $$
 \begin{array}{rcl}
 \cFuncOpt(\mNrmMin+\mNrmEx) > & \cFuncReal(\mNrmMin+\mNrmEx) & > \cFuncPes(\mNrmMin+\mNrmEx) \\
--\cFuncPes(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncPes(\mNrmMin+\mNrmEx) \\
+-\cFuncOpt(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncPes(\mNrmMin+\mNrmEx) \\
 0 < & \cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx) & < \hNrmEx \MPCmin \\
 0 < & \underbrace{\left(\frac{\cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx)}{\hNrmEx \MPCmin}\right)}_{\equiv \modRte} & < 1
 \end{array}

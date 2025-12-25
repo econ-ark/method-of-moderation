@@ -15,7 +15,7 @@ dependencies = [
     "jupyterlab-myst",
     "jupytext>=1.17.2",
     "matplotlib>=3.9.4",
-    "mystmd>=1.6.0",
+    "mystmd>=1.7.1",
     "numba>=0.59.0",  # Ensure Python 3.11 compatibility
     "numpy>=2.0.2",
     "scipy>=1.15.3",
