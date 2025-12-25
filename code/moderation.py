@@ -26,11 +26,11 @@ The algorithm transforms the consumption function construction problem by workin
 in the space between these analytical bounds:
 
 1. **Solve standard EGM**: Use endogenous gridpoints to get consumption/resources pairs
-2. **Calculate moderation ratio**: omega(mu) = (c_opt - c_real) / (c_opt - c_pes)
+2. **Calculate moderation ratio**: omega(mu) = (c_real - c_pes) / (c_opt - c_pes)
    where mu = log(m - m_min) is log excess market resources
-3. **Apply chi transformation**: chi(mu) = log((1-omega)/omega) for asymptotic linearity
+3. **Apply logit transformation**: chi(mu) = log(omega/(1-omega)) for asymptotic linearity
 4. **Interpolate chi function**: Create smooth chi(mu) interpolant with derivatives
-5. **Reconstruct consumption**: c_real = c_opt - omega * (c_opt - c_pes)
+5. **Reconstruct consumption**: c_real = c_pes + omega * (c_opt - c_pes)
 
 Key Mathematical Properties
 ---------------------------
@@ -69,8 +69,8 @@ construct_value_functions : Build complete value functions with inverse utility 
 Mathematical Utility Functions
 ------------------------------
 log_mnrm_ex : Log excess market resources transformation mu = log(m - m_min)
-moderate : Moderation ratio calculation omega = (c_opt - c_real)/(c_opt - c_pes)
-logit_moderate : Asymptotically linear transformation chi = log((1-omega)/omega)
+moderate : Moderation ratio calculation omega = (c_real - c_pes)/(c_opt - c_pes)
+logit_moderate : Asymptotically linear transformation chi = log(omega/(1-omega))
 expit_moderate : Inverse chi transformation omega = 1/(1 + exp(chi))
 TransformedFunctionMoM : Generalized function transformer using Method of Moderation
 
@@ -1627,7 +1627,7 @@ def _construct_mom_interpolants(
     modRteMu : np.array
         Derivatives of moderation ratio domega/dmu at each gridpoint
     logitModRte : np.array
-        Chi transformation values chi = log((1-omega)/omega) at each gridpoint
+        Logit transformation values chi = log(omega/(1-omega)) at each gridpoint
     logitModRteMu : np.array
         Derivatives of chi transformation dchi/dmu at each gridpoint
     CubicBool : bool
@@ -1730,10 +1730,10 @@ def _method_of_moderation(
     Algorithm Overview (following the paper):
     1. Compute analytical bounds: optimist c_opt(m) and pessimist c_pes(m)
     2. Solve standard EGM to get realist consumption at gridpoints
-    3. Calculate moderation ratio omega(mu) = (c_opt - c_real)/(c_opt - c_pes)
-    4. Apply chi transformation chi(mu) = log((1-omega)/omega) for asymptotic linearity
+    3. Calculate moderation ratio omega(mu) = (c_real - c_pes)/(c_opt - c_pes)
+    4. Apply logit transformation chi(mu) = log(omega/(1-omega)) for asymptotic linearity
     5. Interpolate chi(mu) function with derivatives for smooth extrapolation
-    6. Reconstruct consumption function using equation (7) from the paper
+    6. Reconstruct consumption: c_real = c_pes + omega * (c_opt - c_pes)
 
     Key advantages over standard EGM (addresses Figure 1 extrapolation problem):
     - No negative precautionary saving in extrapolation regions
