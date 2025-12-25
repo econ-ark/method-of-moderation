@@ -152,68 +152,6 @@ from HARK.interpolation import (
 )
 from HARK.rewards import UtilityFuncCRRA
 
-# =========================================================================
-# Core solvers (declared early to guide file order)
-# =========================================================================
-
-
-def endogenous_grid_method(
-    solution_next,
-    IncShkDstn,
-    LivPrb,
-    DiscFac,
-    CRRA,
-    Rfree,
-    PermGroFac,
-    BoroCnstArt,
-    aXtraGrid,
-    vFuncBool,
-    CubicBool,
-    ExtrapBool,
-):
-    return _endogenous_grid_method(
-        solution_next,
-        IncShkDstn,
-        LivPrb,
-        DiscFac,
-        CRRA,
-        Rfree,
-        PermGroFac,
-        BoroCnstArt,
-        aXtraGrid,
-        vFuncBool,
-        CubicBool,
-        ExtrapBool,
-    )
-
-
-def method_of_moderation(
-    solution_next,
-    IncShkDstn,
-    LivPrb,
-    DiscFac,
-    CRRA,
-    Rfree,
-    PermGroFac,
-    BoroCnstArt,
-    aXtraGrid,
-    vFuncBool,
-    CubicBool,
-):
-    return _method_of_moderation(
-        solution_next,
-        IncShkDstn,
-        LivPrb,
-        DiscFac,
-        CRRA,
-        Rfree,
-        PermGroFac,
-        BoroCnstArt,
-        aXtraGrid,
-        vFuncBool,
-        CubicBool,
-    )
-
 
 def _create_interpolation(
     cubic_bool: bool,
@@ -275,6 +213,17 @@ MOM_EXTRAP_GAP_RIGHT = 0.5  # Larger rightward extension (higher wealth directio
 # =========================================================================
 # Shared helpers to organize common steps (EGM vs MoM)
 # =========================================================================
+
+
+def _get_derivative(func, x):
+    """Get derivative from function using derivativeX if available, else derivative.
+
+    HARK interpolation objects use 'derivativeX' while standard functions use
+    'derivative'. This helper abstracts over the difference.
+    """
+    if hasattr(func, "derivativeX"):
+        return func.derivativeX(x)
+    return func.derivative(x)
 
 
 def _compute_mpc_vector(
@@ -497,6 +446,156 @@ def _build_vfunc_mom(
         vNvrsPesFunc,
     )
     return ValueFuncCRRA(moderated_vfunc, CRRA)
+
+
+def _build_marginal_value_funcs(cFunc, CRRA, CubicBool):
+    """Construct marginal and marginal-marginal value functions.
+
+    Parameters
+    ----------
+    cFunc : callable
+        Consumption function
+    CRRA : float
+        Coefficient of relative risk aversion
+    CubicBool : bool
+        Whether to use cubic interpolation (determines if vPPfunc is computed)
+
+    Returns
+    -------
+    tuple
+        (vPfunc, vPPfunc) - marginal value functions
+    """
+    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
+    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
+    return vPfunc, vPPfunc
+
+
+def _build_complete_vfunc(
+    *,
+    vFuncBool,
+    aNrm,
+    BoroCnstNat,
+    DiscFacEff,
+    Rfree,
+    PermGroFac,
+    CRRA,
+    IncShkDstn,
+    vFuncNext,
+    EndOfPrdvP,
+    uFunc,
+    cNrm,
+    mNrm,
+    mNrmMin,
+    hNrm,
+    MPCmin,
+    optimist,
+    pessimist,
+    CubicBool,
+):
+    """Construct complete value function using Method of Moderation if requested.
+
+    Parameters
+    ----------
+    vFuncBool : bool
+        Whether to compute value function
+    [other params same as construct_value_functions and _build_vfunc_mom]
+
+    Returns
+    -------
+    vFunc : ValueFuncCRRA or NullFunc
+        Value function (or dummy if not requested)
+    """
+    if not vFuncBool:
+        return NullFunc()
+
+    vNvrs, vNvrsP = construct_value_functions(
+        aNrm,
+        BoroCnstNat,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vFuncNext,
+        EndOfPrdvP,
+        uFunc,
+        cNrm,
+        CubicBool,
+    )
+    return _build_vfunc_mom(
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        CRRA=CRRA,
+        vNvrs=vNvrs,
+        vNvrsP=vNvrsP,
+        optimist=optimist,
+        pessimist=pessimist,
+        CubicBool=CubicBool,
+    )
+
+
+def _assemble_mom_solution(
+    *,
+    cFunc,
+    vFunc,
+    vPfunc,
+    vPPfunc,
+    mNrmMin,
+    hNrm,
+    MPCmin,
+    MPCmax,
+    optimist,
+    pessimist,
+    tighterUpperBound,
+):
+    """Assemble complete ConsumerSolution with behavioral bounds attached.
+
+    Parameters
+    ----------
+    cFunc : callable
+        Consumption function
+    vFunc : callable
+        Value function
+    vPfunc : callable
+        Marginal value function
+    vPPfunc : callable
+        Marginal-marginal value function
+    mNrmMin : float
+        Minimum market resources
+    hNrm : float
+        Human wealth
+    MPCmin : float
+        Minimum MPC
+    MPCmax : float
+        Maximum MPC
+    optimist : ConsumerSolution
+        Optimist perfect foresight solution
+    pessimist : ConsumerSolution
+        Pessimist perfect foresight solution
+    tighterUpperBound : ConsumerSolution
+        Tighter upper bound solution
+
+    Returns
+    -------
+    ConsumerSolution
+        Complete solution with behavioral bounds attached
+    """
+    solution = ConsumerSolution(
+        cFunc=cFunc,
+        vFunc=vFunc,
+        vPfunc=vPfunc,
+        vPPfunc=vPPfunc,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+    )
+    solution.Optimist = optimist
+    solution.Pessimist = pessimist
+    solution.TighterUpperBound = tighterUpperBound
+    return solution
 
 
 def prepare_to_solve(
@@ -956,7 +1055,7 @@ def soln_perf_foresight(intercept, slope, crra):
     )
 
 
-def _endogenous_grid_method(
+def endogenous_grid_method(
     solution_next,
     IncShkDstn,
     LivPrb,
@@ -1529,13 +1628,7 @@ class TransformedFunctionMoM:
 
         chi = self.logitModRteFunc(mu)
         omega = expit_moderate(chi)
-
-        # Support both HARK's derivativeX convention and standard derivative
-        chi_prime_mu = (
-            self.logitModRteFunc.derivativeX(mu)
-            if hasattr(self.logitModRteFunc, "derivativeX")
-            else self.logitModRteFunc.derivative(mu)
-        )
+        chi_prime_mu = _get_derivative(self.logitModRteFunc, mu)
 
         # 3. Check if this is a consumption function (both bounds have same slope = MPCmin)
         if np.allclose(f_opt_prime, f_pes_prime):
@@ -1679,7 +1772,7 @@ def _construct_mom_interpolants(
     return modRteFunc, logitModRteFunc
 
 
-def _method_of_moderation(
+def method_of_moderation(
     solution_next,
     IncShkDstn,
     LivPrb,
@@ -1840,73 +1933,46 @@ def _method_of_moderation(
         pessimist=pessimist,
     )
 
-    # =========================================================================
     # Construct marginal value functions
-    # =========================================================================
+    vPfunc, vPPfunc = _build_marginal_value_funcs(cFunc, CRRA, CubicBool)
 
-    # Create marginal value function v'(m) from consumption function
-    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
-
-    # Create marginal marginal value function v''(m)
-    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
-
-    # Construct this period's value function if requested
-    if vFuncBool:
-        # Construct complete value functions
-        vNvrs, vNvrsP = construct_value_functions(
-            aNrm,
-            BoroCnstNat,
-            DiscFacEff,
-            Rfree,
-            PermGroFac,
-            CRRA,
-            IncShkDstn,
-            vFuncNext,
-            EndOfPrdvP,
-            uFunc,
-            cNrm,
-            CubicBool,
-        )
-
-        # Construct the beginning-of-period value function via MoM helper
-        vFunc = _build_vfunc_mom(
-            mNrm=mNrm,
-            mNrmMin=mNrmMin,
-            hNrm=hNrm,
-            MPCmin=MPCmin,
-            CRRA=CRRA,
-            vNvrs=vNvrs,
-            vNvrsP=vNvrsP,
-            optimist=optimist,
-            pessimist=pessimist,
-            CubicBool=CubicBool,
-        )
-    else:
-        vFunc = NullFunc()  # Dummy object
-
-    # =========================================================================
-    # Assemble and return the complete solution
-    # =========================================================================
-
-    # Package all solution components into ConsumerSolution object
-    solution = ConsumerSolution(
-        cFunc=cFunc,  # Method of Moderation consumption function
-        vFunc=vFunc,  # Value function (if computed)
-        vPfunc=vPfunc,  # Marginal value function
-        vPPfunc=vPPfunc,  # Marginal marginal value function
-        mNrmMin=mNrmMin,  # Minimum market resources
-        hNrm=hNrm,  # Expected human wealth
-        MPCmin=MPCmin,  # Minimum marginal propensity to consume
-        MPCmax=MPCmax,  # Maximum marginal propensity to consume
+    # Construct value function if requested
+    vFunc = _build_complete_vfunc(
+        vFuncBool=vFuncBool,
+        aNrm=aNrm,
+        BoroCnstNat=BoroCnstNat,
+        DiscFacEff=DiscFacEff,
+        Rfree=Rfree,
+        PermGroFac=PermGroFac,
+        CRRA=CRRA,
+        IncShkDstn=IncShkDstn,
+        vFuncNext=vFuncNext,
+        EndOfPrdvP=EndOfPrdvP,
+        uFunc=uFunc,
+        cNrm=cNrm,
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        optimist=optimist,
+        pessimist=pessimist,
+        CubicBool=CubicBool,
     )
 
-    # Add auxiliary consumption functions for Method of Moderation analysis
-    # These enable comparison between different solution methods and bounds checking
-    solution.Optimist = optimist
-    solution.Pessimist = pessimist
-    solution.TighterUpperBound = tighterUpperBound
-
-    return solution
+    # Assemble and return complete solution
+    return _assemble_mom_solution(
+        cFunc=cFunc,
+        vFunc=vFunc,
+        vPfunc=vPfunc,
+        vPPfunc=vPPfunc,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        MPCmax=MPCmax,
+        optimist=optimist,
+        pessimist=pessimist,
+        tighterUpperBound=tighterUpperBound,
+    )
 
 
 class IndShockMoMConsumerType(IndShockConsumerType):
@@ -2163,11 +2229,7 @@ class TransformedFunctionMoMCusp:
 
             chi_low = self.logitModRteFuncLow(mu_low)
             omega_low = expit_moderate(chi_low)
-            chi_prime_mu_low = (
-                self.logitModRteFuncLow.derivativeX(mu_low)
-                if hasattr(self.logitModRteFuncLow, "derivativeX")
-                else self.logitModRteFuncLow.derivative(mu_low)
-            )
+            chi_prime_mu_low = _get_derivative(self.logitModRteFuncLow, mu_low)
             # Compute omega'_mu from chi, consistent with __call__
             omega_prime_mu_low = omega_low * (1 - omega_low) * chi_prime_mu_low
 
@@ -2188,11 +2250,7 @@ class TransformedFunctionMoMCusp:
 
             chi_high = self.logitModRteFuncHigh(mu_high)
             omega_high = expit_moderate(chi_high)
-            chi_prime_mu_high = (
-                self.logitModRteFuncHigh.derivativeX(mu_high)
-                if hasattr(self.logitModRteFuncHigh, "derivativeX")
-                else self.logitModRteFuncHigh.derivative(mu_high)
-            )
+            chi_prime_mu_high = _get_derivative(self.logitModRteFuncHigh, mu_high)
             # Compute omega'_mu from chi, consistent with __call__
             omega_prime_mu_high = omega_high * (1 - omega_high) * chi_prime_mu_high
 
@@ -2439,42 +2497,33 @@ def method_of_moderation_cusp(
     )
 
     # Construct marginal value functions
-    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
-    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
+    vPfunc, vPPfunc = _build_marginal_value_funcs(cFunc, CRRA, CubicBool)
 
-    # Value function (use standard MoM approach)
-    if vFuncBool:
-        vNvrs, vNvrsP = construct_value_functions(
-            aNrm,
-            BoroCnstNat,
-            DiscFacEff,
-            Rfree,
-            PermGroFac,
-            CRRA,
-            IncShkDstn,
-            vFuncNext,
-            EndOfPrdvP,
-            uFunc,
-            cNrm,
-            CubicBool,
-        )
-        vFunc = _build_vfunc_mom(
-            mNrm=mNrm,
-            mNrmMin=mNrmMin,
-            hNrm=hNrm,
-            MPCmin=MPCmin,
-            CRRA=CRRA,
-            vNvrs=vNvrs,
-            vNvrsP=vNvrsP,
-            optimist=optimist,
-            pessimist=pessimist,
-            CubicBool=CubicBool,
-        )
-    else:
-        vFunc = NullFunc()
+    # Construct value function if requested
+    vFunc = _build_complete_vfunc(
+        vFuncBool=vFuncBool,
+        aNrm=aNrm,
+        BoroCnstNat=BoroCnstNat,
+        DiscFacEff=DiscFacEff,
+        Rfree=Rfree,
+        PermGroFac=PermGroFac,
+        CRRA=CRRA,
+        IncShkDstn=IncShkDstn,
+        vFuncNext=vFuncNext,
+        EndOfPrdvP=EndOfPrdvP,
+        uFunc=uFunc,
+        cNrm=cNrm,
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        optimist=optimist,
+        pessimist=pessimist,
+        CubicBool=CubicBool,
+    )
 
-    # Package solution
-    solution = ConsumerSolution(
+    # Assemble solution and add cusp-specific attribute
+    solution = _assemble_mom_solution(
         cFunc=cFunc,
         vFunc=vFunc,
         vPfunc=vPfunc,
@@ -2483,13 +2532,11 @@ def method_of_moderation_cusp(
         hNrm=hNrm,
         MPCmin=MPCmin,
         MPCmax=MPCmax,
+        optimist=optimist,
+        pessimist=pessimist,
+        tighterUpperBound=tighterUpperBound,
     )
-
-    solution.Optimist = optimist
-    solution.Pessimist = pessimist
-    solution.TighterUpperBound = tighterUpperBound
     solution.mNrmCusp = calc_cusp_point(hNrm, mNrmMin, MPCmin, MPCmax)
-
     return solution
 
 
@@ -2712,42 +2759,33 @@ def method_of_moderation_stochastic_r(
     )
 
     # Construct marginal value functions
-    vPfunc = MargValueFuncCRRA(cFunc, CRRA)
-    vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
+    vPfunc, vPPfunc = _build_marginal_value_funcs(cFunc, CRRA, CubicBool)
 
-    # Value function
-    if vFuncBool:
-        vNvrs, vNvrsP = construct_value_functions(
-            aNrm,
-            BoroCnstNat,
-            DiscFacEff,
-            Rfree,
-            PermGroFac,
-            CRRA,
-            IncShkDstn,
-            vFuncNext,
-            EndOfPrdvP,
-            uFunc,
-            cNrm,
-            CubicBool,
-        )
-        vFunc = _build_vfunc_mom(
-            mNrm=mNrm,
-            mNrmMin=mNrmMin,
-            hNrm=hNrm,
-            MPCmin=MPCmin,
-            CRRA=CRRA,
-            vNvrs=vNvrs,
-            vNvrsP=vNvrsP,
-            optimist=optimist,
-            pessimist=pessimist,
-            CubicBool=CubicBool,
-        )
-    else:
-        vFunc = NullFunc()
+    # Construct value function if requested
+    vFunc = _build_complete_vfunc(
+        vFuncBool=vFuncBool,
+        aNrm=aNrm,
+        BoroCnstNat=BoroCnstNat,
+        DiscFacEff=DiscFacEff,
+        Rfree=Rfree,
+        PermGroFac=PermGroFac,
+        CRRA=CRRA,
+        IncShkDstn=IncShkDstn,
+        vFuncNext=vFuncNext,
+        EndOfPrdvP=EndOfPrdvP,
+        uFunc=uFunc,
+        cNrm=cNrm,
+        mNrm=mNrm,
+        mNrmMin=mNrmMin,
+        hNrm=hNrm,
+        MPCmin=MPCmin,
+        optimist=optimist,
+        pessimist=pessimist,
+        CubicBool=CubicBool,
+    )
 
-    # Package solution
-    solution = ConsumerSolution(
+    # Assemble solution and add stochastic-return-specific attributes
+    solution = _assemble_mom_solution(
         cFunc=cFunc,
         vFunc=vFunc,
         vPfunc=vPfunc,
@@ -2756,18 +2794,14 @@ def method_of_moderation_stochastic_r(
         hNrm=hNrm,
         MPCmin=MPCmin,
         MPCmax=MPCmax,
+        optimist=optimist,
+        pessimist=pessimist,
+        tighterUpperBound=tighterUpperBound,
     )
-
-    solution.Optimist = optimist
-    solution.Pessimist = pessimist
-    solution.TighterUpperBound = tighterUpperBound
-
-    # Stochastic return information
     solution.MPCmin_stochastic = MPCmin_stochastic
     solution.MPCmin_deterministic = MPCmin
     solution.OptimistStochastic = optimist_stoch
     solution.PessimistStochastic = pessimist_stoch
-
     return solution
 
 
