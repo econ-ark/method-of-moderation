@@ -31,109 +31,12 @@ Key Figures
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import Enum
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-from moderation import expit_moderate
-
-if TYPE_CHECKING:
-    from matplotlib.axes import Axes
-
-# Public API exports
-__all__ = [
-    # Grid type enum and configuration
-    "GridType",
-    "PlotConfig",
-    "extract_egm_grid_points",
-    # Grid point extraction functions
-    "extract_mom_grid_points",
-    "plot_consumption_bounds",
-    "plot_logit_function",
-    # Main plotting functions
-    "plot_moderation_ratio",
-    "plot_mom_mpc",
-    "plot_precautionary_gaps",
-    "plot_value_functions",
-]
-
-# =========================================================================
-# Plot-Specific Constants
-# =========================================================================
-
-
-class GridType(str, Enum):
-    """Grid types for data extraction from solutions.
-
-    Attributes
-    ----------
-    CONSUMPTION : str
-        Extract consumption function grid points
-    VALUE : str
-        Extract value function grid points
-    MPC : str
-        Extract marginal propensity to consume grid points
-
-    """
-
-    CONSUMPTION = "consumption"
-    VALUE = "value"
-    MPC = "mpc"
-
-
-@dataclass
-class PlotConfig:
-    """Configuration for plot metadata and display options.
-
-    This dataclass encapsulates common plotting parameters to reduce
-    function signature clutter and make plots easier to configure.
-
-    Attributes
-    ----------
-    title : str
-        Main figure title (suptitle)
-    subtitle : str
-        Subplot title (axes title)
-    xlabel : str
-        X-axis label, by default "Normalized Market Resources (m)"
-    ylabel : str
-        Y-axis label (required, no default)
-    legend_loc : str
-        Legend location, by default "upper right"
-    grid_points : bool
-        Whether to display interpolation grid points, by default True
-    grid_type : GridType
-        Type of grid to extract for display, by default GridType.CONSUMPTION
-    solution : object | None
-        Solution object for grid point extraction, by default None
-
-    Examples
-    --------
-    >>> config = PlotConfig(
-    ...     title="Figure 1",
-    ...     subtitle="Consumption Function",
-    ...     ylabel="Consumption (c)",
-    ... )
-
-    """
-
-    title: str
-    subtitle: str
-    ylabel: str
-    xlabel: str = "Normalized Market Resources (m)"
-    legend_loc: str = "upper right"
-    grid_points: bool = True
-    grid_type: GridType = GridType.CONSUMPTION
-    solution: object | None = None
-
-
-# Y-axis limits for different plot types
-YLIM_MODERATION_RATIO = (-0.1, 1.1)
-YLIM_PRECAUTIONARY_GAPS = (-0.15, 0.35)
-YLIM_VALUE_FUNCTION = (-6, 0)
-
+from moderation import calc_cusp_point, expit_moderate
 from style import (
     ALPHA_HIGH,
     ALPHA_LOW,
@@ -162,30 +65,77 @@ from style import (
     setup_figure,
 )
 
+if TYPE_CHECKING:
+    from matplotlib.axes import Axes
+
+# Public API exports
+__all__ = [
+    # Grid type enum
+    "GridType",
+    # Grid point extraction functions
+    "extract_egm_grid_points",
+    "extract_grid_points",
+    "extract_mom_grid_points",
+    # Main plotting functions
+    "plot_consumption_bounds",
+    "plot_cusp_point",
+    "plot_logit_function",
+    "plot_moderation_ratio",
+    "plot_mom_mpc",
+    "plot_precautionary_gaps",
+    "plot_stochastic_bounds",
+    "plot_value_functions",
+]
+
+# =========================================================================
+# Plot-Specific Constants
+# =========================================================================
+
+
+class GridType(str, Enum):
+    """Grid types for data extraction from solutions.
+
+    Attributes
+    ----------
+    CONSUMPTION : str
+        Extract consumption function grid points
+    VALUE : str
+        Extract value function grid points
+    MPC : str
+        Extract marginal propensity to consume grid points
+
+    """
+
+    CONSUMPTION = "consumption"
+    VALUE = "value"
+    MPC = "mpc"
+
+
+# Y-axis limits for different plot types
+YLIM_MODERATION_RATIO = (-0.1, 1.1)
+YLIM_PRECAUTIONARY_GAPS = (-0.15, 0.35)
+YLIM_VALUE_FUNCTION = (-6, 0)
+
 # =========================================================================
 # Helper Functions for Common Plotting Patterns
 # =========================================================================
 
 
-def _validate_grid_points_params(grid_points: bool, solution: object | None) -> None:
-    """Validate parameters for grid point plotting.
+def _is_mom_solution(solution) -> bool:
+    """Check if solution uses Method of Moderation.
 
     Parameters
     ----------
-    grid_points : bool
-        Whether grid points should be shown
-    solution : object | None
-        Solution object to extract grid points from
+    solution : ConsumerSolution
+        Solution object to check
 
-    Raises
-    ------
-    ValueError
-        If grid_points is True but solution is None
+    Returns
+    -------
+    bool
+        True if solution uses TransformedFunctionMoM, False otherwise
 
     """
-    if grid_points and solution is None:
-        msg = "solution parameter is required when grid_points=True"
-        raise ValueError(msg)
+    return type(solution.cFunc).__name__ == "TransformedFunctionMoM"
 
 
 def _add_reference_lines(
@@ -358,7 +308,8 @@ def extract_mom_grid_points(
             return grid_points_m, grid_points_mpc
 
     except (AttributeError, KeyError, IndexError):
-        # Catch specific exceptions instead of bare except
+        # Grid extraction can fail for various solution types or incomplete solutions.
+        # Return None to allow plotting to continue without grid point markers.
         pass
 
     return None, None
@@ -396,16 +347,45 @@ def extract_egm_grid_points(
             return grid_points_m, grid_points_v
 
         if grid_type == GridType.MPC:
-            # For EGM MPC, use consumption grid and evaluate MPC function
+            # For EGM MPC, use consumption grid and evaluate derivative
             grid_m = solution.cFunc.x_list.copy()
-            grid_mpc = solution.vPfunc(grid_m)
+            grid_mpc = solution.cFunc.derivative(grid_m)
             return grid_m, grid_mpc
 
     except (AttributeError, KeyError, IndexError):
-        # Catch specific exceptions instead of bare except
+        # Grid extraction can fail for various solution types or incomplete solutions.
+        # Return None to allow plotting to continue without grid point markers.
         pass
 
     return None, None
+
+
+def extract_grid_points(
+    solution,
+    grid_type: GridType = GridType.CONSUMPTION,
+) -> tuple[np.ndarray | None, np.ndarray | None]:
+    """Extract grid points from either MoM or EGM solution.
+
+    Unified dispatcher that selects the appropriate extraction method
+    based on the solution type.
+
+    Parameters
+    ----------
+    solution : ConsumerSolution
+        Solution object (MoM or EGM)
+    grid_type : GridType, optional
+        Type of grid to extract, by default GridType.CONSUMPTION
+
+    Returns
+    -------
+    tuple[np.ndarray | None, np.ndarray | None]
+        (grid_points_m, grid_points_y) where y is consumption, value, or mpc.
+        Returns (None, None) if extraction fails.
+
+    """
+    if _is_mom_solution(solution):
+        return extract_mom_grid_points(solution, grid_type)
+    return extract_egm_grid_points(solution, grid_type)
 
 
 # =========================================================================
@@ -461,7 +441,7 @@ def plot_moderation_ratio(
     chi_values = logitModRteFunc(mu_grid)
     omega_values = expit_moderate(chi_values)
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot moderation ratio
     mom_color = get_concept_color("MoM")
@@ -475,7 +455,7 @@ def plot_moderation_ratio(
 
     # Extract and plot interpolation grid points if solution provided
     if solution is not None:
-        grid_points_m, grid_points_y = extract_mom_grid_points(solution, grid_type)
+        grid_points_m, _grid_points_y = extract_mom_grid_points(solution, grid_type)
         if grid_points_m is not None:
             # For moderation ratio plots, we need to calculate omega from the grid points
             if grid_type == GridType.CONSUMPTION:
@@ -575,7 +555,7 @@ def plot_logit_function(
     # Evaluate chi function
     chi_values = logitModRteFunc(mu_grid)
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot chi function
     mom_color = get_concept_color("MoM")
@@ -668,7 +648,7 @@ def plot_precautionary_gaps(
     if legend is None:
         legend = []
         for sol in approx_solutions:
-            if type(sol.cFunc).__name__ == "TransformedFunctionMoM":
+            if _is_mom_solution(sol):
                 legend.append("MoM Approximation")
             else:
                 legend.append("EGM Approximation")
@@ -689,7 +669,7 @@ def plot_precautionary_gaps(
         gap = truth_solution.Optimist.cFunc(m_grid) - sol.cFunc(m_grid)
         approx_gaps.append(gap)
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot truth gap with consistent color
     ax.plot(
@@ -721,28 +701,19 @@ def plot_precautionary_gaps(
 
         # Extract and plot grid points for this solution
         try:
-            # Determine solution type and extract appropriate grid points
-            if type(sol.cFunc).__name__ == "TransformedFunctionMoM":
-                # This is a MoM solution
-                grid_points_m, grid_points_c = extract_mom_grid_points(
-                    sol,
-                    GridType.CONSUMPTION,
-                )
-                if grid_points_m is not None and len(grid_points_m) > 1:
+            # Use unified grid extraction
+            grid_points_m, grid_points_c = extract_grid_points(
+                sol,
+                GridType.CONSUMPTION,
+            )
+            # Determine grid boundary based on solution type
+            if grid_points_m is not None:
+                if _is_mom_solution(sol) and len(grid_points_m) > 1:
                     grid_boundary = grid_points_m[-2]  # MoM: second-to-last point
                 else:
-                    grid_boundary = (
-                        grid_points_m[-1] if grid_points_m is not None else None
-                    )
+                    grid_boundary = grid_points_m[-1]  # EGM: last point
             else:
-                # This is an EGM solution (CubicInterp or LinearInterp)
-                grid_points_m, grid_points_c = extract_egm_grid_points(
-                    sol,
-                    GridType.CONSUMPTION,
-                )
-                grid_boundary = (
-                    grid_points_m[-1] if grid_points_m is not None else None
-                )  # EGM: last point
+                grid_boundary = None
 
             # Plot grid points if successfully extracted
             if grid_points_m is not None and grid_points_c is not None:
@@ -762,8 +733,9 @@ def plot_precautionary_gaps(
                         label="Grid boundary",
                     )
 
-        except Exception:
-            # If grid extraction fails, continue without grid points
+        except (AttributeError, KeyError, IndexError, TypeError):
+            # Grid extraction can fail for various solution types or incomplete solutions.
+            # Continue plotting without grid point markers.
             pass
 
     _configure_standard_axes(
@@ -816,7 +788,7 @@ def plot_consumption_bounds(
     """
     # Auto-generate legend if not provided
     if legend is None:
-        if type(solution.cFunc).__name__ == "TransformedFunctionMoM":
+        if _is_mom_solution(solution):
             legend = "MoM Approximation"
         else:
             legend = "Truth"
@@ -831,7 +803,7 @@ def plot_consumption_bounds(
     c_pes = solution.Pessimist.cFunc(m_grid)
     c_tight = solution.TighterUpperBound.cFunc(m_grid) if show_tight_bound else None
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot bounds first with consistent colors
     ax.plot(
@@ -879,18 +851,10 @@ def plot_consumption_bounds(
 
     # Extract and plot interpolation grid points if requested
     if show_grid_points:
-        # Determine which extractor to use based on solution type
-        if type(solution.cFunc).__name__ == "TransformedFunctionMoM":
-            grid_points_m, grid_points_c = extract_mom_grid_points(
-                solution,
-                GridType.CONSUMPTION,
-            )
-        else:
-            grid_points_m, grid_points_c = extract_egm_grid_points(
-                solution,
-                GridType.CONSUMPTION,
-            )
-
+        grid_points_m, grid_points_c = extract_grid_points(
+            solution,
+            GridType.CONSUMPTION,
+        )
         if grid_points_m is not None and grid_points_c is not None:
             _plot_grid_points_scatter(ax, grid_points_m, grid_points_c, main_color)
 
@@ -971,7 +935,7 @@ def plot_mom_mpc(
     """
     # Auto-generate label if not provided
     if mpc_label is None:
-        if type(solution.cFunc).__name__ == "TransformedFunctionMoM":
+        if _is_mom_solution(solution):
             mpc_label = "MoM MPC"
         else:
             mpc_label = "Truth MPC"
@@ -987,7 +951,7 @@ def plot_mom_mpc(
     mpc_opt_vals = np.full_like(m_grid, solution.MPCmin)
     mpc_tight_vals = np.full_like(m_grid, solution.MPCmax)
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot MPC bounds with consistent colors
     ax.plot(
@@ -1020,10 +984,7 @@ def plot_mom_mpc(
     )
 
     # Extract and plot interpolation grid points
-    if type(solution.cFunc).__name__ == "TransformedFunctionMoM":
-        grid_points_m, grid_points_mpc = extract_mom_grid_points(solution, GridType.MPC)
-    else:
-        grid_points_m, grid_points_mpc = extract_egm_grid_points(solution, GridType.MPC)
+    grid_points_m, grid_points_mpc = extract_grid_points(solution, GridType.MPC)
 
     if grid_points_m is not None and grid_points_mpc is not None:
         _plot_grid_points_scatter(ax, grid_points_m, grid_points_mpc, main_color)
@@ -1116,7 +1077,7 @@ def plot_value_functions(
         v_egm_sparse = egm_solution.vFunc(m_grid) if egm_solution else None
         v_mom_sparse = mom_solution.vFunc(m_grid) if mom_solution else None
 
-    fig, ax = setup_figure(title=title)
+    _fig, ax = setup_figure(title=title)
 
     # Plot bounds first with consistent colors
     if v_opt is not None:
@@ -1192,7 +1153,7 @@ def plot_value_functions(
     # Extract and plot grid points (only for regular value functions, not inverse)
     # Only show MoM grid points as they are the same as EGM grid points
     if not inverse and mom_solution is not None:
-        mom_grid_points_m, mom_grid_points_v = extract_mom_grid_points(
+        mom_grid_points_m, mom_grid_points_v = extract_grid_points(
             mom_solution,
             GridType.VALUE,
         )
@@ -1236,5 +1197,298 @@ def plot_value_functions(
     _set_xlim_with_padding(ax, m_grid)
 
     _add_reference_lines(ax)
+
+    plt.tight_layout()
+
+
+def plot_cusp_point(
+    solution,
+    title: str,
+    subtitle: str,
+    *,
+    m_max: float = 10.0,
+    n_points: int = 200,
+) -> None:
+    r"""Plot consumption bounds showing the cusp point intersection.
+
+    This figure visualizes where the optimist and tighter upper bounds
+    intersect (the cusp point), as described in {eq}`eq:mNrmCusp`.
+    Below the cusp, the tighter bound provides a better upper constraint;
+    above the cusp, the optimist bound is tighter.
+
+    Parameters
+    ----------
+    solution : ConsumerSolution
+        Solution containing consumption function and theoretical bounds
+    title : str
+        Figure title
+    subtitle : str
+        Figure subtitle
+    m_max : float, optional
+        Maximum market resources for plot range, by default 10.0
+    n_points : int, optional
+        Number of points in evaluation grid, by default 200
+
+    """
+    # Extract parameters for cusp calculation
+    m_min = solution.mNrmMin
+    hNrm = solution.hNrm
+    MPCmin = solution.MPCmin
+    MPCmax = solution.MPCmax
+
+    # Calculate cusp point
+    mNrmCusp = calc_cusp_point(hNrm, m_min, MPCmin, MPCmax)
+
+    # Create evaluation grid
+    m_grid = np.linspace(m_min + 0.01, m_max, n_points)
+
+    # Evaluate bounds
+    c_opt = solution.Optimist.cFunc(m_grid)
+    c_pes = solution.Pessimist.cFunc(m_grid)
+    c_tight = solution.TighterUpperBound.cFunc(m_grid)
+
+    # Consumption at cusp point
+    c_cusp = solution.Optimist.cFunc(mNrmCusp)
+
+    _fig, ax = setup_figure(title=title)
+
+    # Plot pessimist (lower bound)
+    ax.plot(
+        m_grid,
+        c_pes,
+        label="Pessimist",
+        color=get_concept_color("Pessimist"),
+        linewidth=LINE_WIDTH_THICK,
+        linestyle=LINE_STYLE_DOTTED,
+        alpha=ALPHA_OPAQUE,
+    )
+
+    # Plot optimist (upper bound for high wealth)
+    ax.plot(
+        m_grid,
+        c_opt,
+        label="Optimist",
+        color=get_concept_color("Optimist"),
+        linewidth=LINE_WIDTH_THICK,
+        linestyle=LINE_STYLE_DASHED,
+        alpha=ALPHA_OPAQUE,
+    )
+
+    # Plot tighter upper bound (upper bound for low wealth)
+    ax.plot(
+        m_grid,
+        c_tight,
+        label="Tighter Upper Bound",
+        color=get_concept_color("Tight"),
+        linewidth=LINE_WIDTH_THICK,
+        linestyle=LINE_STYLE_DASHDOT,
+        alpha=ALPHA_OPAQUE,
+    )
+
+    # Plot the envelope of upper bounds (min of optimist and tight)
+    c_envelope = np.minimum(c_opt, c_tight)
+    ax.plot(
+        m_grid,
+        c_envelope,
+        label="Upper Bound Envelope",
+        color=get_concept_color("MoM"),
+        linewidth=LINE_WIDTH_EXTRA_THICK,
+        linestyle="-",
+        alpha=ALPHA_HIGH,
+    )
+
+    # Mark the cusp point with a prominent marker
+    ax.scatter(
+        [mNrmCusp],
+        [c_cusp],
+        color=get_concept_color("MoM"),
+        s=MARKER_SIZE_STANDARD * 1.5,
+        zorder=10,
+        edgecolors=MARKER_EDGE_COLOR,
+        linewidths=MARKER_EDGE_WIDTH_THIN * 1.5,
+        label=f"Cusp Point ($m$ = {mNrmCusp:.2f})",
+    )
+
+    # Add vertical line at cusp point
+    ax.axvline(
+        x=mNrmCusp,
+        color=get_concept_color("MoM"),
+        linestyle=LINE_STYLE_DASHED,
+        linewidth=LINE_WIDTH_THIN,
+        alpha=ALPHA_MEDIUM,
+    )
+
+    # Add annotation
+    ax.annotate(
+        f"$m^{{cusp}}$ = {mNrmCusp:.2f}",
+        xy=(mNrmCusp, c_cusp),
+        xytext=(mNrmCusp + 0.5, c_cusp + 0.3),
+        fontsize=FONT_SIZE_LARGE,
+        ha="left",
+        arrowprops={
+            "arrowstyle": "->",
+            "color": get_concept_color("MoM"),
+            "lw": 1.5,
+        },
+    )
+
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m)",
+        ylabel="Consumption (c)",
+        subtitle=subtitle,
+        legend_loc="lower right",
+    )
+    _add_reference_lines(ax)
+    _set_xlim_with_padding(ax, m_grid)
+
+    # Set y-limits based on visible data
+    y_min = min(c_pes.min(), 0)
+    y_max = max(c_opt.max(), c_tight.max()) * 1.05
+    ax.set_ylim(y_min, y_max)
+
+    plt.tight_layout()
+
+
+def plot_stochastic_bounds(
+    solution,
+    title: str,
+    subtitle: str,
+    *,
+    m_max: float = 10.0,
+    n_points: int = 200,
+) -> None:
+    r"""Plot comparison of deterministic vs stochastic optimist bounds.
+
+    This figure visualizes how stochastic returns affect the theoretical
+    bounds on consumption. The stochastic optimist has a higher MPC
+    (Merton-Samuelson formula) compared to the deterministic optimist,
+    resulting in a lower consumption level at any given wealth.
+
+    Parameters
+    ----------
+    solution : ConsumerSolution
+        Solution from stochastic returns solver containing both
+        deterministic and stochastic bounds
+    title : str
+        Figure title
+    subtitle : str
+        Figure subtitle
+    m_max : float, optional
+        Maximum market resources for plot range, by default 10.0
+    n_points : int, optional
+        Number of points in evaluation grid, by default 200
+
+    Notes
+    -----
+    This function expects a solution from IndShockMoMStochasticRConsumerType
+    which includes OptimistStochastic and PessimistStochastic attributes.
+
+    """
+    m_min = solution.mNrmMin
+
+    # Create evaluation grid
+    m_grid = np.linspace(m_min + 0.01, m_max, n_points)
+
+    # Evaluate deterministic bounds
+    c_opt_det = solution.Optimist.cFunc(m_grid)
+    c_pes_det = solution.Pessimist.cFunc(m_grid)
+
+    # Evaluate stochastic bounds (if available)
+    if hasattr(solution, "OptimistStochastic"):
+        c_opt_stoch = solution.OptimistStochastic.cFunc(m_grid)
+        c_pes_stoch = solution.PessimistStochastic.cFunc(m_grid)
+        has_stochastic = True
+    else:
+        has_stochastic = False
+
+    # Main consumption function
+    c_main = solution.cFunc(m_grid)
+
+    _fig, ax = setup_figure(title=title)
+
+    # Plot deterministic pessimist
+    ax.plot(
+        m_grid,
+        c_pes_det,
+        label="Pessimist (Deterministic)",
+        color=get_concept_color("Pessimist"),
+        linewidth=LINE_WIDTH_MEDIUM,
+        linestyle=LINE_STYLE_DOTTED,
+        alpha=ALPHA_HIGH,
+    )
+
+    # Plot deterministic optimist
+    ax.plot(
+        m_grid,
+        c_opt_det,
+        label=f"Optimist (Det., $\\kappa$ = {solution.MPCmin_deterministic:.3f})",
+        color=get_concept_color("Optimist"),
+        linewidth=LINE_WIDTH_MEDIUM,
+        linestyle=LINE_STYLE_DASHED,
+        alpha=ALPHA_HIGH,
+    )
+
+    if has_stochastic:
+        # Plot stochastic pessimist
+        ax.plot(
+            m_grid,
+            c_pes_stoch,
+            label="Pessimist (Stochastic)",
+            color=get_concept_color("Pessimist"),
+            linewidth=LINE_WIDTH_THICK,
+            linestyle="-",
+            alpha=ALPHA_OPAQUE,
+        )
+
+        # Plot stochastic optimist
+        ax.plot(
+            m_grid,
+            c_opt_stoch,
+            label=f"Optimist (Stoch., $\\kappa$ = {solution.MPCmin_stochastic:.3f})",
+            color=get_concept_color("Optimist"),
+            linewidth=LINE_WIDTH_THICK,
+            linestyle="-",
+            alpha=ALPHA_OPAQUE,
+        )
+
+        # Fill between deterministic and stochastic optimist to show difference
+        ax.fill_between(
+            m_grid,
+            c_opt_stoch,
+            c_opt_det,
+            alpha=ALPHA_LOW,
+            color=get_concept_color("Optimist"),
+            label="Stochastic precautionary effect",
+        )
+
+    # Plot main consumption function
+    main_linestyle = get_concept_linestyle("MoM Approximation")
+    ax.plot(
+        m_grid,
+        c_main,
+        label="Realist (MoM)",
+        color=get_concept_color("MoM"),
+        linewidth=LINE_WIDTH_EXTRA_THICK,
+        linestyle=main_linestyle,
+    )
+
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m)",
+        ylabel="Consumption (c)",
+        subtitle=subtitle,
+        legend_loc="lower right",
+    )
+    _add_reference_lines(ax)
+    _set_xlim_with_padding(ax, m_grid)
+
+    # Set y-limits based on visible data
+    all_c = [c_pes_det, c_opt_det, c_main]
+    if has_stochastic:
+        all_c.extend([c_opt_stoch, c_pes_stoch])
+    y_min = min(c.min() for c in all_c)
+    y_max = max(c.max() for c in all_c) * 1.05
+    ax.set_ylim(y_min - 0.1, y_max)
 
     plt.tight_layout()

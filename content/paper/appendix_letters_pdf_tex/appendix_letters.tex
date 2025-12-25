@@ -40,8 +40,6 @@
 \newcommand{\mNrmCusp}{\mNrm^*}
 \newcommand{\mNrmCuspEx}{\Delta \mNrm^*}
 \newcommand{\modRteLoTightUpBd}{\grave{\check{\modRte}}}
-\newcommand{\modRteMu}{\partial \modRte / \partial \logmNrmEx}
-\newcommand{\MPCmod}{\boldsymbol{\eta}}
 \newcommand{\cLvl}{\mathbf{c}}
 \newcommand{\PDV}{\operatorname{PDV}}
 \newcommand{\PDVCoverc}{\mathcal{C}}
@@ -57,6 +55,8 @@
 \newcommand{\valModRte}{\boldsymbol{\Omega}}
 \newcommand{\valModRteReal}{\hat{\valModRte}}
 \newcommand{\logitValModRteReal}{\hat{\boldsymbol{X}}}
+\newcommand{\modRteMu}{\partial \modRte / \partial \logmNrmEx}
+\newcommand{\MPCmod}{\boldsymbol{\eta}}
 \newcommand{\Nrml}{\mathcal{N}}
 \newcommand{\Risky}{\mathbf{R}}
 \newcommand{\std}{\sigma}
@@ -136,9 +136,6 @@
 
 \maketitle
 
-\begin{abstract}
-This appendix provides detailed mathematical derivations and technical results supporting the Method of Moderation. Topics include: value function transformations and their relationship to the inverse value function; explicit formulas for minimal and maximal marginal propensities to consume; cusp point calculations for tighter upper bounds; Hermite interpolation slope formulas and MPC derivations; patience conditions ensuring well-defined solutions; and extensions to stochastic returns with explicit formulas for portfolio problems.\\
-\end{abstract}
 
 \keywords{Dynamic Stochastic Optimization, Numerical Methods}
 
@@ -148,6 +145,7 @@ This appendix provides detailed mathematical derivations and technical results s
 
 %%%%%%%%%%%%%%%  Main text   %%%%%%%%%%%%%%%
 
+\appendix
 \section{Appendix: Mathematical Details}
 
 \subsection{Patience Conditions Details}
@@ -215,36 +213,7 @@ We define the low-region moderation ratio as
 \modRteLoTightUpBd(\logmNrmEx) = \frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})e^{-\logmNrmEx}-\MPCmin}{\MPCmax-\MPCmin},
 \end{equation}
 
-which measures how far consumption per unit of wealth exceeds the optimist's MPC relative to the maximum possible excess.
-
-\subsection{Hermite Interpolation: Slope Derivations}
-
-The logit transformation slope follows from the chain rule \citep{Santos2000, JuddMaliarMaliar2017}:
-
-\begin{equation}
-\label{eq:logitModRteMu}
-\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
-\end{equation}
-
-where $\modRteMu$ is from (\ref{eq:modRteMuFinal}). For monotone cubic Hermite schemes \citep{Fritsch1980, FritschButland1984, deBoor2001}, theoretical slopes may be adjusted to enforce monotonicity \citep{Hyman1983}. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
-
-The MPC weight derivation starts from differentiating (\ref{eq:cFuncHi}) from the main text with respect to $\mNrm$:
-
-\begin{equation}
-\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
-\end{equation}
-
-Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
-
-\begin{equation}
-\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
-\end{equation}
-
-Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives (\ref{eq:MPCModeration}) from the main text, with weight
-
-\begin{equation}
-\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
-\end{equation}
+which measures how far consumption per unit of wealth exceeds the pessimist's MPC ($\MPCmin$) relative to the maximum possible excess ($\MPCmax - \MPCmin$).
 
 \subsection{Value Function Derivation}
 
@@ -309,6 +278,35 @@ Inverting these approximations yields
 \end{equation}
 
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
+
+\subsection{Hermite Interpolation: Slope Derivations}
+
+The logit transformation slope follows from the chain rule \citep{Santos2000, JuddMaliarMaliar2017}:
+
+\begin{equation}
+\label{eq:logitModRteMu}
+\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
+\end{equation}
+
+where $\modRteMu$ is from (\ref{eq:modRteMuFinal}). For monotone cubic Hermite schemes \citep{Fritsch1980, FritschButland1984, deBoor2001}, theoretical slopes may be adjusted to enforce monotonicity \citep{Hyman1983}. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
+
+The MPC weight derivation starts from differentiating (\ref{eq:cFuncHi}) from the main text with respect to $\mNrm$:
+
+\begin{equation}
+\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
+\end{equation}
+
+Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
+
+\begin{equation}
+\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
+\end{equation}
+
+Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives (\ref{eq:MPCModeration}) from the main text, with weight
+
+\begin{equation}
+\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
+\end{equation}
 
 \subsection{Stochastic Returns: MGF Derivation}
 

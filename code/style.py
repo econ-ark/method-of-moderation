@@ -57,8 +57,8 @@ from cycler import cycler
 
 # Public API exports
 __all__ = [
-    "ALPHA_HIGH",
     # Alpha values
+    "ALPHA_HIGH",
     "ALPHA_LOW",
     "ALPHA_MEDIUM",
     "ALPHA_MEDIUM_LOW",
@@ -67,14 +67,14 @@ __all__ = [
     "ARK_BLUE",
     "ARK_GREEN",
     "ARK_GREY",
-    "ARK_GRID_SOFT",
     "ARK_LIGHTBLUE",
-    # Refined styling colors
-    "ARK_PANEL_LIGHT",
     "ARK_PINK",
+    "ARK_YELLOW",
+    # Refined styling colors
+    "ARK_GRID_SOFT",
+    "ARK_PANEL_LIGHT",
     "ARK_SPINE",
     "ARK_TEXT",
-    "ARK_YELLOW",
     # Concept colors mapping
     "CONCEPT_COLORS",
     # Font sizes
@@ -82,32 +82,33 @@ __all__ = [
     "FONT_SIZE_XLARGE",
     # Grid and padding
     "GRID_ALPHA",
-    "HEADER_HTML_NOTEBOOK",
-    "LINE_STYLE_DASHDOT",
+    "PADDING_RATIO",
     # Line styles
+    "LINE_STYLE_DASHDOT",
     "LINE_STYLE_DASHED",
     "LINE_STYLE_DOTTED",
+    "LINE_STYLE_SOLID",
+    # Line widths
     "LINE_WIDTH_EXTRA_THICK",
     "LINE_WIDTH_MEDIUM",
     "LINE_WIDTH_THICK",
-    # Line widths
     "LINE_WIDTH_THIN",
+    # Marker styling
     "MARKER_EDGE_COLOR",
     "MARKER_EDGE_WIDTH_THIN",
-    # Marker styling
     "MARKER_SIZE_STANDARD",
+    # Reference line styling
+    "REFERENCE_LINE_ALPHA",
+    "REFERENCE_LINE_COLOR",
+    "REFERENCE_LINE_WIDTH",
     # Matplotlib configuration
     "MATPLOTLIB_STYLE",
     # Notebook styling
+    "HEADER_HTML_NOTEBOOK",
     "NOTEBOOK_CSS",
-    "PADDING_RATIO",
-    "REFERENCE_LINE_ALPHA",
-    # Reference line styling
-    "REFERENCE_LINE_COLOR",
-    "REFERENCE_LINE_WIDTH",
+    # Theming functions
     "apply_ark_style",
     "apply_notebook_css",
-    # Theming functions
     "get_concept_color",
     "get_concept_linestyle",
     "setup_figure",
@@ -170,6 +171,7 @@ MARKER_EDGE_WIDTH_THIN = 1.5
 MARKER_EDGE_COLOR = ARK_GREY
 
 # Line styles
+LINE_STYLE_SOLID = "-"
 LINE_STYLE_DASHED = "--"
 LINE_STYLE_DASHDOT = "-."
 LINE_STYLE_DOTTED = ":"
@@ -208,7 +210,8 @@ def get_concept_color(method_name: str) -> str:
         return CONCEPT_COLORS["pessimist"]
     if "tight" in name_lower:
         return CONCEPT_COLORS["tight"]
-    # Fallback to cycling through remaining colors for unknown methods
+    # Fallback to cycling through colors for unknown methods
+    # Use sum of character ordinals for deterministic indexing (hash() varies across sessions)
     fallback_colors = [
         ARK_BLUE,
         ARK_GREEN,
@@ -217,7 +220,7 @@ def get_concept_color(method_name: str) -> str:
         ARK_YELLOW,
         ARK_GREY,
     ]
-    return fallback_colors[hash(name_lower) % len(fallback_colors)]
+    return fallback_colors[sum(ord(c) for c in name_lower) % len(fallback_colors)]
 
 
 def get_concept_linestyle(method_name: str) -> str:
@@ -353,12 +356,12 @@ def _load_css_file(filename: str) -> str:
 NOTEBOOK_CSS = _load_css_file("style.css")
 
 # Header HTML for notebook use only
-HEADER_HTML_NOTEBOOK = """
+HEADER_HTML_NOTEBOOK = f"""
 <div style='
     display: flex;
     align-items: center;
     justify-content: center;
-    background: linear-gradient(135deg, #1f476b, #00aeef);
+    background: linear-gradient(135deg, {ARK_BLUE}, {ARK_LIGHTBLUE});
     color: white;
     padding: 20px;
     margin: -8px -8px 20px -8px;
