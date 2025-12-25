@@ -128,7 +128,7 @@ The first set of figures will focus on the core of the consumption-saving proble
 
 ### Figure 1: The EGM Extrapolation Problem
 
-The **precautionary saving gap** (optimist minus realist consumption) must be positive: income risk induces additional saving. As {ref}`demonstrated in the paper <benchmark-the-method-of-endogenous-gridpoints>` and shown in [](#fig:egm-extrapolation-problem) ({ref}`Figure 1 <fig:ExtrapProblem>` in the paper), standard EGM violates this constraint when extrapolating {cite:p}`carrollEGM`.
+The **precautionary saving gap** (optimist minus realist consumption) must be positive: income risk induces additional saving. As demonstrated in the paper and shown in [](#fig:egm-extrapolation-problem), standard EGM violates this constraint when extrapolating {cite:p}`carrollEGM`.
 
 ```python
 # | label: fig:egm-extrapolation-problem
@@ -209,7 +209,7 @@ MoM steps (notation matches the paper):
 5. Interpolate $\logitModRte(\logmNrmEx)$ with derivatives
 6. Reconstruct: $\cFuncReal = \cFuncPes + \modRte \cdot (\cFuncOpt - \cFuncPes)$
 
-This ensures bound compliance via asymptotically linear extrapolation, as {ref}`derived in the paper <the-consumption-function>`. HARK uses **cubic Hermite interpolation** {cite:p}`Fritsch1980,FritschButland1984` for accuracy; see {cite:p}`Santos2000,JuddMaliarMaliar2017` on function approximation and error bounding.
+This ensures bound compliance via asymptotically linear extrapolation, as derived in the paper. HARK uses **cubic Hermite interpolation** {cite:p}`Fritsch1980,FritschButland1984` for accuracy; see {cite:p}`Santos2000,JuddMaliarMaliar2017` on function approximation and error bounding.
 ```
 
 ```{note} The Transformation

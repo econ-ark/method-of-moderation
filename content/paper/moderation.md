@@ -143,6 +143,7 @@ For expositional simplicity in what follows, we set $\PermGroFac=1$ and assume $
 [^crra-not-one]:
     For notational simplicity, we henceforth assume $\CRRA \neq 1$. Most subsequent derivations involving transformations of the value function (such as $\vInvOpt$ and $\vInvReal$) contain expressions with denominators $(1-\CRRA)$ that are undefined when $\CRRA=1$. The case $\CRRA=1$ (logarithmic utility) requires parallel derivations that exploit the simplifications arising from $\log$ utility; the economic insights remain analogous.
 
+(benchmark-the-method-of-endogenous-gridpoints)=
 # Benchmark: The Method of Endogenous Gridpoints
 
 For comparison to our new solution method, we use the endogenous gridpoints
@@ -281,6 +282,7 @@ future income, and therefore consumes
 \end{aligned}
 ```
 
+(the-consumption-function)=
 ## The Consumption Function
 
 It seems obvious that the spending of the realist will be strictly greater than
