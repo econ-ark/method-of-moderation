@@ -94,7 +94,8 @@ b {
 .ark-header-center span {
   color: white !important;
   font:
-    600 1.35rem/1 system-ui,
+    600 1.35rem/1 "Varela Round",
+    "Roboto",
     sans-serif !important;
   letter-spacing: -0.01em !important;
   text-align: center !important;
