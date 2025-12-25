@@ -124,7 +124,7 @@ mNrmMax = IndShockMoMApproxSol.mNrmMin + IndShockMoMApprox.aXtraGrid.max()
 
 ## Consumption Function Analysis
 
-The first set of figures will focus on the core of the consumption-saving problem: the consumption function, $c(m)$, which maps market resources, $m$, to a chosen level of consumption. We will demonstrate the extrapolation problem inherent in the standard EGM and show how the Method of Moderation resolves it by respecting theoretical bounds.
+The first set of figures will focus on the core of the consumption-saving problem: the consumption function $\cFunc(\mNrm)$, which maps market resources $\mNrm$ to consumption. We will demonstrate the extrapolation problem inherent in the standard EGM and show how the Method of Moderation resolves it by respecting theoretical bounds.
 
 ### Figure 1: The EGM Extrapolation Problem
 
@@ -326,7 +326,7 @@ Unbounded domain $(-\infty, \infty)$, monotonically increasing, asymptotically l
 
 ### Figure 8: MoM MPC Bounded by Theory
 
-The **MPC** ($\partial c / \partial m$) is bounded between $\MPCmin$ (optimist) and $\MPCmax$ (at the borrowing constraint), as detailed in {ref}`the paper <a-tighter-upper-bound>` and Eq. {eq}`eq:MPCModeration` {cite:p}`Carroll2001MPCBound`. [](#fig:mpc-bounds) confirms MoM respects these bounds.
+The **MPC** ($\partial \cNrm / \partial \mNrm$) is bounded between $\MPCmin$ (optimist) and $\MPCmax$ (at the borrowing constraint), as detailed in {ref}`the paper <a-tighter-upper-bound>` and Eq. {eq}`eq:MPCModeration` {cite:p}`Carroll2001MPCBound`. [](#fig:mpc-bounds) confirms MoM respects these bounds.
 
 ```{tip} Policy Applications
 Bounded MPC estimates prevent nonsensical policy multipliers in DSGE models. MoM ensures economically meaningful MPCs for policy analysis.
@@ -344,12 +344,12 @@ plot_mom_mpc(
 ```
 
 ```{hint} MPC Economic Interpretation
-MoM MPC declines with $\mNrm$: poor consumers spend windfalls immediately ($\MPC \to \MPCmax$), wealthy consumers save them ($\MPC \to \MPCmin$), reflecting diminishing marginal utility.
+MoM MPC declines with $\mNrm$: poor consumers spend windfalls immediately (MPC $\to \MPCmax$), wealthy consumers save them (MPC $\to \MPCmin$), reflecting diminishing marginal utility.
 ```
 
 ### Figure 9: Value Functions Bounded by Theory
 
-The **value function** $v(m)$ is also bounded by optimist and pessimist solutions {cite:p}`Aiyagari1994,Huggett1993`. [](#fig:value-functions) compares truth, EGM, and MoM value functions.
+The **value function** $\vFunc(\mNrm)$ is also bounded by optimist and pessimist solutions {cite:p}`Aiyagari1994,Huggett1993`. [](#fig:value-functions) compares truth, EGM, and MoM value functions.
 
 ```python
 # | label: fig:value-functions
@@ -374,7 +374,7 @@ Uncertainty matters most at low wealth where buffers are small; the optimist-pes
 
 ### Figure 10: Inverse Value Functions $\vInv(\mNrm)$
 
-The **inverse value function** $\vInv(\mNrm) = \uFunc^{-1}(\vFunc(\mNrm))$ gives the consumption equivalent of lifetime utility. It is more linear than $v(m)$ near the borrowing constraint, making it better suited for interpolation. [](#fig:inverse-value-functions) compares the three solutions.
+The **inverse value function** $\vInv(\mNrm) = \uFunc^{-1}(\vFunc(\mNrm))$ gives the consumption equivalent of lifetime utility. It is more linear than $\vFunc(\mNrm)$ near the borrowing constraint, making it better suited for interpolation. [](#fig:inverse-value-functions) compares the three solutions.
 
 ```python
 # | label: fig:inverse-value-functions
@@ -477,7 +477,7 @@ plot_stochastic_bounds(
 ```
 
 ```{hint} Stochastic Returns Interpretation
-Deterministic optimist uses $\kappa = 1 - (\beta R)^{1/\rho}$; stochastic optimist uses $\kappa_{stoch} = 1 - (\beta \mathbb{E}[R^{1-\rho}])^{1/\rho}$. Return uncertainty raises MPC and narrows the feasible region. See {ref}`stochastic-returns-mgf-derivation` for the MGF derivation.
+Deterministic optimist uses $\MPCmin = 1 - (\DiscFac \Rfree)^{1/\CRRA}$; stochastic optimist uses $\MPCmin = 1 - (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. Return uncertainty raises MPC and narrows the feasible region. See {ref}`stochastic-returns-mgf-derivation` for the MGF derivation.
 ```
 
 ## Summary
