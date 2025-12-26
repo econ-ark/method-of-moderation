@@ -1582,7 +1582,6 @@ dependencies = [
     { name = "mystmd" },
     { name = "numba" },
     { name = "numpy" },
-    { name = "ruff" },
     { name = "scipy" },
     { name = "voila" },
 ]
@@ -1622,7 +1621,6 @@ requires-dist = [
     { name = "mystmd", specifier = ">=1.7.1" },
     { name = "numba", specifier = ">=0.59.0" },
     { name = "numpy", specifier = ">=2.0.2" },
-    { name = "ruff", specifier = ">=0.12.8" },
     { name = "scipy", specifier = ">=1.15.3" },
     { name = "voila", specifier = ">=0.5.8" },
 ]

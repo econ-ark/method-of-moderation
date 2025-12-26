@@ -15,13 +15,10 @@ uv sync
 echo "✓ Dependencies installed"
 echo ""
 
-# Run minimal tests (skip slow tests)
-echo "Step 2/3: Running quick tests..."
-if uv run pytest -v -k "not slow" --maxfail=1 2>/dev/null; then
-    echo "✓ Quick tests passed"
-else
-    echo "⚠ No tests found or tests not configured yet"
-fi
+# Run tests
+echo "Step 2/3: Running test suite..."
+uv run pytest code/test_moderation.py -v --maxfail=3
+echo "✓ Tests passed"
 echo ""
 
 # Build HTML documentation only (skip PDF and notebook execution)
@@ -37,6 +34,6 @@ echo ""
 echo "To view results:"
 echo "  - Open _build/html/index.html in a browser"
 echo ""
-echo "For full reproduction including executed notebooks, run:"
+echo "For full reproduction including PDFs and executed notebooks, run:"
 echo "  ./reproduce.sh"
 echo ""

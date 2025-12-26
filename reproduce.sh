@@ -17,22 +17,15 @@ echo ""
 
 # Run tests to verify installation and code correctness
 echo "Step 2/5: Running test suite..."
-if uv run pytest -v 2>/dev/null; then
-    echo "✓ All tests passed"
-else
-    echo "⚠ No tests found or tests not configured yet"
-fi
+uv run pytest code/test_moderation.py -v
+echo "✓ All tests passed"
 echo ""
 
 # Build the paper (HTML and PDF)
-echo "Step 3/5: Building paper..."
-uv run myst build --html
-echo "✓ HTML documentation built"
+echo "Step 3/5: Building paper and PDFs..."
+uv run myst build --all --pdf
+echo "✓ HTML documentation and PDFs built"
 echo ""
-
-# Note: PDF build requires LaTeX installation
-# Uncomment the following line if you have LaTeX installed:
-# uv run myst build --pdf content/paper/moderation.md
 
 # Execute computational notebook
 echo "Step 4/5: Executing computational notebook..."
@@ -40,14 +33,25 @@ uv run jupyter nbconvert --to notebook --execute --inplace code/notebook.ipynb
 echo "✓ Notebook executed successfully"
 echo ""
 
-# Generate figures (implicitly done during notebook execution)
+# Verify outputs
 echo "Step 5/5: Verifying outputs..."
 if [ -f "_build/html/index.html" ]; then
-    echo "✓ HTML documentation available at: _build/html/index.html"
+    echo "✓ HTML documentation: _build/html/index.html"
+fi
+if [ -f "content/exports/moderation_letters.pdf" ]; then
+    echo "✓ Paper PDF: content/exports/moderation_letters.pdf"
+fi
+if [ -f "content/exports/moderation_with_appendix.pdf" ]; then
+    echo "✓ Paper+Appendix PDF: content/exports/moderation_with_appendix.pdf"
 fi
 if [ -f "code/notebook.ipynb" ]; then
-    echo "✓ Executed notebook available at: code/notebook.ipynb"
+    echo "✓ Executed notebook: code/notebook.ipynb"
 fi
+echo ""
+
+# Word count check
+echo "Word count for Economics Letters submission:"
+uv run python code/wordcount.py
 echo ""
 
 echo "=========================================="
@@ -57,4 +61,5 @@ echo ""
 echo "To view results:"
 echo "  - Open _build/html/index.html in a browser"
 echo "  - Open code/notebook.ipynb in Jupyter"
+echo "  - PDFs are in content/exports/"
 echo ""
