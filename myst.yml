@@ -76,13 +76,13 @@ project:
   banner: content/banner.png
   jupyter: true
   downloads:
-    - file: content/paper/moderation_with_appendix.pdf
+    - file: content/exports/moderation_with_appendix.pdf
       title: Download PDF
   exports:
     - cff
     - format: tex+pdf
       template: arxiv_two_column
-      output: content/paper/moderation_with_appendix.pdf
+      output: content/exports/moderation_with_appendix.pdf
       articles:
         - content/paper/moderation_with_appendix.md
 

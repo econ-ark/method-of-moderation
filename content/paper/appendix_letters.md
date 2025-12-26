@@ -12,7 +12,7 @@ parts:
 exports:
   - format: tex+pdf
     template: arxiv_two_column
-    output: appendix_letters.pdf
+    output: ../exports/appendix_letters.pdf
 ---
 
 

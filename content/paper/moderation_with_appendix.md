@@ -6,7 +6,7 @@ parts:
 exports:
   - format: tex+pdf
     template: arxiv_two_column
-    output: moderation_with_appendix.pdf
+    output: ../exports/moderation_with_appendix.pdf
 ---
 
 ```{include} moderation_letters.md

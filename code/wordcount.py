@@ -27,14 +27,14 @@ WORD_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z'\-]*[a-zA-Z]|[a-zA-Z]")
 
 # Project root and content directories
 PROJECT_ROOT = Path(__file__).parent.parent
-PAPER_DIR = PROJECT_ROOT / "content" / "paper"
+EXPORTS_DIR = PROJECT_ROOT / "content" / "exports"
 
 
 def find_tex_files() -> list[Path]:
-    """Find all .tex files in paper subdirectories."""
+    """Find all .tex files in exports subdirectories."""
     tex_files = []
-    if PAPER_DIR.exists():
-        for subdir in PAPER_DIR.iterdir():
+    if EXPORTS_DIR.exists():
+        for subdir in EXPORTS_DIR.iterdir():
             if subdir.is_dir() and subdir.name.endswith("_pdf_tex"):
                 tex_files.extend(subdir.glob("*.tex"))
     return sorted(tex_files)
@@ -251,7 +251,7 @@ def main():
     if args.list:
         tex_files = find_tex_files()
         if not tex_files:
-            print("No .tex files found in content/paper/")
+            print("No .tex files found in content/exports/")
             return 1
         print("Available .tex files:")
         default = find_default_file()
