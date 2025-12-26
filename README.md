@@ -40,16 +40,16 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 ## Content
 
 ### Paper
-- [**Read the Paper**](content/paper/moderation.md) - Full paper in MyST Markdown format
-- [**Download PDF**](content/paper/moderation.pdf) - Full paper in PDF format
-- [**Letters Version**](content/paper/moderation_letters.md) - Economics Letters submission format
+- [**Full Paper (Markdown)**](content/paper/moderation.md) - Complete paper in MyST Markdown format
+- [**Letters Version (Markdown)**](content/paper/moderation_letters.md) - Economics Letters submission format
+- [**Letters PDF**](content/exports/moderation_letters.pdf) - Economics Letters PDF
+- [**Full Paper with Appendix (PDF)**](content/exports/moderation_with_appendix.pdf) - Complete paper including appendix
 
 ### Code & Interactive Content
 - [**Jupyter Notebook**](code/notebook.ipynb) - Complete computational notebook with examples
 
 ### Links
 - **Documentation**: [MyST Build](_build/html/index.html) (local build)
-- **REMARK**: [Catalog Entry](https://github.com/econ-ark/REMARK/blob/master/REMARKs/MethodOfModeration.yml)
 - **Source Code**: [GitHub Repository](https://github.com/econ-ark/method-of-moderation)
 
 ## Installation
