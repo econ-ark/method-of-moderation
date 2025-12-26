@@ -8,10 +8,7 @@
 [![PyPI platforms][pypi-platforms]][pypi-link]
 
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
-
-<!-- Uncomment after REMARK indexing:
-[![REMARK](https://img.shields.io/badge/REMARK-indexed-blue)](https://github.com/econ-ark/REMARK)
--->
+[![REMARK](https://img.shields.io/badge/REMARK-v1.0.0-blue)](https://github.com/econ-ark/REMARK)
 
 ## Reproducibility
 
@@ -50,6 +47,7 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 
 ### Links
 - **Documentation**: [MyST Build](_build/html/index.html) (local build)
+- **REMARK Catalog**: [MethodOfModeration](https://github.com/econ-ark/REMARK/blob/master/REMARKs/MethodOfModeration.yml)
 - **Source Code**: [GitHub Repository](https://github.com/econ-ark/method-of-moderation)
 
 ## Installation
