@@ -314,20 +314,28 @@ def _build_cfunc_mom(
     hNrmEx = hNrm + mNrmMin
     mu = log_mnrm_ex(mNrm, mNrmMin)
 
-    # MPC vector for consumption-side Hermite slopes (if cubic)
-    vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
-    EndOfPrdvPP = vPPfacEff * expected(
-        calc_vpp_next,
-        IncShkDstn,
-        args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
-    )
-    MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
-
-    # Moderation ratio and derivatives
+    # Moderation ratio (always computed)
     modRte = moderate(mNrm, optimist.cFunc, cNrm, pessimist.cFunc)
-    modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
+    # Clip to (eps, 1-eps) to prevent numerical issues with logit
+    eps = 1e-10
+    modRte = np.clip(modRte, eps, 1.0 - eps)
     logitModRte = logit_moderate(modRte)
-    logitModRteMu = modRteMu / (modRte * (1 - modRte))
+
+    # MPC vector and derivatives for Hermite slopes (only if cubic)
+    if CubicBool:
+        vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
+        EndOfPrdvPP = vPPfacEff * expected(
+            calc_vpp_next,
+            IncShkDstn,
+            args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
+        )
+        MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
+        modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
+        logitModRteMu = modRteMu / (modRte * (1 - modRte))
+    else:
+        # For linear interpolation, derivatives are not needed
+        modRteMu = None
+        logitModRteMu = None
 
     # Interpolants and wrapper
     modRteFunc, logitModRteFunc = _construct_mom_interpolants(
@@ -1724,8 +1732,15 @@ def _construct_mom_interpolants(
         ]
         modRteMuAug = np.r_[modRteMu[0], modRteMu, modRteMu[-1]]
     else:
-        # Fallback to constant extrapolation if no derivatives available
-        modRteAug = np.r_[modRte[0], modRte, modRte[-1]]
+        # Fallback to finite-difference linear extrapolation
+        # Use slope from edge of grid for linear extrapolation
+        slope_left = (modRte[1] - modRte[0]) / (mu[1] - mu[0])
+        slope_right = (modRte[-1] - modRte[-2]) / (mu[-1] - mu[-2])
+        modRteAug = np.r_[
+            modRte[0] - slope_left * MOM_EXTRAP_GAP_LEFT,
+            modRte,
+            modRte[-1] + slope_right * MOM_EXTRAP_GAP_RIGHT,
+        ]
         modRteMuAug = None
 
     # Augmented chi (logitModRte) values - use derivative-based extrapolation if available
@@ -1738,8 +1753,15 @@ def _construct_mom_interpolants(
         ]
         logitModRteMuAug = np.r_[logitModRteMu[0], logitModRteMu, logitModRteMu[-1]]
     else:
-        # Fallback to constant extrapolation if no derivatives available
-        logitModRteAug = np.r_[logitModRte[0], logitModRte, logitModRte[-1]]
+        # Fallback to finite-difference linear extrapolation
+        # Use slope from edge of grid for linear extrapolation
+        slope_left = (logitModRte[1] - logitModRte[0]) / (mu[1] - mu[0])
+        slope_right = (logitModRte[-1] - logitModRte[-2]) / (mu[-1] - mu[-2])
+        logitModRteAug = np.r_[
+            logitModRte[0] - slope_left * MOM_EXTRAP_GAP_LEFT,
+            logitModRte,
+            logitModRte[-1] + slope_right * MOM_EXTRAP_GAP_RIGHT,
+        ]
         logitModRteMuAug = None
 
     # Create smooth interpolants (cubic or linear based on CubicBool)
@@ -2298,15 +2320,6 @@ def _build_cfunc_mom_cusp(
     hNrmEx = hNrm + mNrmMin
     mu = log_mnrm_ex(mNrm, mNrmMin)
 
-    # MPC vector for Hermite slopes
-    vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
-    EndOfPrdvPP = vPPfacEff * expected(
-        calc_vpp_next,
-        IncShkDstn,
-        args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
-    )
-    MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
-
     # Split grid at cusp point
     low_mask = mNrm < mNrmCusp
     high_mask = ~low_mask
@@ -2334,22 +2347,38 @@ def _build_cfunc_mom_cusp(
             pessimist=pessimist,
         )
 
+    # MPC vector for Hermite slopes (only if cubic)
+    if CubicBool:
+        vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
+        EndOfPrdvPP = vPPfacEff * expected(
+            calc_vpp_next,
+            IncShkDstn,
+            args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
+        )
+        MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
+    else:
+        MPC = None
+
     # LOW REGION: Use tighter bound
     mNrm_low = mNrm[low_mask]
     cNrm_low = cNrm[low_mask]
-    MPC_low = MPC[low_mask]
-    mNrmEx[low_mask]
     mu_low = mu[low_mask]
 
     # Moderation ratio using tight bound
     modRte_low = moderate_tight(mNrm_low, mNrmMin, cNrm_low, MPCmin, MPCmax)
-    # Derivative: d(modRte)/d(mu) for tight bound
-    # modRte = (c - MPCmin*mNrmEx) / ((MPCmax-MPCmin)*mNrmEx)
-    # d(modRte)/d(mu) = mNrmEx * (MPC - MPCmin) / ((MPCmax-MPCmin)*mNrmEx)
-    #                 = (MPC - MPCmin) / (MPCmax - MPCmin)
-    modRteMu_low = (MPC_low - MPCmin) / (MPCmax - MPCmin)
     logitModRte_low = logit_moderate(modRte_low)
-    logitModRteMu_low = modRteMu_low / (modRte_low * (1 - modRte_low))
+
+    if CubicBool:
+        MPC_low = MPC[low_mask]
+        # Derivative: d(modRte)/d(mu) for tight bound
+        # modRte = (c - MPCmin*mNrmEx) / ((MPCmax-MPCmin)*mNrmEx)
+        # d(modRte)/d(mu) = mNrmEx * (MPC - MPCmin) / ((MPCmax-MPCmin)*mNrmEx)
+        #                 = (MPC - MPCmin) / (MPCmax - MPCmin)
+        modRteMu_low = (MPC_low - MPCmin) / (MPCmax - MPCmin)
+        logitModRteMu_low = modRteMu_low / (modRte_low * (1 - modRte_low))
+    else:
+        modRteMu_low = None
+        logitModRteMu_low = None
 
     modRteFuncLow, logitModRteFuncLow = _construct_mom_interpolants(
         mu_low,
@@ -2363,14 +2392,19 @@ def _build_cfunc_mom_cusp(
     # HIGH REGION: Use optimist bound (standard moderation)
     mNrm_high = mNrm[high_mask]
     cNrm_high = cNrm[high_mask]
-    MPC_high = MPC[high_mask]
     mNrmEx_high = mNrmEx[high_mask]
     mu_high = mu[high_mask]
 
     modRte_high = moderate(mNrm_high, optimist.cFunc, cNrm_high, pessimist.cFunc)
-    modRteMu_high = mNrmEx_high * (MPC_high - MPCmin) / (MPCmin * hNrmEx)
     logitModRte_high = logit_moderate(modRte_high)
-    logitModRteMu_high = modRteMu_high / (modRte_high * (1 - modRte_high))
+
+    if CubicBool:
+        MPC_high = MPC[high_mask]
+        modRteMu_high = mNrmEx_high * (MPC_high - MPCmin) / (MPCmin * hNrmEx)
+        logitModRteMu_high = modRteMu_high / (modRte_high * (1 - modRte_high))
+    else:
+        modRteMu_high = None
+        logitModRteMu_high = None
 
     modRteFuncHigh, logitModRteFuncHigh = _construct_mom_interpolants(
         mu_high,
@@ -2567,6 +2601,191 @@ class IndShockMoMCuspConsumerType(IndShockConsumerType):
 # =========================================================================
 
 
+def calc_vp_next_stochastic_r(atoms, a, crra, perm_gro_fac, vp_func_next):
+    """Calculate continuation marginal value with stochastic return.
+
+    Unlike the deterministic case where R is factored out of the expectation,
+    here R is part of the shock and stays inside the integral:
+        E[R * ψ^{-ρ} * v'(R*a/ψ + θ)]
+
+    Parameters
+    ----------
+    atoms : np.ndarray
+        Shock atoms array with shape (3, n_points):
+        - Row 0: PermShk (permanent income shock)
+        - Row 1: TranShk (transitory income shock)
+        - Row 2: Risky (risky return)
+    a : np.ndarray
+        End-of-period assets grid (shape: (n_a, 1) after expansion)
+    crra : float
+        Coefficient of relative risk aversion
+    perm_gro_fac : float
+        Permanent income growth factor
+    vp_func_next : callable
+        Next period's marginal value function
+
+    Returns
+    -------
+    np.ndarray
+        R * ψ^{-ρ} * v'(m_{t+1}) where m_{t+1} = R*a/ψ + θ
+    """
+    psi = atoms[0]  # Permanent shock
+    theta = atoms[1]  # Transitory shock
+    R = atoms[2]  # Risky return
+    # Next period's market resources: m_{t+1} = R*a/(ψ*G) + θ
+    m_next = R * a / (perm_gro_fac * psi) + theta
+    # Contribution to expectation: R * ψ^{-ρ} * v'(m_{t+1})
+    return R * (psi ** (-crra)) * vp_func_next(m_next)
+
+
+def create_joint_distribution(IncShkDstn, RiskyAvg, RiskyStd, n_risky_points=7):
+    """Create joint distribution over income shocks and risky returns.
+
+    Constructs the Cartesian product of the income shock distribution and
+    a discrete approximation to the lognormal return distribution.
+
+    Parameters
+    ----------
+    IncShkDstn : DiscreteDistribution
+        Income shock distribution with PermShk (row 0) and TranShk (row 1)
+    RiskyAvg : float
+        Mean of risky return (in levels)
+    RiskyStd : float
+        Standard deviation of risky return (in levels)
+    n_risky_points : int
+        Number of quadrature points for return distribution
+
+    Returns
+    -------
+    DiscreteDistribution
+        Joint distribution with atoms shape (3, n_points):
+        - Row 0: PermShk
+        - Row 1: TranShk
+        - Row 2: Risky
+    """
+    from HARK.distributions import (
+        MeanOneLogNormal,
+        combine_indep_dstns,
+    )
+
+    # Create lognormal return distribution centered on RiskyAvg
+    # Log R ~ N(μ, σ²) where E[R] = exp(μ + σ²/2) = RiskyAvg
+    # and Var[R] = exp(2μ + σ²)(exp(σ²) - 1) = RiskyStd²
+    # Solve: σ² = log(1 + (RiskyStd/RiskyAvg)²), μ = log(RiskyAvg) - σ²/2
+    variance_ratio = (RiskyStd / RiskyAvg) ** 2
+    log_std = np.sqrt(np.log(1 + variance_ratio))
+
+    # Create mean-one lognormal and scale by RiskyAvg
+    risky_dstn = MeanOneLogNormal(log_std).discretize(n_risky_points, method="hermite")
+    # Scale atoms in place (atoms has shape (1, n_points))
+    risky_dstn.atoms = risky_dstn.atoms * RiskyAvg
+
+    # Combine with income shocks (Cartesian product)
+    # Result: atoms shape (3, n_inc * n_risky) with rows [PermShk, TranShk, Risky]
+    joint = combine_indep_dstns(IncShkDstn, risky_dstn)
+    return joint
+
+
+def calc_boro_const_nat_stochastic_r(mNrmMinNext, JointShkDstn, PermGroFac):
+    """Calculate natural borrowing constraint with stochastic returns.
+
+    With stochastic returns, the borrowing constraint must ensure positive
+    resources in ALL possible shock combinations. Following HARK's approach,
+    we compute the constraint for each combination and take the maximum.
+
+    For each shock combination (psi, theta, R):
+        a * R / (G * psi) + theta >= mNrmMinNext
+        a >= (mNrmMinNext - theta) * (G * psi) / R
+
+    The natural borrowing constraint is the maximum over all combinations.
+
+    Parameters
+    ----------
+    mNrmMinNext : float
+        Next period's minimum market resources
+    JointShkDstn : DiscreteDistribution
+        Joint distribution with atoms shape (3, n_points):
+        - Row 0: PermShk
+        - Row 1: TranShk
+        - Row 2: Risky
+    PermGroFac : float
+        Permanent income growth factor
+
+    Returns
+    -------
+    float
+        Natural borrowing constraint (minimum end-of-period assets)
+    """
+    # Get all shock combinations
+    psi_vals = JointShkDstn.atoms[0]  # Permanent shocks
+    theta_vals = JointShkDstn.atoms[1]  # Transitory shocks
+    R_vals = JointShkDstn.atoms[2]  # Risky returns
+
+    # Compute constraint for each combination: a >= (mNrmMinNext - theta) * (G * psi) / R
+    BoroCnstNat_all = (mNrmMinNext - theta_vals) * (PermGroFac * psi_vals) / R_vals
+
+    # Take the maximum (most binding) constraint
+    return np.max(BoroCnstNat_all)
+
+
+def solve_egm_step_stochastic_r(
+    aXtraGrid,
+    mNrmMin,
+    DiscFacEff,
+    PermGroFac,
+    CRRA,
+    JointShkDstn,
+    vPfuncNext,
+    uFunc,
+):
+    """Execute EGM step with stochastic returns.
+
+    The key difference from standard EGM is that returns are integrated
+    over jointly with income shocks:
+        u'(c) = β E[R * ψ^{-ρ} * u'(c(R*a/ψ + θ))]
+
+    Parameters
+    ----------
+    aXtraGrid : np.array
+        Extra end-of-period asset values
+    mNrmMin : float
+        Minimum market resources (borrowing constraint)
+    DiscFacEff : float
+        Effective discount factor
+    PermGroFac : float
+        Permanent income growth factor
+    CRRA : float
+        Coefficient of relative risk aversion
+    JointShkDstn : DiscreteDistribution
+        Joint distribution over (PermShk, TranShk, Risky)
+    vPfuncNext : callable
+        Next period's marginal value function
+    uFunc : UtilityFuncCRRA
+        Utility function
+
+    Returns
+    -------
+    tuple
+        (aNrm, cNrm, mNrm, EndOfPrdvP)
+    """
+    aNrm = np.asarray(aXtraGrid) + mNrmMin
+
+    # End-of-period marginal value: E[R * ψ^{-ρ} * v'(R*a/ψ + θ)]
+    # Note: no Rfree factor outside since R is inside expectation
+    vPfacEff = DiscFacEff * PermGroFac ** (-CRRA)
+    EndOfPrdvP = vPfacEff * expected(
+        calc_vp_next_stochastic_r,
+        JointShkDstn,
+        args=(aNrm, CRRA, PermGroFac, vPfuncNext),
+    )
+
+    # EGM: invert FOC to find consumption
+    cNrm = uFunc.derinv(EndOfPrdvP, order=(1, 0))
+    mNrm = cNrm + aNrm
+
+    return aNrm, cNrm, mNrm, EndOfPrdvP
+
+
 def calc_stochastic_mpc(DiscFac, CRRA, RiskyAvg, RiskyStd):
     r"""Calculate MPC for consumer facing i.i.d. lognormal returns.
 
@@ -2653,14 +2872,13 @@ def method_of_moderation_stochastic_r(
     """Method of Moderation solver with stochastic rate of return.
 
     This solver extends the standard Method of Moderation to handle
-    i.i.d. lognormal returns. The key modification is to use the
-    stochastic MPC (from Merton-Samuelson) which accounts for return
-    risk in the asymptotic behavior of the consumption function.
+    i.i.d. lognormal returns on savings. Unlike the deterministic case,
+    returns are integrated INSIDE the expectation:
 
-    The implementation uses the original MPCmin for the moderation ratio
-    calculation (to ensure consumption stays within computable bounds),
-    but computes and stores the stochastic MPC for reference and for
-    constructing appropriate asymptotic bounds.
+        u'(c) = β E[R * ψ^{-ρ} * u'(c(R*a/ψ + θ))]
+
+    This properly accounts for both income risk and return risk, showing
+    that adding return volatility increases precautionary savings.
 
     Parameters
     ----------
@@ -2673,27 +2891,27 @@ def method_of_moderation_stochastic_r(
     Returns
     -------
     ConsumerSolution
-        Solution with stochastic-return-adjusted bounds and MPC information
+        Solution with combined income+return risk
 
     Notes
     -----
-    For full stochastic returns, the EGM step would also need to integrate
-    over return shocks. This implementation provides the analytical MPC
-    adjustment while using the deterministic-returns EGM for the base solve.
+    The key difference from deterministic returns:
+    - Deterministic: EndOfPrdvP = β*R * E[ψ^{-ρ} * v'(R*a/ψ + θ)]
+    - Stochastic: EndOfPrdvP = β * E[R * ψ^{-ρ} * v'(R*a/ψ + θ)]
+
+    The R factor is now inside the expectation, creating additional
+    precautionary savings from return uncertainty.
 
     """
-    # Calculate stochastic MPC (for reference and asymptotic behavior)
-    MPCmin_stochastic = calc_stochastic_mpc(DiscFac, CRRA, RiskyAvg, RiskyStd)
-
-    # Setup - use original parameters for EGM solve
     uFunc = UtilityFuncCRRA(CRRA)
 
+    # Get deterministic parameters for comparison
     (
         DiscFacEff,
         hNrm,
-        BoroCnstNat,
-        mNrmMin,
-        MPCmin,  # Original MPCmin for moderation calculation
+        BoroCnstNat_det,
+        mNrmMin_det,
+        MPCmin_deterministic,  # MPCmin with deterministic returns
         MPCmax,
     ) = prepare_to_solve(
         solution_next,
@@ -2710,33 +2928,52 @@ def method_of_moderation_stochastic_r(
     vPfuncNext = solution_next.vPfunc
     vPPfuncNext = solution_next.vPPfunc
 
-    # Create behavioral bounds with original MPCmin (for moderation)
-    optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
-        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+    # Create joint distribution over (income shocks, return shocks)
+    JointShkDstn = create_joint_distribution(IncShkDstn, RiskyAvg, RiskyStd)
+
+    # Calculate stochastic borrowing constraint (accounts for minimum return)
+    # This follows HARK's approach: constraint for all combinations, take max
+    BoroCnstNat = calc_boro_const_nat_stochastic_r(
+        solution_next.mNrmMin, JointShkDstn, PermGroFac
     )
 
-    # Also create stochastic bounds (for reference/comparison)
-    optimist_stoch, pessimist_stoch, _ = make_behavioral_bounds(
-        hNrm, mNrmMin, MPCmin_stochastic, MPCmax, CRRA
-    )
+    # Set mNrmMin to the stochastic constraint (or artificial if more binding)
+    if BoroCnstArt is None:
+        mNrmMin = BoroCnstNat
+    else:
+        mNrmMin = max(BoroCnstNat, BoroCnstArt)
 
-    # Solve EGM step (standard solve)
-    aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step(
+    # Solve EGM with stochastic returns - R is inside the expectation
+    aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step_stochastic_r(
         aXtraGrid,
         mNrmMin,
         DiscFacEff,
-        Rfree,
         PermGroFac,
         CRRA,
-        IncShkDstn,
+        JointShkDstn,
         vPfuncNext,
         uFunc,
     )
 
-    # Build consumption function using original bounds
+    # Compute realized MPCmin from the stochastic solution
+    # (limiting MPC as m → ∞, from the slope of the consumption function)
+    mpc_at_high_m = (cNrm[-1] - cNrm[-2]) / (mNrm[-1] - mNrm[-2])
+    MPCmin = mpc_at_high_m  # Use the realized limiting MPC
+
+    # Create behavioral bounds for moderation
+    optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
+        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+    )
+
+    # Also create deterministic bounds (for comparison)
+    optimist_det, pessimist_det, _ = make_behavioral_bounds(
+        hNrm, mNrmMin, MPCmin_deterministic, MPCmax, CRRA
+    )
+
+    # Build consumption function using MoM
     cFunc = _build_cfunc_mom(
         DiscFacEff=DiscFacEff,
-        Rfree=Rfree,
+        Rfree=RiskyAvg,  # Use mean return for extrapolation
         PermGroFac=PermGroFac,
         CRRA=CRRA,
         IncShkDstn=IncShkDstn,
@@ -2763,7 +3000,7 @@ def method_of_moderation_stochastic_r(
         aNrm=aNrm,
         BoroCnstNat=BoroCnstNat,
         DiscFacEff=DiscFacEff,
-        Rfree=Rfree,
+        Rfree=RiskyAvg,
         PermGroFac=PermGroFac,
         CRRA=CRRA,
         IncShkDstn=IncShkDstn,
@@ -2780,7 +3017,7 @@ def method_of_moderation_stochastic_r(
         CubicBool=CubicBool,
     )
 
-    # Assemble solution and add stochastic-return-specific attributes
+    # Assemble solution
     solution = _assemble_mom_solution(
         cFunc=cFunc,
         vFunc=vFunc,
@@ -2794,17 +3031,25 @@ def method_of_moderation_stochastic_r(
         pessimist=pessimist,
         tighterUpperBound=tighterUpperBound,
     )
-    solution.MPCmin_stochastic = MPCmin_stochastic
-    solution.MPCmin_deterministic = MPCmin
-    solution.OptimistStochastic = optimist_stoch
-    solution.PessimistStochastic = pessimist_stoch
+
+    # Add comparison attributes
+    solution.MPCmin_stochastic = MPCmin  # Combined income + return risk
+    solution.MPCmin_deterministic = MPCmin_deterministic  # Income risk only
+    solution.OptimistStochastic = optimist  # Bounds with stochastic MPCmin
+    solution.PessimistStochastic = pessimist
+    solution.Optimist = optimist_det  # Deterministic bounds for comparison
+    solution.Pessimist = pessimist_det
     return solution
 
 
 # Default parameters for stochastic return consumer
 IndShockMoMStochasticR_defaults = IndShockConsumerType_defaults.copy()
-IndShockMoMStochasticR_defaults["RiskyAvg"] = 1.08  # 8% mean return
-IndShockMoMStochasticR_defaults["RiskyStd"] = 0.20  # 20% std deviation
+IndShockMoMStochasticR_defaults["RiskyAvg"] = (
+    1.03  # Same mean as Rfree (mean-preserving spread)
+)
+IndShockMoMStochasticR_defaults["RiskyStd"] = (
+    0.10  # 10% std deviation (modest volatility)
+)
 
 
 class IndShockMoMStochasticRConsumerType(IndShockConsumerType):
@@ -2817,9 +3062,9 @@ class IndShockMoMStochasticRConsumerType(IndShockConsumerType):
     Parameters
     ----------
     RiskyAvg : float
-        Mean of risky return R (in levels, default 1.08 = 8% return)
+        Mean of risky return R (in levels, default 1.03 = same as Rfree)
     RiskyStd : float
-        Standard deviation of risky return R (in levels, default 0.20)
+        Standard deviation of risky return R (in levels, default 0.15)
 
     Notes
     -----

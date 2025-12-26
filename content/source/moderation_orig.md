@@ -1,4 +1,6 @@
 ---
+# ARCHIVED: Original version preserved for reference.
+# Current authors, affiliations, and macros are defined in myst.yml and macros.yml
 title: The Method of Moderation
 authors:
   - name: Christopher D Carroll

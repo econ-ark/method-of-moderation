@@ -1,4 +1,9 @@
 ---
+# MyST frontmatter (inherits authors, bibliography from myst.yml)
+title: Illustrative Notebook
+short_title: Notebook
+description: A pedagogical introduction to the Method of Moderation with interactive code examples.
+# Jupytext configuration
 jupyter:
   jupytext:
     formats: ipynb,md
@@ -194,7 +199,7 @@ plot_precautionary_gaps(
 MoM maintains positive precautionary saving when extrapolating far beyond its computed grid, matching high-precision truth.
 ```
 
-MoM builds on EGM's computational efficiency while enforcing theoretical bounds. See [the paper's algorithm](moderation.md#the-method-of-moderation).
+MoM builds on EGM's computational efficiency while enforcing theoretical bounds. See [the paper's algorithm](../content/paper/moderation_letters.md#the-method-of-moderation).
 
 (notebook:algorithm)=
 
@@ -458,10 +463,12 @@ With i.i.d. returns, {cite:t}`Samuelson1969` and {cite:t}`Merton1969,Merton1971`
 ```python
 # | label: fig:stochastic-bounds
 
-# Solve model with stochastic returns
+# Solve model with stochastic returns (mean-preserving spread)
 stoch_params = params.copy()
-stoch_params["RiskyAvg"] = 1.08  # 8% mean return
-stoch_params["RiskyStd"] = 0.20  # 20% standard deviation
+stoch_params["RiskyAvg"] = params["Rfree"][0]  # Same mean as Rfree (scalar)
+stoch_params["RiskyStd"] = (
+    0.20  # 20% standard deviation (must satisfy β*E[R^{1-ρ}] < 1)
+)
 
 IndShockStochR = IndShockMoMStochasticRConsumerType(**stoch_params)
 IndShockStochR.solve()

@@ -1,11 +1,9 @@
 ---
-title: The Method of Moderation
-bibliography:
-  - references.bib
+# LEGACY FILE: This is an older version not included in the TOC.
+# The current main paper is moderation_letters.md
+# Inherits title, keywords, bibliography from myst.yml
 abstract: |
   In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A consumer who is a realist (that is, who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between that of the pessimist and the optimist. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
-keywords:
-  - Dynamic Stochastic Optimization
 parts:
   jel_codes: D14; C61; G11
 exports:

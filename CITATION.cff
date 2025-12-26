@@ -1,5 +1,17 @@
 cff-version: 1.2.0
 message: Please cite the following works when using this project.
+abstract: >-
+  In a risky world, a pessimist assumes the worst will happen. Someone who
+  ignores risk altogether is an optimist. Consumption decisions are
+  mathematically simple for both the pessimist and the optimist because both
+  behave as if they live in a riskless world. A consumer who is a realist (that
+  is, who wants to respond optimally to risk) faces a much more difficult
+  problem, but (under standard conditions) will choose a level of spending
+  somewhere between that of the pessimist and the optimist. We use this fact to
+  redefine the space in which the realist searches for optimal consumption
+  rules. The resulting solution accurately represents the numerical consumption
+  rule over the entire interval of feasible wealth values with remarkably few
+  computations.
 title: The Method of Moderation
 authors:
   - family-names: Carroll
@@ -31,6 +43,10 @@ contact:
     address: Baltimore, MD
     orcid: 0000-0002-5289-7054
     email: alujan@jhu.edu
+keywords:
+  - Dynamic Stochastic Optimization
+  - Consumption-Saving Models
+  - Numerical Methods
 license: CC-BY-SA-3.0
 license-url: https://creativecommons.org/licenses/by-sa/3.0/
 repository: https://github.com/econ-ark/method-of-moderation

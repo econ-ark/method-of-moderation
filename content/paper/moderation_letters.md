@@ -1,11 +1,6 @@
 ---
-title: The Method of Moderation
-bibliography:
-  - references.bib
-abstract: |
-  In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A consumer who is a realist (that is, who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between that of the pessimist and the optimist. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
-keywords:
-  - Dynamic Stochastic Optimization
+# Page-specific frontmatter (inherits title, keywords, bibliography from myst.yml)
+abstract: abstract.md
 parts:
   jel_codes: D14; C61; G11
 exports:
@@ -20,14 +15,12 @@ Solving a consumption-saving problem using numerical methods requires the modele
 
 Unfortunately, this endogenous gridpoints solution is not very well-behaved outside the original range of gridpoints (though other common solution methods are no better outside their own predefined ranges). {ref}`fig:ExtrapProblem` demonstrates the point: in the presence of uncertainty, the consumption rule must be evaluated outside _any_ prespecified grid, because large shock realizations push next period's assets beyond the grid boundaries. Although theory proves that precautionary saving is always positive, the linearly extrapolated numerical approximation eventually predicts negative precautionary saving.
 
-```{figure} ../images/ExtrapProblemPlot
+:::{figure} #fig:egm-extrapolation-problem
 :label: fig:ExtrapProblem
 :alt: Graph showing that precautionary saving, approximated with linear extrapolation, incorrectly becomes negative for large market resources.
-:align: center
-:width: 80%
 
 For Large Enough $\mNrm_{T-1}$, Predicted Precautionary Saving is Negative (Oops!)
-```
+:::
 
 This error cannot be fixed by extending the upper gridpoint. While extrapolation techniques can prevent this from being fatal, the problem is often dealt with using inelegant methods whose implications for accuracy are difficult to gauge.
 
@@ -123,14 +116,12 @@ The 'optimist,' on the other hand, pretends that there is no uncertainty about f
 
 It seems obvious that the spending of the realist will be strictly greater than that of the pessimist and strictly less than that of the optimist.
 
-```{figure} ../images/IntExpFOCInvPesReaOptNeedHiPlot
+:::{figure} #fig:truth-bounded-by-theory
 :label: fig:IntExpFOCInvPesReaOptNeedHi
 :alt: Graph showing the realist's consumption function is bounded by the pessimist's (lower) and optimist's (upper) consumption functions.
-:align: center
-:width: 80%
 
 Moderation Illustrated: $\cFuncPes < \cFuncApprox < \cFuncOpt$
-```
+:::
 
 The proof is more difficult than might be imagined, but the necessary work is done in {cite:t}`CarrollShanker2024` so we will take the proposition as a fact and proceed by manipulating the inequality:
 
@@ -178,14 +169,19 @@ Because this method relies upon the fact that the problem is easy to solve if th
 
 Results are shown in {ref}`fig:ExtrapProblemSolved`; a reader with very good eyesight might be able to detect the barest hint of a discrepancy between the Truth and the Approximation at the far righthand edge of the figure, a stark contrast with the calamitous divergence evident in {ref}`fig:ExtrapProblem`.
 
-```{figure} ../images/ExtrapProblemSolvedPlot
+:::{figure} #fig:mom-solution
 :label: fig:ExtrapProblemSolved
 :alt: Graph showing that the Method of Moderation produces an accurate extrapolated consumption function that does not predict negative precautionary saving.
-:align: center
-:width: 80%
 
 Extrapolated $\cFuncApprox_{T-1}$ Constructed Using the Method of Moderation
-```
+:::
+
+:::{figure} #fig:direct-comparison
+:label: fig:DirectComparison
+:alt: Direct comparison of EGM and MoM extrapolation performance against the high-precision truth.
+
+EGM vs MoM: Identical Sparse Grids, Different Extrapolation Behavior
+:::
 
 # Extensions
 
@@ -213,14 +209,19 @@ This ratio measures how far consumption per unit of wealth exceeds the optimist'
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-```{figure} ../images/IntExpFOCInvPesReaOptNeed45Plot
+:::{figure} #fig:mom-consumption-function
 :label: fig:IntExpFOCInvPesReaOptNeed45
 :alt: A diagram showing the true consumption function bounded above by both the optimist's consumption rule and a tighter linear bound originating from the natural borrowing constraint.
-:align: center
-:width: 80%
 
 A Tighter Upper Bound
-```
+:::
+
+:::{figure} #fig:cusp-point
+:label: fig:CuspPoint
+:alt: Visualization of the cusp point where the optimist and tighter upper bounds intersect.
+
+Cusp Point: Intersection of Optimist and Tighter Upper Bounds
+:::
 
 ## Value Function
 
@@ -257,7 +258,14 @@ For Hermite interpolation, compute $\modRteMu$ at gridpoints, then derive $\logi
 
 ## Stochastic Rate of Return
 
-For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\risky}/2,\std^{2}_{\risky})$, {cite:t}`Samuelson1969,Merton1969,Merton1971` showed that for a consumer without labor income (or with perfectly forecastable labor income) the consumption function is linear, with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. See {cite:t}`CRRA-RateRisk,BBZ2016SkewedWealth` for extensions. Simply substitute this stochastic MPC for $\MPCmin$ throughout our formulas. The pessimist and optimist still perceive their income streams with certainty, but both face the same stochastic return. All moderation ratio calculations proceed identically. Extensions to serially correlated returns require tracking the return state as an additional state variable, complicating the analysis but not fundamentally altering the approach.
+For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\risky}/2,\std^{2}_{\risky})$, {cite:t}`Samuelson1969,Merton1969,Merton1971` showed that for a consumer without labor income (or with perfectly forecastable labor income) the consumption function is linear, with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. See {cite:t}`CRRA-RateRisk,BBZ2016SkewedWealth` for extensions. Simply substitute this stochastic MPC for $\MPCmin$ throughout our formulas. The pessimist and optimist still perceive their income streams with certainty, but both face the same stochastic return; thus the Merton-Samuelson result applies to them and their consumption functions remain linear. The realist, however, faces both labor income uncertainty and rate-of-return risk, so the moderation ratio captures the combined precautionary response to both sources of uncertainty. All moderation ratio calculations proceed identically. Extensions to serially correlated returns require tracking the return state as an additional state variable, complicating the analysis but not fundamentally altering the approach.
+
+:::{figure} #fig:stochastic-bounds
+:label: fig:StochasticBounds
+:alt: Comparison of consumption bounds under deterministic and stochastic rates of return.
+
+Effect of Return Uncertainty on Consumption Bounds
+:::
 
 # Conclusion
 
