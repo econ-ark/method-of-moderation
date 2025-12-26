@@ -1,12 +1,6 @@
 # The Method of Moderation
 
 [![Actions Status][actions-badge]][actions-link]
-[![Documentation Status][rtd-badge]][rtd-link]
-
-[![PyPI version][pypi-version]][pypi-link]
-[![Conda-Forge][conda-badge]][conda-link]
-[![PyPI platforms][pypi-platforms]][pypi-link]
-
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 [![REMARK](https://img.shields.io/badge/REMARK-v1.0.0-blue)](https://github.com/econ-ark/REMARK)
 
@@ -52,20 +46,6 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 
 ## Installation
 
-### For Users (when published)
-
-```bash
-pip install moderation
-```
-
-or
-
-```bash
-conda install -c conda-forge moderation
-```
-
-### For Development
-
 This project uses [uv](https://github.com/astral-sh/uv) for dependency management:
 
 ```bash
@@ -76,7 +56,7 @@ uv run pytest              # Run tests
 uv run myst build --html   # Build documentation
 ```
 
-See [REMARK reproduction](#reproducibility) section above for full reproduction instructions.
+See [Reproducibility](#reproducibility) section above for full reproduction instructions.
 
 ## Citation
 
@@ -103,19 +83,9 @@ This work was supported by the Alfred P. Sloan Foundation under grant G-2017-983
 - **Content**: [CC-BY-SA-3.0](https://creativecommons.org/licenses/by-sa/3.0/)
 - **Code**: [MIT](LICENSE)
 
-<!-- SPHINX-START -->
-
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/econ-ark/method-of-moderation/workflows/CI/badge.svg
 [actions-link]:             https://github.com/econ-ark/method-of-moderation/actions
-[conda-badge]:              https://img.shields.io/conda/vn/conda-forge/moderation
-[conda-link]:               https://github.com/conda-forge/moderation-feedstock
 [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
 [github-discussions-link]:  https://github.com/econ-ark/method-of-moderation/discussions
-[pypi-link]:                https://pypi.org/project/moderation/
-[pypi-platforms]:           https://img.shields.io/pypi/pyversions/moderation
-[pypi-version]:             https://img.shields.io/pypi/v/moderation
-[rtd-badge]:                https://readthedocs.org/projects/moderation/badge/?version=latest
-[rtd-link]:                 https://moderation.readthedocs.io/en/latest/?badge=latest
-
 <!-- prettier-ignore-end -->
