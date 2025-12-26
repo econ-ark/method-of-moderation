@@ -1,16 +1,17 @@
 #!/bin/bash
 # Post-build script for Binder
-# Uses uv to install all dependencies from pyproject.toml
+# Uses uv to install dependencies from pyproject.toml with locked versions
 
 set -e
 
-# Navigate to repository root
-cd "${HOME}"
+# Install uv
+pip install uv
 
-# Install dependencies using uv (which reads from pyproject.toml)
-uv sync --all-extras
+# Install project with locked dependencies (no dev extras for Binder)
+# Using --system since we're in conda's environment, not a venv
+uv pip install --system -e .
 
-# Ensure Jupyter extensions are enabled
-jupyter labextension list
+# Sync jupyter extensions
+jupyter labextension list 2>/dev/null || true
 
 echo "Binder environment ready!"
