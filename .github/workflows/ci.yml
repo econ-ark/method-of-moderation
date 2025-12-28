@@ -47,4 +47,6 @@ jobs:
         run: uv sync
 
       - name: Test package
+        env:
+          PYTHONPATH: code
         run: uv run pytest code/test_moderation.py -v --cov --cov-report=term

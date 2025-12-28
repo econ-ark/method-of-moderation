@@ -29,13 +29,16 @@ authors:
   - family-names: Chipeniuk
     given-names: Karsten
     affiliation: Reserve Bank of New Zealand
+    email: karsten.chipeniuk@gmail.com
   - family-names: Tokuoka
     given-names: Kiichi
     affiliation: Japanese Ministry of Finance
+    email: ktokuoka@imf.org
   - family-names: Wu
     given-names: Weifeng
     affiliation: Fannie Mae
     address: Washington, DC
+    email: weifeng_wu@fanniemae.com
 contact:
   - family-names: Lujan
     given-names: Alan
