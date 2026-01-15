@@ -4,7 +4,7 @@ on: [push]
 jobs:
   Create-MyBinderOrg-Cache:
     runs-on: ubuntu-latest
-    continue-on-error: true  # Don't fail the workflow if mybinder.org has infrastructure issues
+    continue-on-error: true # Don't fail the workflow if mybinder.org has infrastructure issues
     steps:
       - name: cache binder build on mybinder.org
         uses: jupyterhub/repo2docker-action@master
