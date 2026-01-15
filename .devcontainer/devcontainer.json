@@ -1,0 +1,49 @@
+{
+  "name": "Method of Moderation",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "remoteUser": "vscode",
+
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y curl git make && curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash - && sudo apt-get install -y nodejs",
+
+  "postCreateCommand": "bash ${containerWorkspaceFolder}/reproduce/docker/setup.sh",
+
+  "postStartCommand": "ARCH=$(uname -m); VENV=\"${containerWorkspaceFolder}/.venv-linux-${ARCH}\"; if [ -f \"$VENV/bin/activate\" ]; then source \"$VENV/bin/activate\"; fi",
+
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONPATH": "${containerWorkspaceFolder}/code"
+  },
+
+  "forwardPorts": [8888, 8866],
+
+  "portsAttributes": {
+    "8888": {
+      "label": "Jupyter Lab",
+      "onAutoForward": "notify"
+    },
+    "8866": {
+      "label": "Voilà Dashboard",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-linux-x86_64/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.ruff": "explicit",
+          "source.organizeImports.ruff": "explicit"
+        }
+      }
+    }
+  }
+}

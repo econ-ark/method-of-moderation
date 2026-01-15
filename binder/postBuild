@@ -1,17 +1,98 @@
 #!/bin/bash
 # Post-build script for Binder
-# Uses uv to install dependencies from pyproject.toml with locked versions
+# Single Source of Truth: pyproject.toml (dependencies)
+#
+# This script mirrors the setup from reproduce/docker/setup.sh but adapted for Binder's
+# conda-based environment where we install into the system Python rather than a venv.
 
 set -e
 
-# Install uv
+echo "🚀 Setting up Method of Moderation Binder environment..."
+
+# ============================================================================
+# Install Node.js 18 (required by MyST for documentation)
+# ============================================================================
+echo "📦 Installing Node.js 18..."
+
+# Use nodesource for Node.js 18 (apt version is too old)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+echo "✓ Node.js $(node --version)"
+echo "✓ npm $(npm --version)"
+
+# ============================================================================
+# Install uv package manager
+# ============================================================================
+echo "📦 Installing uv..."
+
 pip install uv
 
-# Install project with locked dependencies (no dev extras for Binder)
-# Using --system since we're in conda's environment, not a venv
+echo "✓ uv $(uv --version)"
+
+# ============================================================================
+# Install dependencies from pyproject.toml
+# ============================================================================
+echo "🐍 Installing Python dependencies from pyproject.toml..."
+
+# Install project with dependencies into the binder conda environment
+# Using --system since we're not in a venv (binder uses conda)
 uv pip install --system -e .
 
-# Sync jupyter extensions
-jupyter labextension list 2>/dev/null || true
+# ============================================================================
+# Configure environment
+# ============================================================================
+echo "⚙️ Configuring environment..."
 
-echo "Binder environment ready!"
+# Set PYTHONPATH to include code/ directory
+# This is added to the kernel's environment
+mkdir -p ~/.ipython/profile_default/startup
+cat > ~/.ipython/profile_default/startup/00-pythonpath.py << 'PYEOF'
+import os
+import sys
+
+# Add code/ directory to Python path
+workspace = os.environ.get('HOME', '/home/jovyan')
+code_dir = os.path.join(workspace, 'code')
+if os.path.isdir(code_dir) and code_dir not in sys.path:
+    sys.path.insert(0, code_dir)
+PYEOF
+
+# Also set for shell sessions
+# shellcheck disable=SC2016  # Single quotes are intentional - variables expand at runtime
+echo 'export PYTHONPATH="$HOME/code:$PYTHONPATH"' >> ~/.bashrc
+
+# ============================================================================
+# Warm up caches
+# ============================================================================
+echo "🔥 Warming up caches..."
+
+# Generate matplotlib font cache
+python -c "import matplotlib as mpl; mpl.use('Agg'); import pylab as plt; fig, ax = plt.subplots(); fig.savefig('/tmp/test.png')" 2>/dev/null || true
+rm -f /tmp/test.png
+
+# Pre-compile numba functions (optional, reduces first-run time)
+python -c "from moderation import IndShockMoMConsumerType; print('✓ Numba JIT compiled')" 2>/dev/null || echo "⚠️ Numba warmup skipped"
+
+# ============================================================================
+# Verify installation
+# ============================================================================
+echo ""
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo "✅ Binder environment ready!"
+echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+echo ""
+echo "   Python:  $(python --version)"
+echo "   Node.js: $(node --version)"
+echo "   MyST:    $(myst --version 2>/dev/null || echo 'not available')"
+echo ""
+
+# List key packages
+python -c "
+import HARK; print(f'   HARK:    {HARK.__version__}')
+import numpy; print(f'   NumPy:   {numpy.__version__}')
+import scipy; print(f'   SciPy:   {scipy.__version__}')
+import matplotlib; print(f'   Matplotlib: {matplotlib.__version__}')
+" 2>/dev/null || echo "   (package versions not available)"
+
+echo ""
