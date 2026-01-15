@@ -42,12 +42,29 @@ RUN chmod +x /workspace/reproduce/docker/setup.sh && \
 
 # Set runtime environment
 # Note: The actual venv path depends on architecture (e.g., .venv-linux-x86_64 or .venv-linux-aarch64)
-# We add both possible paths to ensure the correct one is found
 ENV PATH="/workspace/.venv-linux-x86_64/bin:/workspace/.venv-linux-aarch64/bin:/home/vscode/.local/bin:$PATH"
 ENV PYTHONPATH="/workspace/code"
+
+# Create entrypoint script that activates the venv
+RUN echo '#!/bin/bash' > /home/vscode/entrypoint.sh && \
+    echo 'set -e' >> /home/vscode/entrypoint.sh && \
+    echo '' >> /home/vscode/entrypoint.sh && \
+    echo '# Determine architecture-specific venv path' >> /home/vscode/entrypoint.sh && \
+    echo 'ARCH=$(uname -m)' >> /home/vscode/entrypoint.sh && \
+    echo 'VENV_PATH="/workspace/.venv-linux-$ARCH"' >> /home/vscode/entrypoint.sh && \
+    echo '' >> /home/vscode/entrypoint.sh && \
+    echo '# Activate venv if it exists' >> /home/vscode/entrypoint.sh && \
+    echo 'if [ -f "$VENV_PATH/bin/activate" ]; then' >> /home/vscode/entrypoint.sh && \
+    echo '    source "$VENV_PATH/bin/activate"' >> /home/vscode/entrypoint.sh && \
+    echo 'fi' >> /home/vscode/entrypoint.sh && \
+    echo '' >> /home/vscode/entrypoint.sh && \
+    echo '# Execute the command' >> /home/vscode/entrypoint.sh && \
+    echo 'exec "$@"' >> /home/vscode/entrypoint.sh && \
+    chmod +x /home/vscode/entrypoint.sh
 
 # Expose common ports
 EXPOSE 8888 8866
 
-# Default command
+# Use entrypoint to activate venv, then run command
+ENTRYPOINT ["/home/vscode/entrypoint.sh"]
 CMD ["/bin/bash"]
