@@ -35,10 +35,12 @@ WORKDIR /workspace
 # Copy files with correct ownership
 COPY --chown=vscode:vscode . /workspace/
 
-# Run setup as vscode user (creates architecture-specific venv)
+# Set execute permissions on all shell scripts
 USER vscode
-RUN chmod +x /workspace/reproduce/docker/setup.sh && \
-    bash /workspace/reproduce/docker/setup.sh
+RUN find /workspace -name "*.sh" -type f -exec chmod +x {} \;
+
+# Run setup (creates architecture-specific venv)
+RUN bash /workspace/reproduce/docker/setup.sh
 
 # Set runtime environment
 # Note: The actual venv path depends on architecture (e.g., .venv-linux-x86_64 or .venv-linux-aarch64)
