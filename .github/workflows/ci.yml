@@ -45,7 +45,7 @@ jobs:
       - uses: astral-sh/setup-uv@v7
 
       - name: Install package
-        run: uv sync
+        run: uv sync --group test
 
       - name: Test package
         env:
