@@ -1,10 +1,10 @@
 # Method of Moderation - REMARK Compliance Report (Reassessment)
 
-**Repository**: https://github.com/econ-ark/method-of-moderation  
-**Tag Specified in REMARK.md**: v1.0.0  
-**Assessment Date**: 2025-12-27  
-**Previous Assessment**: 2025-01-27  
-**STANDARD.md Version**: Updated (reconciled with CLI lint tool)  
+**Repository**: https://github.com/econ-ark/method-of-moderation
+**Tag Specified in REMARK.md**: v1.0.0
+**Assessment Date**: 2025-12-27
+**Previous Assessment**: 2025-01-27
+**STANDARD.md Version**: Updated (reconciled with CLI lint tool)
 **Reassessment**: Manual verification
 
 ---
@@ -48,7 +48,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
 - ✅ `reproduce_min.sh` exists (optional)
 - ✅ Git tag v1.0.0 exists
 
-**Action Required**: 
+**Action Required**:
 1. Create Dockerfile in repository root
 2. Make reproduce.sh executable: `chmod +x reproduce.sh`
 
@@ -75,7 +75,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
 - ✅ `reproduce_min.sh` exists (optional)
 - ✅ Git tag v1.0.0 exists
 
-**Action Required**: 
+**Action Required**:
 1. Create Dockerfile
 2. Expand README.md to ≥100 non-empty lines (currently 58, needs 42+ more lines)
 3. Make reproduce.sh executable
@@ -104,7 +104,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
 - ✅ `reproduce_min.sh` exists (optional)
 - ✅ Git tag v1.0.0 exists (matches REMARK.md version)
 
-**Action Required**: 
+**Action Required**:
 1. Create Dockerfile
 2. Expand README.md to ≥100 non-empty lines (currently 58, needs 42+ more lines)
 3. Obtain Zenodo DOI and add to CITATION.cff (for publication)
@@ -165,7 +165,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
 2. **❌ README.md Length**
    - **Status**: ❌ **TOO SHORT FOR TIER 2/3**
    - **Current**: 58 non-empty lines
-   - **Required**: 
+   - **Required**:
      - Tier 1: ≥50 lines ✅ (meets requirement - 58 lines)
      - Tier 2: ≥100 lines ❌ (needs 42 more lines)
      - Tier 3: ≥100 lines ❌ (needs 42 more lines)
@@ -216,7 +216,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
    - **Status**: ⚠️ **MISSING** (Warning)
    - **Required For**: Tier 3 (Published REMARKs)
    - **Details**: No DOI found in CITATION.cff
-   - **Action Required**: 
+   - **Action Required**:
      - Follow [ZENODO-GUIDE.md](ZENODO-GUIDE.md) to obtain DOI
      - Create GitHub release for v1.0.0
      - Enable Zenodo-GitHub integration
@@ -265,7 +265,7 @@ The **Method of Moderation** repository has **improved compliance** since the la
 1. **Create Dockerfile**
    - **Status**: Required for ALL tiers
    - **Action**: Create a Dockerfile in repository root
-   - **Guidance**: 
+   - **Guidance**:
      - Should be compatible with repo2docker or standard Docker practices
      - Use Python 3.12 base image (matches binder/environment.yml)
      - Install uv and run `uv sync`
@@ -380,7 +380,7 @@ The **Method of Moderation** repository has made **significant progress** since 
 1. reproduce.sh not executable (easy fix: `chmod +x`)
 2. No DOI in CITATION.cff (recommended for Tier 3 publication)
 
-**Next Steps**: 
+**Next Steps**:
 1. Create Dockerfile to achieve Tier 1 compliance
 2. Expand README.md by 42+ lines to achieve Tier 2/3 compliance
 3. Make reproduce.sh executable
@@ -393,7 +393,7 @@ The **Method of Moderation** repository has made **significant progress** since 
 
 ---
 
-**Report Generated**: 2025-12-27  
-**Previous Assessment**: 2025-01-27  
-**Assessment Method**: Manual verification  
+**Report Generated**: 2025-12-27
+**Previous Assessment**: 2025-01-27
+**Assessment Method**: Manual verification
 **Repository State**: Checked via filesystem inspection and git commands
