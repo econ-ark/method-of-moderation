@@ -3,7 +3,7 @@
   "image": "mcr.microsoft.com/devcontainers/python:3.12",
   "remoteUser": "vscode",
 
-  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y curl git make",
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y curl git make && curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash - && sudo apt-get install -y nodejs",
 
   "postCreateCommand": "bash ${containerWorkspaceFolder}/reproduce/docker/setup.sh",
 
