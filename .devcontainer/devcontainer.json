@@ -1,0 +1,49 @@
+{
+  "name": "Method of Moderation",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "remoteUser": "vscode",
+
+  "onCreateCommand": "sudo apt-get update && sudo apt-get install -y curl git make",
+
+  "postCreateCommand": "bash ${containerWorkspaceFolder}/reproduce/docker/setup.sh",
+
+  "postStartCommand": "source ${containerWorkspaceFolder}/.venv/bin/activate",
+
+  "containerEnv": {
+    "PYTHONUNBUFFERED": "1",
+    "PYTHONPATH": "${containerWorkspaceFolder}/code"
+  },
+
+  "forwardPorts": [8888, 8866],
+
+  "portsAttributes": {
+    "8888": {
+      "label": "Jupyter Lab",
+      "onAutoForward": "notify"
+    },
+    "8866": {
+      "label": "Voilà Dashboard",
+      "onAutoForward": "notify"
+    }
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-toolsai.jupyter",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "python.terminal.activateEnvironment": true,
+        "editor.formatOnSave": true,
+        "editor.codeActionsOnSave": {
+          "source.fixAll.ruff": "explicit",
+          "source.organizeImports.ruff": "explicit"
+        }
+      }
+    }
+  }
+}
