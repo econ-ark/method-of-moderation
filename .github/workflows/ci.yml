@@ -6,6 +6,7 @@ on:
   push:
     branches:
       - main
+      - REMARK-upgrade-path
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
