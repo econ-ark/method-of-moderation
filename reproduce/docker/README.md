@@ -17,6 +17,21 @@ method-of-moderation/
         └── README.md             # This file
 ```
 
+## Platform-Specific Virtual Environments
+
+The setup creates **architecture-specific virtual environments** to enable
+seamless switching between different platforms without rebuilding venvs:
+
+| Platform | Architecture | Venv Directory |
+|----------|--------------|----------------|
+| macOS | Apple Silicon | `.venv-darwin-arm64` |
+| macOS | Intel | `.venv-darwin-x86_64` |
+| Linux | ARM64 | `.venv-linux-aarch64` |
+| Linux | x86_64 | `.venv-linux-x86_64` |
+
+This prevents architecture mismatches when switching between local development
+(macOS) and DevContainer (Linux).
+
 ## Quick Start
 
 ### Option 1: DevContainer (Recommended for Development)
@@ -49,8 +64,11 @@ docker run -it --rm -p 8888:8888 method-of-moderation \
 # Run the setup script directly
 bash reproduce/docker/setup.sh
 
-# Activate the environment
-source .venv/bin/activate
+# The script auto-detects your platform and creates the appropriate venv
+# For example, on macOS Apple Silicon: .venv-darwin-arm64
+
+# Activate the environment (example for macOS ARM)
+source .venv-darwin-arm64/bin/activate
 export PYTHONPATH="$(pwd)/code:$PYTHONPATH"
 ```
 
@@ -58,9 +76,10 @@ export PYTHONPATH="$(pwd)/code:$PYTHONPATH"
 
 The setup script (`setup.sh`) performs these steps:
 
-1. **Installs `uv`** - The fast Python package manager
-2. **Creates virtual environment** - Using `uv sync --all-groups`
-3. **Configures shell** - Auto-activates venv in bash/zsh
+1. **Detects platform and architecture** - Creates appropriate venv name
+2. **Installs `uv`** - The fast Python package manager
+3. **Creates virtual environment** - Using `uv sync --all-groups`
+4. **Configures shell** - Auto-activates venv in bash/zsh
 
 ### Exposed Ports
 
@@ -93,6 +112,18 @@ Ensure `PYTHONPATH` includes the `code/` directory:
 export PYTHONPATH="$(pwd)/code:$PYTHONPATH"
 ```
 
+### Finding your venv
+
+The venv is named based on your platform and architecture:
+
+```bash
+# Check which venvs exist
+ls -la .venv-*
+
+# Activate the correct one for your platform
+source .venv-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)/bin/activate
+```
+
 ### Permission issues in Docker
 
 The container runs as user `vscode` (UID 1000). If you have permission issues
@@ -110,4 +141,8 @@ docker build --no-cache -t method-of-moderation .
 
 # DevContainer
 # Use "Dev Containers: Rebuild Container" from command palette
+
+# Local: remove venv and re-run setup
+rm -rf .venv-*
+bash reproduce/docker/setup.sh
 ```

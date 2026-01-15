@@ -23,6 +23,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     make \
     && rm -rf /var/lib/apt/lists/*
 
+# Install Node.js 18 (required by MyST for building documentation)
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
 # Create workspace directory with correct ownership
 RUN mkdir -p /workspace && chown vscode:vscode /workspace
 WORKDIR /workspace
@@ -30,13 +35,15 @@ WORKDIR /workspace
 # Copy files with correct ownership
 COPY --chown=vscode:vscode . /workspace/
 
-# Run setup as vscode user
+# Run setup as vscode user (creates architecture-specific venv)
 USER vscode
 RUN chmod +x /workspace/reproduce/docker/setup.sh && \
     bash /workspace/reproduce/docker/setup.sh
 
 # Set runtime environment
-ENV PATH="/workspace/.venv/bin:/home/vscode/.local/bin:$PATH"
+# Note: The actual venv path depends on architecture (e.g., .venv-linux-x86_64 or .venv-linux-aarch64)
+# We add both possible paths to ensure the correct one is found
+ENV PATH="/workspace/.venv-linux-x86_64/bin:/workspace/.venv-linux-aarch64/bin:/home/vscode/.local/bin:$PATH"
 ENV PYTHONPATH="/workspace/code"
 
 # Expose common ports

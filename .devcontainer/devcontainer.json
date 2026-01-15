@@ -7,7 +7,7 @@
 
   "postCreateCommand": "bash ${containerWorkspaceFolder}/reproduce/docker/setup.sh",
 
-  "postStartCommand": "source ${containerWorkspaceFolder}/.venv/bin/activate",
+  "postStartCommand": "ARCH=$(uname -m); VENV=\"${containerWorkspaceFolder}/.venv-linux-${ARCH}\"; if [ -f \"$VENV/bin/activate\" ]; then source \"$VENV/bin/activate\"; fi",
 
   "containerEnv": {
     "PYTHONUNBUFFERED": "1",
@@ -36,7 +36,7 @@
         "tamasfe.even-better-toml"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv/bin/python",
+        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-linux-x86_64/bin/python",
         "python.terminal.activateEnvironment": true,
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {

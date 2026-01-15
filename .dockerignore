@@ -1,8 +1,9 @@
 # Method of Moderation Docker ignore file
 # Prevents local development artifacts from being copied into the Docker build
 
-# Virtual environments
+# Virtual environments (all platform-specific variants)
 .venv/
+.venv-*/
 venv/
 env/
 __pycache__/
