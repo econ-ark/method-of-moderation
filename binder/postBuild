@@ -59,6 +59,7 @@ if os.path.isdir(code_dir) and code_dir not in sys.path:
 PYEOF
 
 # Also set for shell sessions
+# shellcheck disable=SC2016  # Single quotes are intentional - variables expand at runtime
 echo 'export PYTHONPATH="$HOME/code:$PYTHONPATH"' >> ~/.bashrc
 
 # ============================================================================

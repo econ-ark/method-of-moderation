@@ -25,7 +25,7 @@ get_platform_venv_path() {
     local workspace_dir="$1"
     local platform=""
     local arch=""
-    
+
     # Detect platform
     case "$(uname -s)" in
         Darwin)
@@ -47,15 +47,15 @@ get_platform_venv_path() {
             return
             ;;
     esac
-    
+
     # Normalize architecture names
     case "$arch" in
         arm64) arch="arm64" ;;       # macOS ARM
         aarch64) arch="aarch64" ;;   # Linux ARM
         x86_64) arch="x86_64" ;;     # Both platforms
-        *) arch="$arch" ;;           # Other
+        *) ;;                        # Keep original value
     esac
-    
+
     echo "$workspace_dir/.venv-$platform-$arch"
 }
 
