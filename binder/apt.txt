@@ -6,4 +6,4 @@ curl
 git
 make
 
-# Node.js is installed via postBuild using nodesource (apt version is too old for MyST)
+# Node.js 18 is installed via environment.yml (conda-forge)

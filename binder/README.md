@@ -7,31 +7,32 @@ which allows users to launch interactive Jupyter notebooks in the cloud.
 
 The binder setup draws from the same source as Docker and DevContainer:
 
-| Component | Source |
-|-----------|--------|
-| Python dependencies | `pyproject.toml` (installed via `uv`) |
+| Component           | Source                                             |
+| ------------------- | -------------------------------------------------- |
+| Python dependencies | `pyproject.toml` + `uv.lock` (installed via `uv`)  |
 | System dependencies | Same as `Dockerfile` (Node.js 18, curl, git, make) |
-| Environment setup | Mirrors `reproduce/docker/setup.sh` |
+| Environment setup   | Mirrors `reproduce/docker/setup.sh`                |
 
 ## Files
 
-| File | Purpose |
-|------|---------|
-| `environment.yml` | Minimal conda env (Python 3.12 + pip) |
-| `apt.txt` | System packages (curl, git, make) |
-| `postBuild` | Installs Node.js 18, uv, and project dependencies |
-| `README.md` | This file |
+| File              | Purpose                                             |
+| ----------------- | --------------------------------------------------- |
+| `environment.yml` | Conda env (Python 3.12, pip, Node.js 18)            |
+| `apt.txt`         | System packages (curl, git, make)                   |
+| `postBuild`       | Installs uv and project dependencies                |
+| `README.md`       | This file                                           |
 
 ## How It Works
 
-1. **Binder reads `environment.yml`** → Creates conda environment with Python 3.12
+1. **Binder reads `environment.yml`** → Creates conda environment with Python 3.12 and Node.js 18
 2. **Binder reads `apt.txt`** → Installs system packages via apt-get
-3. **Binder runs `postBuild`** → Installs Node.js 18, uv, and all Python dependencies
+3. **Binder runs `postBuild`** → Installs uv and all Python dependencies
 
 The `postBuild` script:
-- Installs Node.js 18 from nodesource (required by MyST)
+
 - Installs `uv` package manager
-- Runs `uv pip install --system -e .` to install from `pyproject.toml`
+- Exports locked dependencies via `uv export --frozen` for reproducibility
+- Installs dependencies into the system Python environment
 - Configures `PYTHONPATH` for the `code/` directory
 - Warms up matplotlib and numba caches
 
@@ -61,14 +62,14 @@ jupyter lab
 ## Relationship to Other Environments
 
 ```
-                    ┌─────────────────────┐
-                    │   pyproject.toml    │  ← Single Source of Truth
-                    │   (dependencies)    │
-                    └─────────┬───────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        │                     │                     │
-        ▼                     ▼                     ▼
+                ┌─────────────────────────┐
+                │  pyproject.toml         │  ← Single Source of Truth
+                │  uv.lock                │    (dependencies + lock)
+                └───────────┬─────────────┘
+                            │
+      ┌─────────────────────┼─────────────────────┐
+      │                     │                     │
+      ▼                     ▼                     ▼
 ┌───────────────┐   ┌─────────────────┐   ┌─────────────────┐
 │   Dockerfile  │   │  devcontainer   │   │     Binder      │
 │               │   │     .json       │   │   postBuild     │
@@ -76,11 +77,12 @@ jupyter lab
         │                    │                     │
         ▼                    ▼                     ▼
 ┌───────────────┐   ┌─────────────────┐   ┌─────────────────┐
-│ reproduce/    │   │ reproduce/      │   │ uv pip install  │
-│ docker/       │   │ docker/         │   │ --system -e .   │
-│ setup.sh      │   │ setup.sh        │   │                 │
+│ reproduce/    │   │ reproduce/      │   │ uv export       │
+│ docker/       │   │ docker/         │   │ --frozen        │
+│ setup.sh      │   │ setup.sh        │   │ + uv pip install│
 └───────────────┘   └─────────────────┘   └─────────────────┘
 ```
 
-All three environments install the same dependencies from `pyproject.toml`,
-ensuring consistency across local development, CI, and cloud notebooks.
+All three environments install the same locked dependencies from `pyproject.toml`
+and `uv.lock`, ensuring reproducibility across local development, CI, and cloud
+notebooks.
