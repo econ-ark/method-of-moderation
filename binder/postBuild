@@ -41,8 +41,9 @@ uv export --frozen --no-hashes --no-dev -o /tmp/requirements.txt
 # Install the exported requirements into the system Python
 uv pip install --system -r /tmp/requirements.txt
 
-# Install the project itself in editable mode
-uv pip install --system --no-deps -e .
+# Note: We don't install the project in editable mode because the repo has a
+# flat layout with multiple top-level directories (code/, binder/, content/, reproduce/).
+# Instead, we add code/ to PYTHONPATH below, which makes the moderation module importable.
 
 rm /tmp/requirements.txt
 
