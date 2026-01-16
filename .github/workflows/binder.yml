@@ -1,13 +1,87 @@
 name: Binder
-on: [push]
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    paths:
+      - "binder/**"
+      - "pyproject.toml"
+      - "uv.lock"
+  workflow_dispatch: # Allow manual triggering
 
 jobs:
-  Create-MyBinderOrg-Cache:
+  # Validate binder configuration files
+  validate-config:
+    name: Validate Binder Config
     runs-on: ubuntu-latest
-    continue-on-error: true # Don't fail the workflow if mybinder.org has infrastructure issues
     steps:
-      - name: cache binder build on mybinder.org
-        uses: jupyterhub/repo2docker-action@master
+      - uses: actions/checkout@v4
+
+      - name: Validate environment.yml syntax
+        run: |
+          pip install --quiet pyyaml
+          python -c "import yaml; yaml.safe_load(open('binder/environment.yml'))"
+          echo "✓ environment.yml is valid YAML"
+
+      - name: Validate apt.txt format
+        run: |
+          # Check apt.txt has package entries (not just comments and empty lines)
+          if grep -v '^#' binder/apt.txt | grep -v '^$' | head -1 > /dev/null; then
+            echo "✓ apt.txt contains package entries"
+          else
+            echo "✗ apt.txt contains no package entries"
+            exit 1
+          fi
+
+      - name: Validate postBuild is executable
+        run: |
+          if head -1 binder/postBuild | grep -q '^#!/bin/bash'; then
+            echo "✓ postBuild has correct shebang"
+          else
+            echo "✗ postBuild missing shebang"
+            exit 1
+          fi
+
+      - name: Check uv.lock exists
+        run: |
+          if [ -f "uv.lock" ]; then
+            echo "✓ uv.lock exists for reproducible builds"
+          else
+            echo "✗ uv.lock not found - binder builds may not be reproducible"
+            exit 1
+          fi
+
+  # Warm the mybinder.org cache (only on main branch pushes)
+  warm-mybinder-cache:
+    name: Warm MyBinder.org Cache
+    runs-on: ubuntu-latest
+    needs: validate-config
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Don't fail the workflow if mybinder.org has infrastructure issues
+    continue-on-error: true
+    steps:
+      - name: Trigger mybinder.org build
+        id: trigger
+        # Use the dedicated action for triggering binder builds
+        # See: https://github.com/s-weigand/trigger-mybinder-build
+        uses: s-weigand/trigger-mybinder-build@v1.1.0
         with:
-          NO_PUSH: true
-          MYBINDERORG_TAG: ${{ github.event.ref }} # This builds the container on mybinder.org with the branch that was pushed on.
+          target-repo: ${{ github.repository }}
+          target-state: main
+
+      - name: Report status
+        if: always()
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          if [ "${{ steps.trigger.outcome }}" = "success" ]; then
+            echo "✓ Binder cache build triggered successfully"
+          else
+            echo "⚠ Binder cache build trigger failed (mybinder.org may be unavailable)"
+          fi
+          echo ""
+          echo "Binder Launch URL:"
+          echo "  https://mybinder.org/v2/gh/${{ github.repository }}/main"
+          echo ""
+          echo "Note: The build may continue asynchronously on mybinder.org"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

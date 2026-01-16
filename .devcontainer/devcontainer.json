@@ -36,7 +36,6 @@
         "tamasfe.even-better-toml"
       ],
       "settings": {
-        "python.defaultInterpreterPath": "${containerWorkspaceFolder}/.venv-linux-x86_64/bin/python",
         "python.terminal.activateEnvironment": true,
         "editor.formatOnSave": true,
         "editor.codeActionsOnSave": {

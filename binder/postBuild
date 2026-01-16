@@ -1,6 +1,6 @@
 #!/bin/bash
 # Post-build script for Binder
-# Single Source of Truth: pyproject.toml (dependencies)
+# Single Source of Truth: pyproject.toml + uv.lock (dependencies)
 #
 # This script mirrors the setup from reproduce/docker/setup.sh but adapted for Binder's
 # conda-based environment where we install into the system Python rather than a venv.
@@ -9,35 +9,50 @@ set -e
 
 echo "🚀 Setting up Method of Moderation Binder environment..."
 
+# Binder clones the repo to the user's home directory
+REPO_DIR="${HOME}"
+
 # ============================================================================
 # Install Node.js 18 (required by MyST for documentation)
 # ============================================================================
 echo "📦 Installing Node.js 18..."
 
-# Use nodesource for Node.js 18 (apt version is too old)
-curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+# Use nodesource for Node.js 18 (matches Dockerfile and devcontainer)
+curl -fsSL https://deb.nodesource.com/setup_18.x | sudo bash -
 sudo apt-get install -y nodejs
 
 echo "✓ Node.js $(node --version)"
 echo "✓ npm $(npm --version)"
 
 # ============================================================================
-# Install uv package manager
+# Install uv package manager (pinned for reproducibility)
 # ============================================================================
 echo "📦 Installing uv..."
 
-pip install uv
+# Pin uv version for reproducible builds
+# Update this version periodically to get bug fixes and new features
+pip install "uv>=0.5,<1.0"
 
 echo "✓ uv $(uv --version)"
 
 # ============================================================================
-# Install dependencies from pyproject.toml
+# Install dependencies from pyproject.toml using locked versions
 # ============================================================================
 echo "🐍 Installing Python dependencies from pyproject.toml..."
 
-# Install project with dependencies into the binder conda environment
-# Using --system since we're not in a venv (binder uses conda)
-uv pip install --system -e .
+cd "${REPO_DIR}"
+
+# Export locked dependencies to requirements.txt format
+# This respects [tool.uv.sources] and ensures reproducible builds
+uv export --frozen --no-hashes --no-dev -o /tmp/requirements.txt
+
+# Install the exported requirements into the system Python
+uv pip install --system -r /tmp/requirements.txt
+
+# Install the project itself in editable mode
+uv pip install --system --no-deps -e .
+
+rm /tmp/requirements.txt
 
 # ============================================================================
 # Configure environment
@@ -51,28 +66,36 @@ cat > ~/.ipython/profile_default/startup/00-pythonpath.py << 'PYEOF'
 import os
 import sys
 
-# Add code/ directory to Python path
-workspace = os.environ.get('HOME', '/home/jovyan')
-code_dir = os.path.join(workspace, 'code')
+# Add code/ directory to Python path (Binder clones to home directory)
+repo_dir = os.environ.get('HOME', '/home/jovyan')
+code_dir = os.path.join(repo_dir, 'code')
 if os.path.isdir(code_dir) and code_dir not in sys.path:
     sys.path.insert(0, code_dir)
 PYEOF
 
 # Also set for shell sessions
 # shellcheck disable=SC2016  # Single quotes are intentional - variables expand at runtime
-echo 'export PYTHONPATH="$HOME/code:$PYTHONPATH"' >> ~/.bashrc
+echo 'export PYTHONPATH="${HOME}/code:${PYTHONPATH}"' >> ~/.bashrc
 
 # ============================================================================
-# Warm up caches
+# Warm up caches (non-critical, failures are logged but don't stop the build)
 # ============================================================================
 echo "🔥 Warming up caches..."
 
 # Generate matplotlib font cache
-python -c "import matplotlib as mpl; mpl.use('Agg'); import pylab as plt; fig, ax = plt.subplots(); fig.savefig('/tmp/test.png')" 2>/dev/null || true
+if python -c "import matplotlib as mpl; mpl.use('Agg'); import pylab as plt; fig, ax = plt.subplots(); fig.savefig('/tmp/test.png')" 2>&1; then
+    echo "✓ Matplotlib font cache generated"
+else
+    echo "⚠️ Matplotlib cache warmup failed (non-critical, first plot may be slow)"
+fi
 rm -f /tmp/test.png
 
 # Pre-compile numba functions (optional, reduces first-run time)
-python -c "from moderation import IndShockMoMConsumerType; print('✓ Numba JIT compiled')" 2>/dev/null || echo "⚠️ Numba warmup skipped"
+if python -c "from moderation import IndShockMoMConsumerType; print('✓ Numba JIT compiled')" 2>&1; then
+    : # Success message printed by Python
+else
+    echo "⚠️ Numba warmup skipped (first run may be slower)"
+fi
 
 # ============================================================================
 # Verify installation
@@ -84,15 +107,17 @@ echo "━━━━━━━━━━━━━━━━━━━━━━━━�
 echo ""
 echo "   Python:  $(python --version)"
 echo "   Node.js: $(node --version)"
-echo "   MyST:    $(myst --version 2>/dev/null || echo 'not available')"
+myst_version=$(myst --version 2>&1) && echo "   MyST:    $myst_version" || echo "   MyST:    not available"
 echo ""
 
-# List key packages
-python -c "
+# List key packages (show warning if imports fail - these are critical)
+if ! python -c "
 import HARK; print(f'   HARK:    {HARK.__version__}')
 import numpy; print(f'   NumPy:   {numpy.__version__}')
 import scipy; print(f'   SciPy:   {scipy.__version__}')
 import matplotlib; print(f'   Matplotlib: {matplotlib.__version__}')
-" 2>/dev/null || echo "   (package versions not available)"
+" 2>&1; then
+    echo "   ⚠️ WARNING: Some packages failed to import - check installation"
+fi
 
 echo ""
