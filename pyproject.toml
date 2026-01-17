@@ -39,6 +39,9 @@ dev = [
   "jupyterlab",
   "pre-commit>=4.3.0",
 ]
+symbolic = [
+  "sympy>=1.12",
+]
 
 [tool.ruff.lint]
 extend-select = [

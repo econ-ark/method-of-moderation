@@ -1,6 +1,6 @@
 # Machine-Readable Metadata
 
-This directory contains structured JSON files describing the Method of Moderation algorithm and its parameters in a machine-readable format.
+This directory contains structured files describing the Method of Moderation algorithm, parameters, and equations in machine-readable formats.
 
 ## Files
 
@@ -8,17 +8,59 @@ This directory contains structured JSON files describing the Method of Moderatio
 |------|---------|
 | [algorithm.json](algorithm.json) | Structured description of the algorithm steps, properties, and implementation |
 | [parameters.json](parameters.json) | Parameter definitions with defaults, valid ranges, and descriptions |
+| [equations.json](equations.json) | All equations in LaTeX, SymPy string, and Python formats |
+| [equations.py](equations.py) | SymPy module for symbolic equation manipulation (requires `sympy`) |
 
-## Usage
+## For AI Systems
 
-These files are designed for:
+These files are specifically designed for programmatic access by AI systems:
 
-1. **AI systems** parsing repository content
-2. **Automated tools** generating documentation
-3. **Validation scripts** checking parameter ranges
-4. **Integration** with other software systems
+- **JSON files** can be parsed by any language without dependencies
+- **equations.py** enables symbolic computation (differentiation, simplification, code generation)
+- All equations include LaTeX, Python, and SymPy representations
 
-## Example: Reading Parameters in Python
+## Quick Start: Equations
+
+### Without SymPy (JSON only)
+
+```python
+import json
+
+with open('metadata/equations.json') as f:
+    eq_data = json.load(f)
+
+# Get the moderation ratio equation
+for eq in eq_data['equations']:
+    if eq['id'] == 'moderation_ratio':
+        print(f"LaTeX: {eq['latex']}")
+        print(f"Python: {eq['python']}")
+```
+
+### With SymPy
+
+```python
+# Install: pip install sympy
+from metadata.equations import (
+    consumption_optimist, consumption_pessimist,
+    moderation_ratio_definition, logit_moderation,
+    EQUATIONS, get_equation_latex
+)
+from sympy import latex, diff, simplify
+
+# Get LaTeX
+print(latex(consumption_optimist))
+
+# Differentiate
+from metadata.equations import m, kappa_min, h
+dc_dm = diff(consumption_optimist, m)
+print(f"MPC of optimist: {dc_dm}")  # kappa_min
+
+# List all equations
+for name in EQUATIONS:
+    print(f"- {name}: {EQUATIONS[name]['name']}")
+```
+
+## Example: Reading Parameters
 
 ```python
 import json
@@ -49,6 +91,22 @@ for step in algo['algorithm_steps']:
     print(f"  {step['description']}")
 ```
 
+## Installing SymPy (Optional)
+
+The `equations.py` module requires SymPy for symbolic mathematics:
+
+```bash
+pip install sympy
+# or
+uv pip install sympy
+```
+
+SymPy is included in the project's optional `symbolic` dependency group:
+
+```bash
+uv sync --group symbolic
+```
+
 ## Schema
 
-Both files follow JSON Schema draft 2020-12 conventions and can be validated using standard JSON Schema validators.
+JSON files follow JSON Schema draft 2020-12 conventions and can be validated using standard validators.
