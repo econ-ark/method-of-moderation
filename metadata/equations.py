@@ -1,21 +1,31 @@
 """Symbolic equations for the Method of Moderation.
 
 This module provides SymPy representations of all key equations from the paper,
-enabling programmatic manipulation, verification, and code generation.
+using Unicode mathematical symbols that correspond to the LaTeX macros.
+
+Symbol Naming Convention:
+    - Greek parameters: Unicode Greek letters (β, ρ, θ, ψ)
+    - Bold functions: Mathematical bold Unicode (𝐜, 𝐯, 𝐮)
+    - Bold Greek: Mathematical bold Greek (𝛚, 𝛘, 𝛋)
+    - Normalized variables: ASCII letters (m, c, a, h)
+
+LaTeX Macro Correspondence:
+    \\DiscFac → β       \\CRRA → ρ        \\Rfree → R
+    \\mNrm → m          \\cNrm → c        \\aNrm → a
+    \\cFunc → 𝐜         \\vFunc → 𝐯       \\uFunc → 𝐮
+    \\modRte → 𝛚        \\logitModRte → 𝛘 \\MPC → 𝛋
+    \\permShk → ψ       \\tranShkEmp → θ  \\WorstProb → ℘
+    \\AbsPatFac → Þ     \\PermGroFac → Γ
 
 Usage:
     >>> from metadata.equations import *
-    >>> print(latex(consumption_optimist))
-    >>> print(consumption_realist.subs({m: 10, kappa_min: 0.04, h: 25, m_min: 0}))
+    >>> print(latex(𝐜_opt))
+    >>> expr = 𝛋_min * (m + h)
+    >>> expr.subs({m: 10, 𝛋_min: 0.04, h: 25})
 
 For AI Systems:
     This module is designed to be discoverable and usable by AI systems.
-    All equations are defined as SymPy expressions that can be:
-    - Evaluated numerically with .subs() and .evalf()
-    - Differentiated with sympy.diff()
-    - Simplified with sympy.simplify()
-    - Converted to LaTeX with sympy.latex()
-    - Converted to code with sympy.lambdify()
+    All equations use Unicode symbols matching the paper's notation.
 """
 
 from sympy import (
@@ -27,166 +37,186 @@ from sympy import (
 )
 
 # =============================================================================
-# Symbol Definitions
+# Symbol Definitions - Parameters
 # =============================================================================
 
-# State and choice variables
-m = Symbol('m', real=True, positive=True)           # Market resources (normalized)
-c = Symbol('c', real=True, positive=True)           # Consumption (normalized)
-a = Symbol('a', real=True)                          # End-of-period assets
-m_prime = Symbol("m'", real=True, positive=True)    # Next period market resources
-
-# Parameters
-rho = Symbol('rho', real=True, positive=True)       # CRRA (risk aversion)
-beta = Symbol('beta', real=True, positive=True)     # Discount factor
-R = Symbol('R', real=True, positive=True)           # Gross interest rate
-Gamma = Symbol('Gamma', real=True, positive=True)   # Permanent income growth
+# Economic parameters (Greek letters)
+β = Symbol('β', real=True, positive=True)              # Discount factor (\DiscFac)
+ρ = Symbol('ρ', real=True, positive=True)              # CRRA risk aversion (\CRRA)
+R = Symbol('R', real=True, positive=True)              # Gross interest rate (\Rfree)
+Γ = Symbol('Γ', real=True, positive=True)              # Permanent income growth (\PermGroFac)
 
 # Shock parameters
-theta = Symbol('theta', real=True, positive=True)   # Transitory shock
-psi = Symbol('psi', real=True, positive=True)       # Permanent shock
-theta_min = Symbol('theta_min', real=True, nonnegative=True)  # Minimum transitory
-wp = Symbol('wp', real=True, positive=True)         # Unemployment probability (℘)
+θ = Symbol('θ', real=True, positive=True)              # Transitory shock (\tranShkEmp)
+ψ = Symbol('ψ', real=True, positive=True)              # Permanent shock (\permShk)
+θ_min = Symbol('θ_min', real=True, nonnegative=True)   # Minimum transitory (\tranShkEmpMin)
+℘ = Symbol('℘', real=True, positive=True)              # Unemployment probability (\WorstProb)
 
-# Derived quantities
-kappa_min = Symbol('kappa_min', real=True, positive=True)  # Minimum MPC
-kappa_max = Symbol('kappa_max', real=True, positive=True)  # Maximum MPC
-h = Symbol('h', real=True)                          # Human wealth
-h_pes = Symbol('h_pes', real=True)                  # Pessimist human wealth
-h_ex = Symbol('h_ex', real=True, positive=True)     # Excess human wealth
-m_min = Symbol('m_min', real=True)                  # Natural borrowing constraint
-m_ex = Symbol('m_ex', real=True, positive=True)     # Excess market resources
-
-# Method of Moderation variables
-omega = Symbol('omega', real=True, positive=True)   # Moderation ratio
-chi = Symbol('chi', real=True)                      # Logit-transformed moderation
-mu = Symbol('mu', real=True)                        # Log excess market resources
-
-# Index for summations
-n = Symbol('n', integer=True, nonnegative=True)
-t = Symbol('t', integer=True, nonnegative=True)
+# Patience factor
+Þ = Symbol('Þ', real=True, positive=True)              # Absolute patience factor (\AbsPatFac)
 
 # =============================================================================
-# Utility Function
+# Symbol Definitions - State Variables (Normalized)
 # =============================================================================
 
-def utility(c_val, rho_val=rho):
-    """CRRA utility function u(c) = c^(1-rho)/(1-rho) for rho != 1."""
-    return c_val**(1 - rho_val) / (1 - rho_val)
+# Normalized state variables (ASCII - matching \mNrm etc.)
+m = Symbol('m', real=True, positive=True)              # Market resources (\mNrm)
+c = Symbol('c', real=True, positive=True)              # Consumption (\cNrm)
+a = Symbol('a', real=True)                             # End-of-period assets (\aNrm)
+h = Symbol('h', real=True)                             # Human wealth (\hNrm)
 
-def marginal_utility(c_val, rho_val=rho):
-    """Marginal utility u'(c) = c^(-rho)."""
-    return c_val**(-rho_val)
-
-def inverse_marginal_utility(u_prime, rho_val=rho):
-    """Inverse marginal utility: c = u'^(-1/rho)."""
-    return u_prime**(-1/rho_val)
-
-# Symbolic expressions
-u_c = c**(1 - rho) / (1 - rho)
-u_prime_c = c**(-rho)
-u_prime_inv = Symbol('u_prime')**(-1/rho)
+# Next period
+m_next = Symbol("m'", real=True, positive=True)        # Next period market resources
+c_next = Symbol("c'", real=True, positive=True)        # Next period consumption
 
 # =============================================================================
-# Patience Factor and MPC
+# Symbol Definitions - Bounds and Constraints
+# =============================================================================
+
+# MPC bounds (bold kappa: 𝛋)
+𝛋_min = Symbol('𝛋_min', real=True, positive=True)      # Minimum MPC (\MPCmin)
+𝛋_max = Symbol('𝛋_max', real=True, positive=True)      # Maximum MPC (\MPCmax)
+
+# Human wealth variants
+h̄ = Symbol('h̄', real=True)                             # Optimist human wealth (\hNrmOpt)
+h_min = Symbol('h_min', real=True)                     # Pessimist human wealth (\hNrmPes)
+Δh = Symbol('Δh', real=True, positive=True)            # Excess human wealth (\hNrmEx)
+
+# Market resources bounds
+m_min = Symbol('m_min', real=True)                     # Natural borrowing constraint (\mNrmMin)
+Δm = Symbol('Δm', real=True, positive=True)            # Excess market resources (\mNrmEx)
+μ = Symbol('μ', real=True)                             # Log excess resources (\logmNrmEx)
+
+# Cusp point
+m_cusp = Symbol('m*', real=True)                       # Cusp point (\mNrmCusp)
+
+# =============================================================================
+# Symbol Definitions - Method of Moderation Variables
+# =============================================================================
+
+# Bold omega and chi (moderation framework)
+𝛚 = Symbol('𝛚', real=True, positive=True)              # Moderation ratio (\modRte)
+𝛘 = Symbol('𝛘', real=True)                             # Logit moderation (\logitModRte)
+𝛘_hat = Symbol('𝛘̂', real=True)                         # Approximated logit
+
+# Value function moderation (bold Omega)
+𝛀 = Symbol('𝛀', real=True, positive=True)              # Value moderation ratio (\valModRte)
+
+# =============================================================================
+# Utility Function (𝐮)
+# =============================================================================
+
+def 𝐮(c_val, ρ_val=ρ):
+    """CRRA utility function u(c) = c^(1-ρ)/(1-ρ) for ρ ≠ 1."""
+    return c_val**(1 - ρ_val) / (1 - ρ_val)
+
+def 𝐮_prime(c_val, ρ_val=ρ):
+    """Marginal utility u'(c) = c^(-ρ)."""
+    return c_val**(-ρ_val)
+
+def 𝐮_prime_inv(u_prime_val, ρ_val=ρ):
+    """Inverse marginal utility: c = u'^(-1/ρ)."""
+    return u_prime_val**(-1/ρ_val)
+
+# Symbolic utility expressions
+u_of_c = c**(1 - ρ) / (1 - ρ)
+u_prime_of_c = c**(-ρ)
+
+# =============================================================================
+# Patience Factor and MPC Formulas
 # =============================================================================
 
 # Absolute patience factor: Þ = (βR)^(1/ρ)
-patience_factor = (beta * R)**(1/rho)
+Þ_formula = (β * R)**(1/ρ)
 
-# Minimum MPC: κ_min = 1 - Þ/R
-mpc_min_formula = 1 - patience_factor / R
+# Minimum MPC: 𝛋_min = 1 - Þ/R
+𝛋_min_formula = 1 - Þ / R
 
-# Maximum MPC: κ_max = 1 - ℘^(1/ρ) × Þ/R
-mpc_max_formula = 1 - wp**(1/rho) * patience_factor / R
-
-# =============================================================================
-# Human Wealth
-# =============================================================================
-
-# Human wealth (optimist): h = Γ/(R-Γ) assuming E[θ] = 1
-human_wealth_optimist = Gamma / (R - Gamma)
-
-# Human wealth (pessimist): h_pes = θ_min × Γ/(R-Γ)
-human_wealth_pessimist = theta_min * Gamma / (R - Gamma)
-
-# Excess human wealth: h^e = h - h_pes
-human_wealth_excess = human_wealth_optimist - human_wealth_pessimist
-
-# Natural borrowing constraint: m_min = -h_pes
-borrowing_constraint = -human_wealth_pessimist
+# Maximum MPC: 𝛋_max = 1 - ℘^(1/ρ) × Þ/R
+𝛋_max_formula = 1 - ℘**(1/ρ) * Þ / R
 
 # =============================================================================
-# Consumption Functions
+# Human Wealth Formulas
 # =============================================================================
 
-# Optimist consumption: c_opt(m) = κ_min × (m + h)
-consumption_optimist = kappa_min * (m + h)
+# Optimist human wealth: h̄ = Γ/(R-Γ) assuming E[θ] = 1
+h̄_formula = Γ / (R - Γ)
 
-# Pessimist consumption: c_pes(m) = κ_min × (m - m_min) = κ_min × m^e
-consumption_pessimist = kappa_min * (m - m_min)
-consumption_pessimist_excess = kappa_min * m_ex
+# Pessimist human wealth: h_min = θ_min × Γ/(R-Γ)
+h_min_formula = θ_min * Γ / (R - Γ)
 
-# Tighter upper bound: c_tight(m) = c_opt(m) - (κ_max - κ_min) × m^e
-consumption_tight = consumption_optimist - (kappa_max - kappa_min) * m_ex
+# Excess human wealth: Δh = h̄ - h_min
+Δh_formula = h̄_formula - h_min_formula
 
-# Realist consumption (implicit - defined by bounds)
-c_real = Symbol('c_real', real=True, positive=True)
+# Natural borrowing constraint: m_min = -h_min
+m_min_formula = -h_min_formula
 
 # =============================================================================
-# Moderation Ratio
+# Consumption Functions (𝐜)
 # =============================================================================
 
-# Definition: ω = (c_real - c_pes) / (c_opt - c_pes)
-moderation_ratio_definition = (c_real - consumption_pessimist) / (consumption_optimist - consumption_pessimist)
+# Optimist consumption: 𝐜̄(m) = 𝛋_min × (m + h̄)
+𝐜_opt = 𝛋_min * (m + h̄)
 
-# Simplified: ω = (c_real - c_pes) / (h^e × κ_min)
-moderation_ratio_simplified = (c_real - consumption_pessimist) / (h_ex * kappa_min)
+# Pessimist consumption: 𝐜̲(m) = 𝛋_min × (m - m_min) = 𝛋_min × Δm
+𝐜_pes = 𝛋_min * (m - m_min)
+𝐜_pes_excess = 𝛋_min * Δm
+
+# Tighter upper bound: 𝐜_tight(m) = 𝐜_opt - (𝛋_max - 𝛋_min) × Δm
+𝐜_tight = 𝐜_opt - (𝛋_max - 𝛋_min) * Δm
+
+# Realist consumption (symbolic placeholder)
+𝐜_real = Symbol('𝐜̂', real=True, positive=True)
+
+# =============================================================================
+# Moderation Ratio (𝛚)
+# =============================================================================
+
+# Definition: 𝛚 = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
+𝛚_definition = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
+
+# Simplified: 𝛚 = (𝐜_real - 𝐜_pes) / (Δh × 𝛋_min)
+𝛚_simplified = (𝐜_real - 𝐜_pes) / (Δh * 𝛋_min)
 
 # =============================================================================
 # Transformations
 # =============================================================================
 
-# Log excess market resources: μ = log(m - m_min)
-log_excess_resources = log(m - m_min)
+# Log excess market resources: μ = log(m - m_min) = log(Δm)
+μ_definition = log(m - m_min)
 
-# Logit transformation: χ = log(ω/(1-ω))
-logit_moderation = log(omega / (1 - omega))
+# Logit transformation: 𝛘 = log(𝛚/(1-𝛚))
+𝛘_definition = log(𝛚 / (1 - 𝛚))
 
-# Inverse logit (expit): ω = 1/(1 + exp(-χ))
-expit_moderation = 1 / (1 + exp(-chi))
+# Inverse logit (expit): 𝛚 = 1/(1 + exp(-𝛘))
+𝛚_from_𝛘 = 1 / (1 + exp(-𝛘))
 
 # =============================================================================
 # Reconstruction Formula
 # =============================================================================
 
-# Given χ̂, reconstruct consumption:
-# ĉ(m) = c_pes(m) + ω̂ × (c_opt(m) - c_pes(m))
-#      = c_pes(m) + expit(χ̂) × h^e × κ_min
-
-chi_hat = Symbol('chi_hat', real=True)
-omega_hat = 1 / (1 + exp(-chi_hat))
-consumption_reconstructed = consumption_pessimist + omega_hat * (consumption_optimist - consumption_pessimist)
+# Given 𝛘̂, reconstruct consumption:
+# 𝐜̂(m) = 𝐜_pes(m) + 𝛚̂ × (𝐜_opt(m) - 𝐜_pes(m))
+𝛚_hat = 1 / (1 + exp(-𝛘_hat))
+𝐜_reconstructed = 𝐜_pes + 𝛚_hat * (𝐜_opt - 𝐜_pes)
 
 # =============================================================================
 # Cusp Point
 # =============================================================================
 
-# The cusp point m̌ is where c_tight crosses c_pes:
-# m̌ = m_min + (κ_min × h^e) / (κ_max - κ_min)
-cusp_point = m_min + (kappa_min * h_ex) / (kappa_max - kappa_min)
+# The cusp point m* is where 𝐜_tight crosses 𝐜_pes:
+# m* = m_min + (𝛋_min × Δh) / (𝛋_max - 𝛋_min)
+m_cusp_formula = m_min + (𝛋_min * Δh) / (𝛋_max - 𝛋_min)
 
 # =============================================================================
-# Bellman Equation (Symbolic Form)
+# Value Functions (𝐯)
 # =============================================================================
 
-# Value function
-v = Function('v')
-v_next = Function('v_next')
-
-# Bellman equation: v(m) = max_c { u(c) + β E[Ψ^(1-ρ) v(m')] }
-# Where m' = (m - c)R + θ'
-# This is defined implicitly
+# Value function symbols
+𝐯 = Function('𝐯')                                      # Value function (\vFunc)
+𝐯_opt = Function('𝐯̄')                                  # Optimist value (\vFuncOpt)
+𝐯_pes = Function('𝐯̲')                                  # Pessimist value (\vFuncPes)
+𝐯_real = Function('𝐯̂')                                 # Realist value (\vFuncReal)
 
 # =============================================================================
 # Euler Equation
@@ -194,20 +224,19 @@ v_next = Function('v_next')
 
 # u'(c) = βR E[Ψ^(-ρ) u'(c')]
 # c^(-ρ) = βR E[Ψ^(-ρ) (c')^(-ρ)]
-euler_lhs = c**(-rho)
-c_next = Symbol("c'", real=True, positive=True)
-Psi = Symbol('Psi', real=True, positive=True)  # Combined permanent shock
-euler_rhs_kernel = beta * R * Psi**(-rho) * c_next**(-rho)
+Ψ = Symbol('Ψ', real=True, positive=True)              # Combined permanent shock
+euler_lhs = c**(-ρ)
+euler_rhs_kernel = β * R * Ψ**(-ρ) * c_next**(-ρ)
 
 # =============================================================================
 # Patience Conditions
 # =============================================================================
 
 # Condition expressions (must be positive for solution to exist)
-condition_AIC = 1 - patience_factor                    # Þ < 1
-condition_RIC = 1 - patience_factor / R                # Þ/R < 1
-condition_GIC = 1 - patience_factor / Gamma            # Þ/Γ < 1
-condition_FHWC = 1 - Gamma / R                         # Γ/R < 1
+condition_AIC = 1 - Þ                                  # Þ < 1
+condition_RIC = 1 - Þ / R                              # Þ/R < 1 (equiv to 𝛋_min > 0)
+condition_GIC = 1 - Þ / Γ                              # Þ/Γ < 1
+condition_FHWC = 1 - Γ / R                             # Γ/R < 1 (finite human wealth)
 
 # =============================================================================
 # Equation Dictionary (for programmatic access)
@@ -216,98 +245,152 @@ condition_FHWC = 1 - Gamma / R                         # Γ/R < 1
 EQUATIONS = {
     'utility': {
         'name': 'CRRA Utility Function',
-        'sympy': u_c,
-        'latex': r'u(c) = \frac{c^{1-\rho}}{1-\rho}',
+        'sympy': u_of_c,
+        'latex': r'𝐮(c) = \frac{c^{1-ρ}}{1-ρ}',
+        'latex_macro': r'\uFunc(\cNrm) = \frac{\cNrm^{1-\CRRA}}{1-\CRRA}',
         'description': 'Constant relative risk aversion utility'
     },
     'marginal_utility': {
         'name': 'Marginal Utility',
-        'sympy': u_prime_c,
-        'latex': r"u'(c) = c^{-\rho}",
+        'sympy': u_prime_of_c,
+        'latex': r"𝐮'(c) = c^{-ρ}",
+        'latex_macro': r"\uPrime(\cNrm) = \cNrm^{-\CRRA}",
         'description': 'First derivative of utility'
     },
     'patience_factor': {
         'name': 'Absolute Patience Factor',
-        'sympy': patience_factor,
-        'latex': r'\Phi = (\beta R)^{1/\rho}',
+        'sympy': Þ_formula,
+        'latex': r'Þ = (βR)^{1/ρ}',
+        'latex_macro': r'\AbsPatFac = (\DiscFac \Rfree)^{1/\CRRA}',
         'description': 'Key parameter for impatience conditions'
     },
     'mpc_min': {
         'name': 'Minimum MPC',
-        'sympy': mpc_min_formula,
-        'latex': r'\kappa_{\min} = 1 - \frac{\Phi}{R}',
+        'sympy': 𝛋_min_formula,
+        'latex': r'𝛋_{min} = 1 - \frac{Þ}{R}',
+        'latex_macro': r'\MPCmin = 1 - \frac{\AbsPatFac}{\Rfree}',
         'description': 'MPC of perfect foresight consumer'
     },
     'mpc_max': {
         'name': 'Maximum MPC',
-        'sympy': mpc_max_formula,
-        'latex': r'\kappa_{\max} = 1 - \wp^{1/\rho} \frac{\Phi}{R}',
+        'sympy': 𝛋_max_formula,
+        'latex': r'𝛋_{max} = 1 - ℘^{1/ρ} \frac{Þ}{R}',
+        'latex_macro': r'\MPCmax = 1 - \WorstProb^{1/\CRRA} \frac{\AbsPatFac}{\Rfree}',
         'description': 'Upper bound on MPC'
     },
     'human_wealth': {
         'name': 'Human Wealth (Optimist)',
-        'sympy': human_wealth_optimist,
-        'latex': r'h = \frac{\Gamma}{R - \Gamma}',
+        'sympy': h̄_formula,
+        'latex': r'h̄ = \frac{Γ}{R - Γ}',
+        'latex_macro': r'\hNrmOpt = \frac{\PermGroFac}{\Rfree - \PermGroFac}',
         'description': 'PDV of expected future income'
     },
     'consumption_optimist': {
         'name': 'Optimist Consumption',
-        'sympy': consumption_optimist,
-        'latex': r'c_{\text{opt}}(m) = \kappa_{\min} (m + h)',
+        'sympy': 𝐜_opt,
+        'latex': r'𝐜̄(m) = 𝛋_{min} (m + h̄)',
+        'latex_macro': r'\cFuncOpt(\mNrm) = \MPCmin (\mNrm + \hNrmOpt)',
         'description': 'Upper bound consumption function'
     },
     'consumption_pessimist': {
         'name': 'Pessimist Consumption',
-        'sympy': consumption_pessimist,
-        'latex': r'c_{\text{pes}}(m) = \kappa_{\min} (m - m_{\min})',
+        'sympy': 𝐜_pes,
+        'latex': r'𝐜̲(m) = 𝛋_{min} (m - m_{min})',
+        'latex_macro': r'\cFuncPes(\mNrm) = \MPCmin (\mNrm - \mNrmMin)',
         'description': 'Lower bound consumption function'
     },
     'moderation_ratio': {
         'name': 'Moderation Ratio',
-        'sympy': moderation_ratio_definition,
-        'latex': r'\omega = \frac{c_{\text{real}} - c_{\text{pes}}}{c_{\text{opt}} - c_{\text{pes}}}',
-        'description': 'Position between bounds (0 < ω < 1)'
+        'sympy': 𝛚_definition,
+        'latex': r'𝛚 = \frac{𝐜̂ - 𝐜̲}{𝐜̄ - 𝐜̲}',
+        'latex_macro': r'\modRte = \frac{\cFuncReal - \cFuncPes}{\cFuncOpt - \cFuncPes}',
+        'description': 'Position between bounds (0 < 𝛚 < 1)'
     },
     'log_excess_resources': {
         'name': 'Log Excess Resources',
-        'sympy': log_excess_resources,
-        'latex': r'\mu = \log(m - m_{\min})',
+        'sympy': μ_definition,
+        'latex': r'μ = \log(m - m_{min})',
+        'latex_macro': r'\logmNrmEx = \log(\mNrm - \mNrmMin)',
         'description': 'Transformed state variable'
     },
     'logit_moderation': {
         'name': 'Chi Function (Logit)',
-        'sympy': logit_moderation,
-        'latex': r'\chi = \log\left(\frac{\omega}{1-\omega}\right)',
+        'sympy': 𝛘_definition,
+        'latex': r'𝛘 = \log\left(\frac{𝛚}{1-𝛚}\right)',
+        'latex_macro': r'\logitModRte = \log\left(\frac{\modRte}{1-\modRte}\right)',
         'description': 'Asymptotically linear transformation'
     },
     'expit_moderation': {
         'name': 'Inverse Logit (Expit)',
-        'sympy': expit_moderation,
-        'latex': r'\omega = \frac{1}{1 + e^{-\chi}}',
+        'sympy': 𝛚_from_𝛘,
+        'latex': r'𝛚 = \frac{1}{1 + e^{-𝛘}}',
+        'latex_macro': r'\modRte = \frac{1}{1 + e^{-\logitModRte}}',
         'description': 'Inverse chi transformation'
     },
     'consumption_reconstructed': {
         'name': 'Reconstructed Consumption',
-        'sympy': consumption_reconstructed,
-        'latex': r'\hat{c}(m) = c_{\text{pes}}(m) + \hat{\omega} (c_{\text{opt}}(m) - c_{\text{pes}}(m))',
-        'description': 'Final consumption formula'
+        'sympy': 𝐜_reconstructed,
+        'latex': r'𝐜̂(m) = 𝐜̲(m) + 𝛚̂ (𝐜̄(m) - 𝐜̲(m))',
+        'latex_macro': r'\cFuncReal(\mNrm) = \cFuncPes(\mNrm) + \hat{\modRte} (\cFuncOpt(\mNrm) - \cFuncPes(\mNrm))',
+        'description': 'Final consumption formula from Method of Moderation'
     },
     'cusp_point': {
         'name': 'Cusp Point',
-        'sympy': cusp_point,
-        'latex': r'\check{m} = m_{\min} + \frac{\kappa_{\min} h^e}{\kappa_{\max} - \kappa_{\min}}',
+        'sympy': m_cusp_formula,
+        'latex': r'm^* = m_{min} + \frac{𝛋_{min} Δh}{𝛋_{max} - 𝛋_{min}}',
+        'latex_macro': r'\mNrmCusp = \mNrmMin + \frac{\MPCmin \hNrmEx}{\MPCmax - \MPCmin}',
         'description': 'Where tight bound crosses pessimist'
     },
 }
 
 # =============================================================================
+# Aliases for backward compatibility and convenience
+# =============================================================================
+
+# Parameter aliases (ASCII names)
+beta = β
+rho = ρ
+Rfree = R
+PermGroFac = Γ
+DiscFac = β
+CRRA = ρ
+
+# MPC aliases
+kappa_min = 𝛋_min
+kappa_max = 𝛋_max
+MPCmin = 𝛋_min
+MPCmax = 𝛋_max
+
+# Moderation aliases
+omega = 𝛚
+chi = 𝛘
+modRte = 𝛚
+logitModRte = 𝛘
+
+# Consumption function aliases
+cFuncOpt = 𝐜_opt
+cFuncPes = 𝐜_pes
+consumption_optimist = 𝐜_opt
+consumption_pessimist = 𝐜_pes
+
+# Human wealth aliases
+hNrmOpt = h̄
+h_opt = h̄
+
+# =============================================================================
 # Helper Functions
 # =============================================================================
 
-def get_equation_latex(name):
-    """Get LaTeX representation of named equation."""
+def get_equation_latex(name, use_macros=False):
+    """Get LaTeX representation of named equation.
+    
+    Args:
+        name: Equation name from EQUATIONS dict
+        use_macros: If True, return LaTeX with macro names; otherwise Unicode
+    """
     if name in EQUATIONS:
-        return EQUATIONS[name]['latex']
+        key = 'latex_macro' if use_macros else 'latex'
+        return EQUATIONS[name].get(key, EQUATIONS[name]['latex'])
     raise KeyError(f"Unknown equation: {name}")
 
 def get_equation_sympy(name):
@@ -320,16 +403,27 @@ def list_equations():
     """List all available equations."""
     return list(EQUATIONS.keys())
 
-def evaluate_consumption(m_val, kappa_min_val, h_val, m_min_val, omega_val):
-    """Evaluate the Method of Moderation consumption formula numerically."""
-    c_pes = kappa_min_val * (m_val - m_min_val)
-    c_opt = kappa_min_val * (m_val + h_val)
-    return c_pes + omega_val * (c_opt - c_pes)
+def evaluate_consumption(m_val, κ_min_val, h_val, m_min_val, ω_val):
+    """Evaluate the Method of Moderation consumption formula numerically.
+    
+    Args:
+        m_val: Market resources
+        κ_min_val: Minimum MPC
+        h_val: Human wealth (optimist)
+        m_min_val: Natural borrowing constraint
+        ω_val: Moderation ratio
+    
+    Returns:
+        Consumption value
+    """
+    c_pes = κ_min_val * (m_val - m_min_val)
+    c_opt = κ_min_val * (m_val + h_val)
+    return c_pes + ω_val * (c_opt - c_pes)
 
-def compute_moderation_ratio(c_val, m_val, kappa_min_val, h_val, m_min_val):
+def compute_moderation_ratio(c_val, m_val, κ_min_val, h_val, m_min_val):
     """Compute moderation ratio from consumption value."""
-    c_pes = kappa_min_val * (m_val - m_min_val)
-    c_opt = kappa_min_val * (m_val + h_val)
+    c_pes = κ_min_val * (m_val - m_min_val)
+    c_opt = κ_min_val * (m_val + h_val)
     return (c_val - c_pes) / (c_opt - c_pes)
 
 # =============================================================================
@@ -337,34 +431,47 @@ def compute_moderation_ratio(c_val, m_val, kappa_min_val, h_val, m_min_val):
 # =============================================================================
 
 __all__ = [
-    # Symbols
-    'm', 'c', 'a', 'rho', 'beta', 'R', 'Gamma',
-    'theta', 'psi', 'theta_min', 'wp',
-    'kappa_min', 'kappa_max', 'h', 'h_pes', 'h_ex', 'm_min', 'm_ex',
-    'omega', 'chi', 'mu',
+    # Primary symbols (Unicode)
+    'β', 'ρ', 'R', 'Γ', 'θ', 'ψ', 'θ_min', '℘', 'Þ',
+    'm', 'c', 'a', 'h', 'm_next', 'c_next',
+    '𝛋_min', '𝛋_max', 'h̄', 'h_min', 'Δh', 'm_min', 'Δm', 'μ', 'm_cusp',
+    '𝛚', '𝛘', '𝛘_hat', '𝛀',
+    
     # Expressions
-    'u_c', 'u_prime_c',
-    'patience_factor', 'mpc_min_formula', 'mpc_max_formula',
-    'human_wealth_optimist', 'human_wealth_pessimist', 'human_wealth_excess',
-    'borrowing_constraint',
-    'consumption_optimist', 'consumption_pessimist', 'consumption_tight',
-    'moderation_ratio_definition', 'moderation_ratio_simplified',
-    'log_excess_resources', 'logit_moderation', 'expit_moderation',
-    'consumption_reconstructed', 'cusp_point',
+    'u_of_c', 'u_prime_of_c',
+    'Þ_formula', '𝛋_min_formula', '𝛋_max_formula',
+    'h̄_formula', 'h_min_formula', 'Δh_formula', 'm_min_formula',
+    '𝐜_opt', '𝐜_pes', '𝐜_pes_excess', '𝐜_tight', '𝐜_real', '𝐜_reconstructed',
+    '𝛚_definition', '𝛚_simplified', '𝛚_from_𝛘', '𝛚_hat',
+    'μ_definition', '𝛘_definition',
+    'm_cusp_formula',
     'condition_AIC', 'condition_RIC', 'condition_GIC', 'condition_FHWC',
+    
+    # Functions
+    '𝐮', '𝐮_prime', '𝐮_prime_inv',
+    '𝐯', '𝐯_opt', '𝐯_pes', '𝐯_real',
+    
+    # Aliases (ASCII for convenience)
+    'beta', 'rho', 'Rfree', 'PermGroFac', 'DiscFac', 'CRRA',
+    'kappa_min', 'kappa_max', 'MPCmin', 'MPCmax',
+    'omega', 'chi', 'modRte', 'logitModRte',
+    'cFuncOpt', 'cFuncPes', 'consumption_optimist', 'consumption_pessimist',
+    'hNrmOpt', 'h_opt',
+    
     # Dictionary
     'EQUATIONS',
-    # Functions
-    'utility', 'marginal_utility', 'inverse_marginal_utility',
+    
+    # Helper functions
     'get_equation_latex', 'get_equation_sympy', 'list_equations',
     'evaluate_consumption', 'compute_moderation_ratio',
 ]
 
 if __name__ == '__main__':
-    # Demo: Print all equations in LaTeX
-    print("Method of Moderation Equations (SymPy)")
+    # Demo: Print all equations
+    print("Method of Moderation Equations (Unicode SymPy)")
     print("=" * 60)
     for name, eq in EQUATIONS.items():
         print(f"\n{eq['name']}:")
-        print(f"  LaTeX:  {eq['latex']}")
-        print(f"  SymPy:  {eq['sympy']}")
+        print(f"  Unicode: {eq['latex']}")
+        print(f"  Macros:  {eq.get('latex_macro', 'N/A')}")
+        print(f"  SymPy:   {eq['sympy']}")
