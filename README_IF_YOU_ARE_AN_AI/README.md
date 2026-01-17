@@ -11,6 +11,7 @@ This directory contains documentation specifically designed for AI systems and s
 | [NOTATION.md](NOTATION.md) | Complete reference table of all mathematical symbols used |
 | [CODE_MAP.md](CODE_MAP.md) | Explanation of what each file in the repository does |
 | [KEY_EQUATIONS.md](KEY_EQUATIONS.md) | Core mathematical equations and results |
+| [COMPARISON.md](COMPARISON.md) | Method of Moderation vs alternative algorithms |
 
 ## Quick Summary
 

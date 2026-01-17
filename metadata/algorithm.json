@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Method of Moderation",
+  "version": "1.0.0",
+  "description": "A numerical technique for solving consumption-saving problems with theoretically-guaranteed extrapolation properties",
+  "domain": "computational economics",
+  "problem_class": "dynamic stochastic optimization",
+  
+  "problem_solved": {
+    "name": "Consumption-Saving Problem with Idiosyncratic Income Risk",
+    "description": "A consumer maximizes expected discounted utility over consumption subject to stochastic income and borrowing constraints",
+    "difficulty": "Standard numerical methods fail to extrapolate properly outside computed gridpoints"
+  },
+  
+  "key_insight": "The optimal consumption of a risk-aware consumer is bounded between analytical solutions for a pessimist (worst-case income) and optimist (expected income). Working in this bounded space with a logit transformation produces asymptotically linear functions that extrapolate well.",
+  
+  "algorithm_steps": [
+    {
+      "step": 1,
+      "name": "Compute analytical bounds",
+      "description": "Calculate optimist and pessimist perfect-foresight consumption functions",
+      "formulas": {
+        "optimist": "c_opt(m) = κ_min × (m + h)",
+        "pessimist": "c_pes(m) = κ_min × (m - m_min)"
+      }
+    },
+    {
+      "step": 2,
+      "name": "Solve EGM at gridpoints",
+      "description": "Use endogenous gridpoints method to get (m, c) pairs from Euler equation",
+      "method": "endogenous_gridpoints"
+    },
+    {
+      "step": 3,
+      "name": "Compute moderation ratio",
+      "description": "Calculate position between pessimist and optimist bounds",
+      "formula": "ω = (c - c_pes) / (c_opt - c_pes)",
+      "range": "(0, 1)"
+    },
+    {
+      "step": 4,
+      "name": "Transform to log-excess space",
+      "description": "Map market resources to unbounded domain",
+      "formula": "μ = log(m - m_min)"
+    },
+    {
+      "step": 5,
+      "name": "Apply logit transformation",
+      "description": "Transform moderation ratio to asymptotically linear space",
+      "formula": "χ = log(ω / (1 - ω))",
+      "key_property": "χ'(μ) → 0 as μ → ∞"
+    },
+    {
+      "step": 6,
+      "name": "Interpolate χ function",
+      "description": "Create smooth interpolant from computed (μ, χ) pairs",
+      "methods": ["linear", "cubic_spline", "hermite"]
+    },
+    {
+      "step": 7,
+      "name": "Reconstruct consumption",
+      "description": "Evaluate consumption at any m using inverse transformation",
+      "formulas": {
+        "inverse_logit": "ω̂ = 1 / (1 + exp(-χ̂))",
+        "reconstruction": "ĉ(m) = c_pes(m) + ω̂ × (c_opt(m) - c_pes(m))"
+      },
+      "guarantee": "c_pes(m) < ĉ(m) < c_opt(m) always holds"
+    }
+  ],
+  
+  "theoretical_guarantees": [
+    "Consumption is always bounded between pessimist and optimist",
+    "No negative precautionary saving possible",
+    "Asymptotically correct behavior for large wealth",
+    "Smooth extrapolation beyond computed grid"
+  ],
+  
+  "computational_properties": {
+    "complexity": "Same as standard EGM plus O(N) transformation overhead",
+    "gridpoints_required": "Same as standard methods",
+    "numerical_stability": "Uses log1p/expm1 for robust floating-point arithmetic"
+  },
+  
+  "extensions": [
+    {
+      "name": "Tighter upper bound",
+      "description": "Uses maximum MPC constraint for additional tightness"
+    },
+    {
+      "name": "Stochastic returns",
+      "description": "Extends to problems with risky rate of return"
+    },
+    {
+      "name": "Value function moderation",
+      "description": "Same technique applied to value function approximation"
+    }
+  ],
+  
+  "implementation": {
+    "language": "Python",
+    "dependencies": ["numpy", "scipy", "econ-ark/HARK"],
+    "main_file": "code/moderation.py",
+    "key_classes": [
+      "IndShockEGMConsumerType",
+      "IndShockMoMConsumerType"
+    ],
+    "key_functions": [
+      "method_of_moderation",
+      "endogenous_grid_method",
+      "logit_moderate",
+      "expit_moderate"
+    ]
+  },
+  
+  "references": {
+    "primary_paper": {
+      "title": "The Method of Moderation",
+      "authors": ["Christopher D. Carroll", "Alan Lujan", "Karsten Chipeniuk", "Kiichi Tokuoka", "Weifeng Wu"],
+      "year": 2025
+    },
+    "foundational_methods": [
+      {
+        "name": "Endogenous Gridpoints Method",
+        "citation": "Carroll (2006)",
+        "doi": "10.1016/j.econlet.2005.09.013"
+      },
+      {
+        "name": "Buffer-Stock Consumption Theory",
+        "citations": ["Stachurski & Toda (2019)", "Carroll (1997)"]
+      }
+    ]
+  }
+}

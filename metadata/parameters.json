@@ -1,0 +1,185 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "name": "Method of Moderation Parameters",
+  "description": "Default parameter values and valid ranges for the Method of Moderation consumption-saving model",
+  
+  "preference_parameters": {
+    "CRRA": {
+      "symbol": "ρ",
+      "name": "Coefficient of Relative Risk Aversion",
+      "default": 2.0,
+      "valid_range": {"min": 1.0, "max": 10.0, "exclusive_min": false},
+      "typical_values": [1.0, 2.0, 3.0, 5.0],
+      "description": "Higher values indicate more risk averse consumers",
+      "units": "dimensionless"
+    },
+    "DiscFac": {
+      "symbol": "β",
+      "name": "Discount Factor",
+      "default": 0.96,
+      "valid_range": {"min": 0.0, "max": 1.0, "exclusive_min": true, "exclusive_max": true},
+      "typical_values": [0.94, 0.96, 0.98],
+      "description": "How much the consumer values future utility relative to present",
+      "units": "per period"
+    }
+  },
+  
+  "income_parameters": {
+    "PermGroFac": {
+      "symbol": "Γ",
+      "name": "Permanent Income Growth Factor",
+      "default": 1.0,
+      "valid_range": {"min": 0.9, "max": 1.1},
+      "typical_values": [1.0, 1.01, 1.02],
+      "description": "Expected growth rate of permanent income",
+      "units": "per period"
+    },
+    "PermShkStd": {
+      "symbol": "σ_ψ",
+      "name": "Permanent Shock Standard Deviation",
+      "default": 0.1,
+      "valid_range": {"min": 0.0, "max": 0.5},
+      "typical_values": [0.0, 0.05, 0.1],
+      "description": "Standard deviation of log permanent income shocks",
+      "units": "log points"
+    },
+    "TranShkStd": {
+      "symbol": "σ_θ",
+      "name": "Transitory Shock Standard Deviation",
+      "default": 0.1,
+      "valid_range": {"min": 0.0, "max": 0.5},
+      "typical_values": [0.0, 0.1, 0.2],
+      "description": "Standard deviation of log transitory income shocks",
+      "units": "log points"
+    },
+    "UnempPrb": {
+      "symbol": "℘",
+      "name": "Unemployment Probability",
+      "default": 0.005,
+      "valid_range": {"min": 0.0, "max": 0.5, "exclusive_min": true},
+      "typical_values": [0.005, 0.01, 0.05],
+      "description": "Probability of zero income (unemployment)",
+      "units": "per period",
+      "note": "Must be positive for natural borrowing constraint"
+    }
+  },
+  
+  "market_parameters": {
+    "Rfree": {
+      "symbol": "R",
+      "name": "Gross Risk-Free Interest Rate",
+      "default": 1.03,
+      "valid_range": {"min": 1.0, "max": 1.2, "exclusive_min": true},
+      "typical_values": [1.01, 1.03, 1.05],
+      "description": "Gross return on assets (1 + r)",
+      "units": "per period"
+    }
+  },
+  
+  "computational_parameters": {
+    "aXtraMin": {
+      "name": "Minimum Asset Grid Point",
+      "default": 0.001,
+      "valid_range": {"min": 0.0, "max": 0.1, "exclusive_min": true},
+      "description": "Smallest end-of-period asset value on grid"
+    },
+    "aXtraMax": {
+      "name": "Maximum Asset Grid Point",
+      "default": 20.0,
+      "valid_range": {"min": 5.0, "max": 100.0},
+      "description": "Largest end-of-period asset value on grid"
+    },
+    "aXtraCount": {
+      "name": "Number of Asset Grid Points",
+      "default": 48,
+      "valid_range": {"min": 10, "max": 500},
+      "typical_values": [24, 48, 96, 192],
+      "description": "Number of points in the asset grid"
+    },
+    "aXtraNestFac": {
+      "name": "Asset Grid Nesting Factor",
+      "default": 3,
+      "valid_range": {"min": 1, "max": 10},
+      "description": "Controls grid point density near borrowing constraint"
+    }
+  },
+  
+  "derived_quantities": {
+    "PatFac": {
+      "symbol": "Þ",
+      "name": "Absolute Patience Factor",
+      "formula": "(β × R)^(1/ρ)",
+      "description": "Key parameter for patience conditions"
+    },
+    "MPCmin": {
+      "symbol": "κ_min",
+      "name": "Minimum MPC",
+      "formula": "1 - Þ/R",
+      "description": "MPC of perfect foresight consumer"
+    },
+    "MPCmax": {
+      "symbol": "κ_max",
+      "name": "Maximum MPC",
+      "formula": "1 - ℘^(1/ρ) × Þ/R",
+      "description": "Upper bound on MPC"
+    },
+    "hNrm": {
+      "symbol": "h",
+      "name": "Human Wealth",
+      "formula": "Γ / (R - Γ)",
+      "description": "PDV of expected future income",
+      "requires": "R > Γ"
+    },
+    "mNrmMin": {
+      "symbol": "m_min",
+      "name": "Natural Borrowing Constraint",
+      "formula": "-h_pes",
+      "description": "Minimum feasible market resources"
+    }
+  },
+  
+  "patience_conditions": {
+    "description": "Conditions required for a finite solution to exist",
+    "conditions": [
+      {
+        "name": "FVAC",
+        "full_name": "Finite Value of Autarky Condition",
+        "formula": "0 < β × Γ^(1-ρ) × E[ψ^(1-ρ)] < 1"
+      },
+      {
+        "name": "AIC",
+        "full_name": "Absolute Impatience Condition",
+        "formula": "Þ < 1"
+      },
+      {
+        "name": "RIC",
+        "full_name": "Return Impatience Condition",
+        "formula": "Þ/R < 1"
+      },
+      {
+        "name": "GIC",
+        "full_name": "Growth Impatience Condition",
+        "formula": "Þ/Γ < 1"
+      },
+      {
+        "name": "FHWC",
+        "full_name": "Finite Human Wealth Condition",
+        "formula": "Γ/R < 1"
+      }
+    ]
+  },
+  
+  "default_configuration": {
+    "description": "Standard parameter set for examples and testing",
+    "CRRA": 2.0,
+    "DiscFac": 0.96,
+    "Rfree": 1.03,
+    "PermGroFac": 1.0,
+    "PermShkStd": 0.1,
+    "TranShkStd": 0.1,
+    "UnempPrb": 0.005,
+    "aXtraMin": 0.001,
+    "aXtraMax": 20.0,
+    "aXtraCount": 48
+  }
+}
