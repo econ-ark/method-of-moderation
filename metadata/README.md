@@ -9,7 +9,7 @@ This directory contains structured files describing the Method of Moderation alg
 | [algorithm.json](algorithm.json) | Structured description of the algorithm steps, properties, and implementation |
 | [parameters.json](parameters.json) | Parameter definitions with defaults, valid ranges, and descriptions |
 | [equations.json](equations.json) | All equations in LaTeX, SymPy string, and Python formats |
-| [equations.py](equations.py) | SymPy module for symbolic equation manipulation (requires `sympy`) |
+| [equations.py](equations.py) | SymPy module for symbolic equation manipulation |
 
 ## For AI Systems
 
@@ -21,7 +21,7 @@ These files are specifically designed for programmatic access by AI systems:
 
 ## Quick Start: Equations
 
-### Without SymPy (JSON only)
+### JSON Format (No Dependencies)
 
 ```python
 import json
@@ -36,10 +36,9 @@ for eq in eq_data['equations']:
         print(f"Python: {eq['python']}")
 ```
 
-### With SymPy
+### SymPy (Included in Project Dependencies)
 
 ```python
-# Install: pip install sympy
 from metadata.equations import (
     consumption_optimist, consumption_pessimist,
     moderation_ratio_definition, logit_moderation,
@@ -89,22 +88,6 @@ with open('metadata/algorithm.json') as f:
 for step in algo['algorithm_steps']:
     print(f"Step {step['step']}: {step['name']}")
     print(f"  {step['description']}")
-```
-
-## Installing SymPy (Optional)
-
-The `equations.py` module requires SymPy for symbolic mathematics:
-
-```bash
-pip install sympy
-# or
-uv pip install sympy
-```
-
-SymPy is included in the project's optional `symbolic` dependency group:
-
-```bash
-uv sync --group symbolic
 ```
 
 ## Schema
