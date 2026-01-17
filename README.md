@@ -38,7 +38,7 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 - [**Full Paper with Appendix (PDF)**](content/exports/moderation_with_appendix.pdf) - Complete paper including appendix
 
 ### Code & Interactive Content
-- [**Jupyter Notebook**](code/notebook.ipynb) - Complete computational notebook with examples
+- [**Jupyter Notebook**](code/method-of-moderation.ipynb) - Complete computational notebook with examples
 
 ### Links
 - **Documentation**: [MyST Build](_build/html/index.html) (local build)
