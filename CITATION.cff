@@ -13,6 +13,8 @@ abstract: >-
   rule over the entire interval of feasible wealth values with remarkably few
   computations.
 title: The Method of Moderation
+version: 1.0.0
+date-released: 2025-01-16
 authors:
   - family-names: Carroll
     given-names: Christopher D.
@@ -50,3 +52,17 @@ keywords:
 license: CC-BY-SA-3.0
 license-url: https://creativecommons.org/licenses/by-sa/3.0/
 repository: https://github.com/econ-ark/method-of-moderation
+
+# REMARK required fields
+remark-version: "1.0"
+github_repo_url: https://github.com/econ-ark/method-of-moderation
+remark-name: MethodOfModeration
+notebooks:
+  - code/notebook.ipynb
+tags:
+  - REMARK
+  - Notebook
+  - Reproduction
+identifiers:
+  - type: doi
+    value: "https://doi.org/10.5281/zenodo.18275272"
