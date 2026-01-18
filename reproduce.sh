@@ -92,8 +92,8 @@ fi
 if [ -f "content/exports/moderation_with_appendix.pdf" ]; then
     echo "✓ Paper+Appendix PDF: content/exports/moderation_with_appendix.pdf"
 fi
-if [ -f "code/notebook.ipynb" ]; then
-    echo "✓ Executed notebook: code/notebook.ipynb"
+if [ -f "code/method-of-moderation.ipynb" ]; then
+    echo "✓ Executed notebook: code/method-of-moderation.ipynb"
 fi
 echo ""
 
