@@ -77,7 +77,7 @@ echo ""
 
 # Execute computational notebook
 echo "Step 4/5: Executing computational notebook..."
-uv run jupyter nbconvert --to notebook --execute --inplace code/notebook.ipynb
+uv run jupyter nbconvert --to notebook --execute --inplace code/method-of-moderation.ipynb
 echo "✓ Notebook executed successfully"
 echo ""
 

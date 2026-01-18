@@ -12,6 +12,7 @@ mystmd>=1.7.1
 numba>=0.59.0
 numpy>=2.0.2
 scipy>=1.15.3
+sympy>=1.12
 voila>=0.5.8
 
 # Git dependency (installed via uv from pyproject.toml)

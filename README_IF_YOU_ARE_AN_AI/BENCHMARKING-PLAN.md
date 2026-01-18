@@ -12,14 +12,14 @@ Add benchmarking infrastructure following the HAFiscal-Latest pattern to track r
 - Simple reproduce_min.sh for quick validation
 
 ### HAFiscal-Latest Pattern (Reference)
-- reproduce/benchmarks/ directory with benchmark.sh, capture_system_info.py, schema.json
+- README_IF_YOU_ARE_AN_AI/benchmarks/ directory with benchmark.sh, capture_system_info.py, schema.json
 - Benchmark files stored with timestamps and metadata
 - latest.json symlink to most recent benchmark
 
 ## Implementation Plan - 7 Phases
 
 ### Phase 1: Directory Structure
-Create reproduce/benchmarks/ with subdirectories for results
+Create README_IF_YOU_ARE_AN_AI/benchmarks/ with subdirectories for results
 
 ### Phase 2: System Info Capture Script
 Create capture_system_info.py adapted for method-of-moderation packages (mystmd, etc.)
