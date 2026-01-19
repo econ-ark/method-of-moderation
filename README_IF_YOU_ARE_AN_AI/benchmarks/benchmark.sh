@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--min] [--notes "note"]"
+            echo "Usage: $0 [--min] [--notes \"note\"]"
             exit 1
             ;;
     esac

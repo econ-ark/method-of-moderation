@@ -184,7 +184,7 @@ Automated performance regression detection:
 ```yaml
 - name: Run Benchmark
   run: ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min
-  
+
 - name: Upload Results
   uses: actions/upload-artifact@v3
   with:

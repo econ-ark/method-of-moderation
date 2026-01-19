@@ -25,15 +25,15 @@ def run_command(cmd, fallback="unknown"):
 def get_cpu_info():
     """Get CPU information cross-platform."""
     system = platform.system()
-    
+
     cpu_info = {
         "model": "unknown",
         "architecture": platform.machine(),
         "cores_physical": None,
         "cores_logical": os.cpu_count(),
-        "frequency_mhz": None
+        "frequency_mhz": None,
     }
-    
+
     if system == "Darwin":  # macOS
         cpu_info["model"] = run_command("sysctl -n machdep.cpu.brand_string")
         physical = run_command("sysctl -n hw.physicalcpu")
@@ -41,32 +41,34 @@ def get_cpu_info():
         freq = run_command("sysctl -n hw.cpufrequency_max")
         if freq.isdigit():
             cpu_info["frequency_mhz"] = int(freq) / 1_000_000
-            
+
     elif system == "Linux":
         model = run_command("lscpu | grep 'Model name' | cut -d ':' -f 2")
         if model != "unknown":
             cpu_info["model"] = model.strip()
         else:
-            cpu_info["model"] = run_command("cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d ':' -f 2").strip()
-        
+            cpu_info["model"] = run_command(
+                "cat /proc/cpuinfo | grep 'model name' | head -1 | cut -d ':' -f 2"
+            ).strip()
+
         physical = run_command(r"lscpu | grep 'Core(s) per socket' | awk '{print $NF}'")
         sockets = run_command(r"lscpu | grep 'Socket(s)' | awk '{print $NF}'")
         if physical.isdigit() and sockets.isdigit():
             cpu_info["cores_physical"] = int(physical) * int(sockets)
-        
+
         freq = run_command(r"lscpu | grep 'CPU max MHz' | awk '{print $NF}'")
-        if freq.replace('.', '').isdigit():
+        if freq.replace(".", "").isdigit():
             cpu_info["frequency_mhz"] = float(freq)
-    
+
     return cpu_info
 
 
 def get_memory_info():
     """Get memory information in GB."""
     system = platform.system()
-    
+
     memory_info = {"total_gb": None, "available_gb": None}
-    
+
     if system == "Darwin":
         total = run_command("sysctl -n hw.memsize")
         if total.isdigit():
@@ -78,7 +80,7 @@ def get_memory_info():
         available = run_command(r"grep MemAvailable /proc/meminfo | awk '{print $2}'")
         if available.isdigit():
             memory_info["available_gb"] = round(int(available) / (1024**2), 2)
-    
+
     return memory_info
 
 
@@ -88,14 +90,24 @@ def get_disk_info(path="/"):
         stat = os.statvfs(path)
         free_gb = round((stat.f_bavail * stat.f_frsize) / (1024**3), 2)
         disk_type = "unknown"
-        
+
         if platform.system() == "Darwin":
-            disk_type_cmd = run_command(r"diskutil info / | grep 'Solid State' | awk '{print $3}'")
+            disk_type_cmd = run_command(
+                r"diskutil info / | grep 'Solid State' | awk '{print $3}'"
+            )
             disk_type = "SSD" if disk_type_cmd == "Yes" else "HDD"
         elif platform.system() == "Linux":
-            rotational = run_command(r"cat /sys/block/$(df / | tail -1 | awk '{print $1}' | sed 's|/dev/||' | sed 's/[0-9]//g')/queue/rotational 2>/dev/null")
-            disk_type = "SSD" if rotational == "0" else "HDD" if rotational == "1" else "unknown"
-        
+            rotational = run_command(
+                r"cat /sys/block/$(df / | tail -1 | awk '{print $1}' | sed 's|/dev/||' | sed 's/[0-9]//g')/queue/rotational 2>/dev/null"
+            )
+            disk_type = (
+                "SSD"
+                if rotational == "0"
+                else "HDD"
+                if rotational == "1"
+                else "unknown"
+            )
+
         return {"type": disk_type, "free_gb": free_gb}
     except Exception:
         return {"type": "unknown", "free_gb": None}
@@ -104,19 +116,31 @@ def get_disk_info(path="/"):
 def get_python_packages():
     """Get versions of key Python packages."""
     packages = {}
-    key_packages = ["econ-ark", "mystmd", "numpy", "scipy", "matplotlib", "numba", "jupyter", "ipywidgets", "pytest"]
-    
+    key_packages = [
+        "econ-ark",
+        "mystmd",
+        "numpy",
+        "scipy",
+        "matplotlib",
+        "numba",
+        "jupyter",
+        "ipywidgets",
+        "pytest",
+    ]
+
     for pkg in key_packages:
         try:
             from importlib.metadata import version
+
             packages[pkg] = version(pkg)
         except Exception:
             try:
                 import pkg_resources
+
                 packages[pkg] = pkg_resources.get_distribution(pkg).version
             except Exception:
                 packages[pkg] = "not installed"
-    
+
     return packages
 
 
@@ -124,13 +148,15 @@ def get_git_info(repo_path=None):
     """Get git repository information."""
     if repo_path is None:
         repo_path = Path(__file__).parent.parent.parent
-    
+
     original_dir = os.getcwd()
     try:
         os.chdir(repo_path)
         commit = run_command("git rev-parse HEAD", "unknown")
         branch = run_command("git rev-parse --abbrev-ref HEAD", "unknown")
-        dirty = run_command("git diff --quiet && echo 'false' || echo 'true'", "unknown")
+        dirty = run_command(
+            "git diff --quiet && echo 'false' || echo 'true'", "unknown"
+        )
         return {"commit": commit, "branch": branch, "dirty": dirty == "true"}
     finally:
         os.chdir(original_dir)
@@ -142,10 +168,14 @@ def capture_system_info():
     venv_path = os.environ.get("VIRTUAL_ENV", "")
     env_type = "unknown"
     if venv_path:
-        env_type = "uv" if ".venv" in venv_path or "UV_PROJECT_ENVIRONMENT" in os.environ else "venv"
+        env_type = (
+            "uv"
+            if ".venv" in venv_path or "UV_PROJECT_ENVIRONMENT" in os.environ
+            else "venv"
+        )
     elif os.environ.get("CONDA_DEFAULT_ENV"):
         env_type = "conda"
-    
+
     return {
         "system": {
             "os": system,
@@ -154,30 +184,35 @@ def capture_system_info():
             "hostname": platform.node(),
             "cpu": get_cpu_info(),
             "memory": get_memory_info(),
-            "disk": get_disk_info()
+            "disk": get_disk_info(),
         },
         "environment": {
             "python_version": platform.python_version(),
             "environment_type": env_type,
             "virtual_env": venv_path if venv_path else None,
-            "key_packages": get_python_packages()
+            "key_packages": get_python_packages(),
         },
-        "git": get_git_info()
+        "git": get_git_info(),
     }
 
 
 def main():
     import argparse
-    parser = argparse.ArgumentParser(description="Capture system information for benchmarking")
-    parser.add_argument("--output", "-o", help="Output file (default: stdout)", type=str)
+
+    parser = argparse.ArgumentParser(
+        description="Capture system information for benchmarking"
+    )
+    parser.add_argument(
+        "--output", "-o", help="Output file (default: stdout)", type=str
+    )
     parser.add_argument("--pretty", "-p", help="Pretty-print JSON", action="store_true")
     args = parser.parse_args()
-    
+
     info = capture_system_info()
     output = json.dumps(info, indent=2) if args.pretty else json.dumps(info)
-    
+
     if args.output:
-        with open(args.output, 'w') as f:
+        with open(args.output, "w") as f:
             f.write(output)
         print(f"System information saved to: {args.output}", file=sys.stderr)
     else:
