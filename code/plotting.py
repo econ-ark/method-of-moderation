@@ -750,6 +750,213 @@ def plot_precautionary_gaps(
 
     plt.tight_layout()
 
+def plot_solution_gaps(
+    truth_solution,
+    approx_solutions,
+    title: str,
+    subtitle: str,
+    *,
+    m_min: float = 0.0,
+    m_max: float = 30.0,
+    n_points: int = 100,
+    legend: str | list[str] | None = None,
+) -> None:
+    """Plot savings function gaps comparing truth vs approximation(s).
+
+    Parameters
+    ----------
+    truth_solution : ConsumerSolution
+        High-precision "truth" solution for comparison
+    approx_solutions : ConsumerSolution or list[ConsumerSolution]
+        Approximation solution(s) to compare (single or list for multiple methods)
+    title : str
+        Figure title
+    subtitle : str
+        Figure subtitle
+    m_max : float, optional
+        Maximum market resources for plot range, by default 30.0
+    n_points : int, optional
+        Number of points in evaluation grid, by default 100
+    legend : str or list[str], optional
+        Legend labels for approximation(s). If None, auto-generates from solution type.
+
+    """
+    # Ensure approx_solutions is a list
+    if not isinstance(approx_solutions, list):
+        approx_solutions = [approx_solutions]
+
+    # Auto-generate legend labels if not provided
+    if legend is None:
+        legend = []
+        for sol in approx_solutions:
+            if _is_mom_solution(sol):
+                legend.append("MoM Approximation")
+            else:
+                legend.append("EGM Approximation")
+    elif not isinstance(legend, list):
+        legend = [legend]
+
+    # Create evaluation grid
+    #m_min = approx_solutions[0].cFunc.x_list[-2]#truth_solution.mNrmMin
+    m_grid = np.linspace(m_min + 0.001, m_max, n_points)
+
+    # Compute solution differences
+    approx_gaps = []
+    for sol in approx_solutions:
+        # Use the same optimist as truth solution
+        gap = truth_solution.cFunc(m_grid) - sol.cFunc(m_grid)
+        approx_gaps.append(gap)
+
+    _fig, ax = setup_figure(title=title)
+
+    # Plot each approximation method
+    for gap_vals, method_label, sol in zip(
+        approx_gaps,
+        legend,
+        approx_solutions,
+        strict=False,
+    ):
+        color = get_concept_color(method_label)
+        linestyle = get_concept_linestyle(method_label)
+
+        ax.plot(
+            m_grid,
+            gap_vals,
+            label=method_label,
+            color=color,
+            linewidth=LINE_WIDTH_THICK,
+            linestyle=linestyle,
+        )
+
+        # Extract and plot grid points for this solution
+        try:
+            # Use unified grid extraction
+            grid_points_m, grid_points_c = extract_grid_points(
+                sol,
+                GridType.CONSUMPTION,
+            )
+            # Determine grid boundary based on solution type
+            if grid_points_m is not None:
+                if _is_mom_solution(sol) and len(grid_points_m) > 1:
+                    grid_boundary = grid_points_m[-2]  # MoM: second-to-last point
+                else:
+                    grid_boundary = grid_points_m[-1]  # EGM: last point
+            else:
+                grid_boundary = None
+
+            # Plot grid points if successfully extracted
+            if grid_points_m is not None and grid_points_c is not None:
+                # Get the gap values at grid point locations by interpolation
+                gap_at_grid_points = np.interp(grid_points_m, m_grid, gap_vals)
+
+                # Plot actual grid points as scatter
+                _plot_grid_points_scatter(ax, grid_points_m, gap_at_grid_points, color)
+
+                # Also plot grid boundary line
+                if grid_boundary is not None:
+                    ax.axvline(
+                        x=grid_boundary,
+                        color="gray",
+                        linestyle=LINE_STYLE_DASHED,
+                        alpha=ALPHA_MEDIUM,
+                        label="Grid boundary",
+                    )
+
+        except (AttributeError, KeyError, IndexError, TypeError):
+            # Grid extraction can fail for various solution types or incomplete solutions.
+            # Continue plotting without grid point markers.
+            pass
+
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m)",
+        ylabel="Precautionary Saving Gap",
+        subtitle=subtitle,
+    )
+    _add_reference_lines(ax)
+    #ax.set_ylim(*YLIM_PRECAUTIONARY_GAPS)
+    _set_xlim_with_padding(ax, m_grid)
+
+    plt.tight_layout()
+
+def average_solution_gaps(
+    truth_solution,
+    approx_solutions,
+    title: str,
+    subtitle: str,
+    *,
+    m_min: float = 0.0,
+    m_max: float = 30.0,
+    n_points: int = 100,
+    legend: str | list[str] | None = None,
+) -> None:
+    """Plot savings function gaps comparing truth vs approximation(s).
+
+    Parameters
+    ----------
+    truth_solution : ConsumerSolution
+        High-precision "truth" solution for comparison
+    approx_solutions : ConsumerSolution or list[ConsumerSolution]
+        Approximation solution(s) to compare (single or list for multiple methods)
+    title : str
+        Figure title
+    subtitle : str
+        Figure subtitle
+    m_max : float, optional
+        Maximum market resources for plot range, by default 30.0
+    n_points : int, optional
+        Number of points in evaluation grid, by default 100
+    legend : str or list[str], optional
+        Legend labels for approximation(s). If None, auto-generates from solution type.
+
+    """
+    # Ensure approx_solutions is a list
+    if not isinstance(approx_solutions, list):
+        approx_solutions = [approx_solutions]
+
+    approx_gaps_all_solutions = []
+    # Compute the average error between each pair of grid points for each approximation method
+    for sol in approx_solutions:
+        approx_gaps = []
+        # Extract and plot grid points for this solution
+        try:
+            # Use unified grid extraction
+            grid_points_m, grid_points_c = extract_grid_points(
+                sol,
+                GridType.CONSUMPTION,
+            )
+            # Determine grid boundary based on solution type
+            if grid_points_m is not None:
+                if _is_mom_solution(sol) and len(grid_points_m) > 1:
+                    grid_boundary = grid_points_m[-2]  # MoM: second-to-last point
+                else:
+                    grid_boundary = grid_points_m[-1]  # EGM: last point
+            else:
+                grid_boundary = None
+
+            # Plot grid points if successfully extracted
+            if grid_points_m is not None and grid_points_c is not None:
+                for left_point, right_point in zip(grid_points_m[0:-1],grid_points_m[1:]):
+                    # Contruct a fine grid between this pair of grid points
+                    m_grid = np.linspace(left_point + 0.001, right_point, n_points)
+                    # Get the mean absolute gap value for this interval
+                    ave_gap = np.max(np.abs(truth_solution.cFunc(m_grid) - sol.cFunc(m_grid)))
+                    approx_gaps.append(ave_gap)
+                m_grid = np.linspace(grid_boundary + 0.001, m_max, n_points)
+                ave_gap = np.max(np.abs(truth_solution.cFunc(m_grid) - sol.cFunc(m_grid)))
+                approx_gaps.append(ave_gap)
+                if _is_mom_solution(sol) and len(grid_points_m) > 1:
+                    approx_gaps = np.append(approx_gaps[1:-2],approx_gaps[-1])  # MoM: second-to-last point
+                else:
+                    approx_gaps = approx_gaps[1:]  # EGM: last point
+                approx_gaps_all_solutions.append(approx_gaps)
+
+        except (AttributeError, KeyError, IndexError, TypeError):
+            # Grid extraction can fail for various solution types or incomplete solutions.
+            # Continue plotting without grid point markers.
+            pass
+
+    return approx_gaps_all_solutions
 
 def plot_consumption_bounds(
     solution,

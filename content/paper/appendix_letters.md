@@ -21,7 +21,7 @@ exports:
 
 ## Patience Conditions Details
 
-The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ ensures autarky (consuming zero forever) has finite disutility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
+The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ ensures autarky (consuming the permanent component of income each period) has finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
 
 ## Human Wealth Formulas
 
@@ -34,22 +34,6 @@ The pessimist's human wealth (assuming $\tranShk_{t+n}=\tranShkMin~\forall~n>0$)
 The minimal MPC (perfect foresight consumer with horizon $T-t$) has three forms {cite:p}`Carroll2001MPCBound`: backward recursion $\MPCmin_{t}=\MPCmin_{t+1}/(\MPCmin_{t+1}+\AbsPatFac/\Rfree)$ with $\MPCmin_T=1$; forward sum $\MPCmin_{t}=(\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n})^{-1}$; or infinite-horizon $\MPCmin=1-\AbsPatFac/\Rfree = 1-(\Rfree \DiscFac)^{1/\CRRA}/\Rfree$.
 
 The maximal MPC {cite:p}`CarrollToche2009` satisfies backward recursion $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) (1 + \MPCmax_{t+1})$ with $\MPCmax_T = 1$; forward sum $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) \sum_{n=0}^{T-t}\left(\WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)\right)^{n}$; or infinite-horizon $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$.
-
-## Moderation Ratio Slope Formula
-
-The moderation ratio slope needed for Hermite interpolation is derived from differentiating {eq}`eq:modRte` from the main text. Using the chain rule:
-
-```{math}
-:label: eq:modRteMuDeriv
-\frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})-\cFuncPes(\mNrmMin+e^{\logmNrmEx})}{\hNrmEx \MPCmin}\right].
-```
-
-Since $\partial e^{\logmNrmEx}/\partial \logmNrmEx = e^{\logmNrmEx} = \mNrmEx$ and $\cFuncPes$ is linear with slope $\MPCmin$, this yields
-
-```{math}
-:label: eq:modRteMuFinal
-\frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\mNrmEx (\partial \cFuncReal/\partial \mNrm - \MPCmin)}{\MPCmin \hNrmEx}.
-```
 
 ## Asymptotic Linearity and Extrapolation
 
@@ -78,17 +62,11 @@ $$
 \end{array}
 $$
 
-We define the low-region moderation ratio as
-
-$$
-\modRteLoTightUpBd(\logmNrmEx) = \frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})e^{-\logmNrmEx}-\MPCmin}{\MPCmax-\MPCmin},
-$$
-
-which measures how far consumption per unit of wealth exceeds the pessimist's MPC ($\MPCmin$) relative to the maximum possible excess ($\MPCmax - \MPCmin$).
+This motivates the definition of the low-resource moderation ratio as in {eq} `eq:modRteLoTightUpBd`.
 
 ## Value Function Derivation
 
-Under perfect foresight, consumption grows at constant rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc = \MPCmin^{-1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
+Under perfect foresight, consumption grows at constant rate equal to the absolute patience factor $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc_{t}^{T} \to \PDVCoverc = \MPCmin^{-1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
 
 The optimist's value function satisfies
 
@@ -101,7 +79,7 @@ $$
 \end{aligned}
 $$
 
-The general expression becomes
+The infinite horizon expression becomes
 
 ```{math}
 :label: eq:vFuncPF
@@ -109,7 +87,6 @@ The general expression becomes
 \vFuncOpt(\mNrm) &= \uFunc(\cFuncOpt(\mNrm))\PDVCoverc \\
 &= \uFunc(\cFuncOpt(\mNrm))\MPCmin^{-1} \\
 &= \uFunc((\mNrmEx+\hNrmEx)\MPCmin) \MPCmin^{-1} \\
-&= \left[(\mNrmEx+\hNrmEx)^{1-\CRRA}/(1-\CRRA)\right] \cdot \left[\MPCmin^{1-\CRRA} \cdot \MPCmin^{-1}\right] \\
 &= \uFunc(\mNrmEx+\hNrmEx)\MPCmin^{-\CRRA}.
 \end{aligned}
 ```
@@ -150,38 +127,30 @@ Inverting these approximations yields
 
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
 
-## Hermite Interpolation: Slope Derivations
+## I.I.D. Stochastic Returns: MPC Derivation
 
-The logit transformation slope follows from the chain rule {cite:p}`Santos2000,JuddMaliarMaliar2017`:
+The fact that a linear consumption function with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ satisfies the Euler equation with i.i.d. returns and no labor income can be derived by the method of undetermined coefficients.  In particular, assume that $\cFuncOpt(\mNrm) = \mNrm\MPCmin$, with a time-independent MPC $\MPCmin$ to be determined.  Substituting this into the Euler equation, we have
 
 ```{math}
-:label: eq:logitModRteMu
-\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
+:label: eq:stochReturnsEulerEqn
+\begin{aligned}
+1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\cNrm_{t+1}}{\cNrm_t}\right)^{-\CRRA}\\
+&= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\mNrm_{t+1}}{\mNrm_t}\right)^{-\CRRA}
+\end{aligned}
 ```
 
-where $\modRteMu$ is from {eq}`eq:modRteMuFinal`. For monotone cubic Hermite schemes {cite:p}`Fritsch1980,FritschButland1984,deBoor2001`, theoretical slopes may be adjusted to enforce monotonicity {cite:p}`Hyman1983`. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
+where the second equality uses the assumed form of the consumption function.  Since there is no labor income, $\mNrm_{t+1} = \Risky_{t+1}(\mNrm_t - \cNrm_t)$.  Substituting this into the above we obtain
 
-The MPC weight derivation starts from differentiating {eq}`eq:cFuncHi` from the main text with respect to $\mNrm$:
+```{math}
+:label: eq:stochReturnsEulerEqnContd
+\begin{aligned}
+1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\Risky_{t+1}(\mNrm_t - \cNrm_t)}{\mNrm_t}\right)^{-\CRRA} \\
+&= \DiscFac \Ex_t\Risky_{t+1} \left(\Risky_{t+1}(1-\MPCmin)\right)^{-\CRRA}
+\end{aligned}
+```
+Solving for $\MPCmin$ and recalling that returns are i.i.d. gives $\MPCmin=1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$.
 
-$$
-\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
-$$
-
-Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
-
-$$
-\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
-$$
-
-Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives {eq}`eq:MPCModeration` from the main text, with weight
-
-$$
-\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
-$$
-
-## Stochastic Returns: MGF Derivation
-
-The moment generating function (MGF) for lognormal returns provides the key formula. For $\log \Risky \sim \Nrml(\mu, \sigma^2)$, the MGF is $\Ex[e^{sX}] = \exp(\mu s + \sigma^2 s^2/2)$ where $X = \log \Risky$. Setting $s = 1-\CRRA$ and $\mu = r + \equityPrem - \std_{\risky}^2/2$ yields
+In the particular case of lognormal returns, the MPC can be written in closed form.  The moment generating function (MGF) for lognormal returns provides the key formula. For $\log \Risky \sim \Nrml(\mu, \sigma^2)$, the MGF is $\Ex[e^{sX}] = \exp(\mu s + \sigma^2 s^2/2)$ where $X = \log \Risky$. Setting $s = 1-\CRRA$ and $\mu = r + \equityPrem - \std_{\risky}^2/2$ yields[^lognormal-returns-intuition]
 
 $$
 \Ex[\Risky^{1-\CRRA}] = \exp\left((1-\CRRA)\left(r+\equityPrem - \frac{\std_{\risky}^2}{2}\right) + \frac{(1-\CRRA)^2\std_{\risky}^2}{2}\right).
@@ -193,8 +162,11 @@ $$
 \Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem) + (1-\CRRA)(1-2\CRRA)\std_{\risky}^2/2).
 $$
 
-For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.
+[^lognormal-returns-intuition]:
+    Here we can interpret $\equityPrem$ as the risk premium, that is, the additional average return from holding a risky asset compared to the risk-free rate $r$.  Adjusting the average log return by the asset volatility ensures that increasing $\std_{\risky}^2$ constitutes a mean-preserving spread of the level of return.
 
-## Shock Discretization
+## Correlated Returns: Shock Discretization
 
-Continuous shock distributions require discretization. The Tauchen method {cite:p}`tauchen1986` constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method {cite:p}`TauchenHussey1991` uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1-\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis. The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.
+For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.  Moreover, continuous shock distributions require discretization. 
+
+The Tauchen method {cite:p}`tauchen1986` constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method {cite:p}`TauchenHussey1991` uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1-\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis. 

@@ -7,70 +7,70 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%  imports  %%%%%%%%%%%%%%%%%%%
 \usepackage{amsmath}
+\usepackage{booktabs}
 \usepackage{graphicx}
 %%%%%%%%%%%%%%%%%  math commands  %%%%%%%%%%%%%%%%
 \newcommand{\mNrm}{m}
 \newcommand{\CRRA}{\rho}
 \newcommand{\cNrm}{c}
-\newcommand{\uFunc}{\mathbf{u}}
+\newcommand{\uFunc}{u}
 \newcommand{\Ex}{\mathbf{\mathbb{E}}}
 \newcommand{\DiscFac}{\beta}
-\newcommand{\cLvl}{\mathbf{c}}
-\newcommand{\aLvl}{\mathbf{a}}
-\newcommand{\mLvl}{\mathbf{m}}
-\newcommand{\PermGroShk}{\mathcal{G}}
-\newcommand{\pLvl}{\mathbf{p}}
-\newcommand{\tranShk}{\xi}
-\newcommand{\yLvl}{\mathbf{y}}
+\newcommand{\aNrm}{a}
 \newcommand{\Rfree}{\text{R}}
+\newcommand{\yNrm}{y}
+\newcommand{\tranShk}{\xi}
+\newcommand{\pNrm}{p}
+\newcommand{\PermGroShk}{\mathcal{G}}
 \newcommand{\PermGroFac}{G}
 \newcommand{\permShk}{\psi}
 \newcommand{\permShkMin}{\underline{\permShk}}
 \newcommand{\permShkMax}{\bar{\permShk}}
-\newcommand{\WorstProb}{\wp}
+\newcommand{\WorstProb}{q}
 \newcommand{\tranShkEmp}{\theta}
-\newcommand{\vFunc}{\mathbf{v}}
+\newcommand{\vFunc}{V}
 \newcommand{\uPrime}{\uFunc'}
 \newcommand{\AbsPatFac}{\Phi}
 \newcommand{\hNrm}{h}
 \newcommand{\hNrmOpt}{\bar{\hNrm}}
-\newcommand{\cFunc}{\mathbf{c}}
+\newcommand{\cFunc}{c}
 \newcommand{\cFuncOpt}{\bar{\cFunc}}
-\newcommand{\MPC}{\boldsymbol{\kappa}}
+\newcommand{\MPC}{\kappa}
 \newcommand{\MPCmin}{\underline{\MPC}}
 \newcommand{\hNrmPes}{\underline{\hNrm}}
 \newcommand{\tranShkMin}{\underline{\tranShk}}
+\newcommand{\cFuncPes}{\underline{\cFunc}}
 \newcommand{\mNrmMin}{\underline{\mNrm}}
-\newcommand{\logmNrmEx}{\boldsymbol{\mu}}
-\newcommand{\modRte}{\boldsymbol{\omega}}
 \newcommand{\mNrmEx}{\Delta \mNrm}
 \newcommand{\hNrmEx}{\Delta \hNrm}
-\newcommand{\cFuncPes}{\underline{\cFunc}}
-\newcommand{\cFuncApprox}{\grave{\cFunc}}
+\newcommand{\cFuncApprox}{\cFuncReal}
 \newcommand{\cFuncReal}{\hat{\cFunc}}
-\newcommand{\logitModRte}{\boldsymbol{\chi}}
+\newcommand{\modRte}{\omega}
+\newcommand{\logmNrmEx}{\mu}
+\newcommand{\logitModRte}{\chi}
 \newcommand{\asympSlope}{\alpha}
 \newcommand{\logitModRteApprox}{\grave{\logitModRte}}
 \newcommand{\MPCmax}{\bar{\MPC}}
 \newcommand{\mNrmCusp}{\mNrm^*}
-\newcommand{\modRteLoTightUpBd}{\grave{\check{\modRte}}}
+\newcommand{\modRteLoTightUpBd}{\modRte}
 \newcommand{\vFuncOpt}{\bar{\vFunc}}
-\newcommand{\vInv}{{\scriptsize \boldsymbol{\Lambda}}}
+\newcommand{\vInv}{\Lambda}
 \newcommand{\vInvOpt}{\bar{\vInv}}
-\newcommand{\valModRte}{\boldsymbol{\Omega}}
+\newcommand{\valModRte}{\Omega}
 \newcommand{\valModRteReal}{\hat{\valModRte}}
-\newcommand{\logitValModRteReal}{\hat{\boldsymbol{X}}}
+\newcommand{\logitValModRteReal}{\hat{X}}
 \newcommand{\vFuncReal}{\hat{\vFunc}}
 \newcommand{\vInvReal}{\hat{\vInv}}
-\newcommand{\MPCmod}{\boldsymbol{\eta}}
+\newcommand{\MPCmod}{\eta}
 \newcommand{\modRteMu}{\partial \modRte / \partial \logmNrmEx}
 \newcommand{\logitModRteMu}{\partial \logitModRte / \partial \logmNrmEx}
 \newcommand{\Nrml}{\mathcal{N}}
 \newcommand{\std}{\sigma}
-\newcommand{\risky}{\mathbf{r}}
-\newcommand{\Risky}{\mathbf{R}}
+\newcommand{\risky}{\text{r}}
+\newcommand{\Risky}{\text{R}}
 \newcommand{\equityPrem}{\pi}
 \newcommand{\mNrmCuspEx}{\Delta \mNrm^*}
+\newcommand{\cLvl}{\mathbf{c}}
 \newcommand{\PDV}{\operatorname{PDV}}
 \newcommand{\PDVCoverc}{\mathcal{C}}
 \newcommand{\vInvPes}{\underline{\vInv}}
@@ -162,14 +162,14 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 
 \section{Introduction}
 
-Solving a consumption-saving problem using numerical methods requires the modeler to choose how to represent a policy function. In the stochastic case, where analytical solutions are generally not available, a common approach is to use low-order polynomial splines that exactly match the function at a finite set of gridpoints, and then to assume that interpolated or extrapolated versions of that spline represent the function well at the continuous infinity of unmatched points. \citet{carrollEGM} developed the endogenous gridpoints method, which has become a standard tool for computing consumption at gridpoints determined endogenously using the Euler equation.
+Solving a consumption-saving problem using numerical methods requires the modeler to choose how to represent a policy function. In the stochastic case, where analytical solutions are generally not available, a common approach is to use low-order polynomial splines that exactly match the function at a finite set of gridpoints, and then to assume that interpolated or extrapolated versions of that spline represent the function well at the continuous infinity of unmatched points. \citet{carrollEGM} developed the endogenous gridpoints method (EGM), which has become a standard tool for computing consumption at gridpoints determined endogenously using the Euler equation.
 
-Unfortunately, this endogenous gridpoints solution is not very well-behaved outside the original range of gridpoints (though other common solution methods are no better outside their own predefined ranges). Figure~\ref{fig:ExtrapProblem} demonstrates the point: in the presence of uncertainty, the consumption rule must be evaluated outside \textit{any} prespecified grid, because large shock realizations push next period's assets beyond the grid boundaries. Although theory proves that precautionary saving is always positive, the linearly extrapolated numerical approximation eventually predicts negative precautionary saving.
+Unfortunately, this endogenous gridpoints solution is not very well-behaved outside the original range of gridpoints (though other common solution methods are no better outside their own predefined ranges). Figure~\ref{fig:ExtrapProblem} demonstrates the point.  The figure shows the approximated precautionary component of savings, the amount that a consumer facing income uncertainty saves above and beyond that of a consumer with a deterministic income stream with identical average value.  Although theory proves that precautionary saving is always positive, the linearly extrapolated numerical approximation eventually predicts negative precautionary saving.  However, in the presence of uncertainty, the consumption-saving rule must be evaluated outside \textit{any} prespecified grid.  This is because large positive shock realizations push next period's assets for a sufficiently wealthy individual beyond the grid boundaries.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\linewidth]{files/9d4f7989eda5d34a0040765014e40698.png}
-\caption[]{For Large Enough $\mNrm_{T -1}$, Predicted Precautionary Saving is Negative (Oops!)}
+\includegraphics[width=0.7\linewidth]{files/70f447f85447acbdc224e6634f057a4a.png}
+\caption[]{For Large Enough Resources $\mNrm$, Predicted Precautionary Saving is Negative (Oops!)}
 \label{fig:ExtrapProblem}
 \end{figure}
 
@@ -197,23 +197,25 @@ This utility function satisfies prudence ($\uFunc''' > 0$), which induces precau
 
 \begin{equation}
 \label{eq:MaxProb}
-\max~\Ex_{t}\left[\sum_{n=0}^{T-t}\DiscFac^{n} \uFunc(\cLvl_{t+n})\right]
+\max_{\cNrm_t,\aNrm_t}~\Ex_{t}\left[\sum_{n=0}^{T-t}\DiscFac^{n} \uFunc(\cNrm_{t+n})\right]
 \end{equation}
 
-subject to $\aLvl_{t} = \mLvl_{t} -\cLvl_{t}$, $\pLvl_{t+1} = \pLvl_{t} \PermGroShk_{t+1}$, $\yLvl_{t+1} = \pLvl_{t+1}\tranShk_{t+1}$, $\mLvl_{t+1} = \aLvl_{t}\Rfree_{t+1} + \yLvl_{t+1}$, where $\mLvl$ denotes market resources, $\pLvl$ permanent labor income, $\aLvl$ assets, and $\yLvl$ noncapital income. Income evolves via the Friedman-Muth process (\citet{Friedman1957} distinguished permanent from transitory income; \citet{Muth1960} provided the stochastic framework): $\PermGroShk_{t+1} = \PermGroFac_{t+1} \permShk_{t+1}$ with permanent shocks $\permShk$ having mean unity and bounded support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$, and transitory shocks $\tranShk_{t+1}$ taking value 0 with probability $\WorstProb > 0$ (unemployment) or $\tranShkEmp_{t+1}/(1 -\WorstProb)$ otherwise, with $\Ex[\tranShkEmp]=1$.
+subject to $\aNrm_{t} + \cNrm_{t} = \mNrm_{t}$, where $\mNrm$ denotes income or resources and $\aNrm$ denotes assets. We will make use of how the properties of uncertain sources of income impact a perfect foresight household's propensity to consume.  Common sources include interest, wages, dividends, and government transfers.  We focus on resources of the form $\mNrm_{t+1} = \aNrm_{t}\Rfree_{t+1} + \yNrm_{t+1}$, where $\Rfree_{t+1}$ denotes the interest rate, and $\yNrm_{t+1}$ labor income.  Initially we take $\Rfree_{t+1}$ to be deterministic, and relax this later.
 
-This problem can be rewritten (see \citet{SolvingMicroDSOPs} for a proof) in a more convenient form in which choice and state variables are normalized by the level of permanent income, e.g., $\mNrm=\mLvl/\pLvl$. When that is done, the Bellman equation for the transformed version of the consumer's problem is
+While our method can be adapted to a range of stochastic labor income processes, to fix ideas we suppose income evolves via the Friedman-Muth process (\citet{Friedman1957} distinguished permanent from transitory income; \citet{Muth1960} provided the stochastic framework).  That is, $\yNrm_{t+1} = \pNrm_{t+1}\tranShk_{t+1}$ where $\pNrm$ denotes permanent labor income and $\tranShk_{t+1}$ a transitory component.  Permanent income growth is given by $\pNrm_{t+1} = \pNrm_{t} \PermGroShk_{t+1}$, $\PermGroShk_{t+1} = \PermGroFac_{t+1} \permShk_{t+1}$. Here $\PermGroFac_{t+1}$ is deterministic income growth, while $\permShk_{t_1}$ are permanent shocks with mean unity and bounded support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$.  Transitory shocks $\tranShk_{t+1}$ take value 0 with probability $\WorstProb > 0$ (unemployment) or $\tranShkEmp_{t+1}/(1 -\WorstProb)$ otherwise, with $\Ex_t[\tranShkEmp_{t+1}]=1$.
+
+This problem can be rewritten (see \citet{SolvingMicroDSOPs} for a proof) in a more convenient form in which choice and state variables are normalized by the level of permanent income, e.g., replacing $\mNrm$ with $\mNrm/\pNrm$. When that is done, the Bellman equation for the transformed version of the consumer's problem is
 
 \begin{equation}
 \label{eq:vNormed}
-\vFunc_{t}(\mNrm_{t}) = \max_{\cNrm_{t}} ~~ \uFunc(\cNrm_{t})+\DiscFac \Ex_{t}[ \PermGroShk_{t+1}^{1-\CRRA}\vFunc_{t+1}(\mNrm_{t+1})]
+\vFunc_{t}(\mNrm_{t}) = \max_{\cNrm_{t},\aNrm_t} ~~ \left(\uFunc(\cNrm_{t})+\DiscFac \Ex_{t}[ \PermGroShk_{t+1}^{1-\CRRA}\vFunc_{t+1}(\mNrm_{t+1})]\right)
 \end{equation}
 
 with Euler equation $\uPrime(\cNrm_{t}) = \DiscFac \Rfree \Ex_{t}[ \PermGroShk_{t+1}^{ -\CRRA} \uPrime(\cNrm_{t+1})]$.
 
-For expositional simplicity, we assume $\CRRA \neq 1$ and set $\PermGroFac=1$, $\permShk=1$ (no permanent income growth or shocks), working with the infinite-horizon formulation; results extend to general cases. Parameter restrictions (below) are required.
+\citet{CarrollShanker2024} gives conditions for a finite solution of the problem with a Friedman-Muth process.  Consider the case of time-invariant $\PermGroFac_t$, $\psi_t$, and $\Rfree_t$, and define the absolute patience factor $\AbsPatFac\equiv(\DiscFac\Rfree)^{1/\CRRA}$.  Then a finite solution requires: (i) finite-value-of-autarky condition (FVAC) $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$, (ii) absolute-impatience condition (AIC) $\AbsPatFac<1$, (iii) return-impatience condition (RIC) $\AbsPatFac/\Rfree<1$, (iv) growth-impatience condition (GIC) $\AbsPatFac/\PermGroFac<1$, and (v) finite-human-wealth condition (FHWC) $\PermGroFac/\Rfree<1$. These patience conditions ensure the consumption bounds and limiting MPCs used in our method.
 
-We define the absolute patience factor $\AbsPatFac\equiv(\DiscFac\Rfree)^{1/\CRRA}$. \citet{CarrollShanker2024} shows that a finite solution requires: (i) finite-value-of-autarky condition (FVAC) $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$, (ii) absolute-impatience condition (AIC) $\AbsPatFac<1$, (iii) return-impatience condition (RIC) $\AbsPatFac/\Rfree<1$, (iv) growth-impatience condition (GIC) $\AbsPatFac/\PermGroFac<1$, and (v) finite-human-wealth condition (FHWC) $\PermGroFac/\Rfree<1$. These patience conditions ensure the consumption bounds and limiting MPCs used in our method.
+For expositional simplicity, in the numerical results that follow, we assume $\CRRA \neq 1$ and set $\PermGroFac=1$, $\permShk=1$ (no permanent income growth or shocks) and focus on the next-to-last period of a finite horizon problem.  The method extends to general cases, including the infinite-horizoon formulation.
 
 \section{The Method of Moderation}
 
@@ -226,9 +228,16 @@ As a preliminary to our solution, define $\hNrmOpt$\footnote{Setting $\tranShk_{
 \cFuncOpt(\mNrm) = (\mNrm + \hNrmOpt)\MPCmin
 \end{equation}
 
-for a constant minimal marginal propensity to consume $\MPCmin$.\footnote{The MPC of the perfect foresight consumer: infinite-horizon $\MPCmin=1 -\AbsPatFac/\Rfree$.} We similarly define $\hNrmPes$\footnote{Setting $\tranShk_{t+n}=\tranShkMin~\forall~n>0$, minimal human wealth is $\hNrmPes=\tranShkMin\PermGroFac/(\Rfree -\PermGroFac)$ if $\Rfree>\PermGroFac$. When $\tranShkMin=0$, $\hNrmPes=0$.} as `minimal human wealth,' the present discounted value of labor income if the shocks were to take on their worst value in every future period $\tranShk_{t+n} = \tranShkMin$ $\forall~n>0$ (which we define as corresponding to the beliefs of a `pessimist'). We will call a `realist' the consumer who correctly perceives the true probabilities of the future risks and optimizes accordingly.
+for a constant minimal marginal propensity to consume $\MPCmin$.\footnote{The MPC of the perfect foresight consumer: infinite-horizon $\MPCmin=1 -\AbsPatFac/\Rfree$.} We similarly define $\hNrmPes$\footnote{Setting $\tranShk_{t+n}=\tranShkMin~\forall~n>0$, minimal human wealth is $\hNrmPes=\tranShkMin\PermGroFac/(\Rfree -\PermGroFac)$ if $\Rfree>\PermGroFac$. When $\tranShkMin=0$, $\hNrmPes=0$.} as `minimal human wealth,' the present discounted value of labor income if the shocks were to take on their worst value in every future period $\tranShk_{t+n} = \tranShkMin$ $\forall~n>0$.  We refer to a consumer whose expects to encounter this sequence of shocks as a `pessimist'. Their consumption decision rule is given by
 
-A first useful point is that, for the realist, a lower bound for the level of market resources is the natural borrowing constraint $\mNrmMin = -\hNrmPes$ derived by \citet{Aiyagari1994} and \citet{Huggett1993}, because if $\mNrm$ equalled this value then there would be a positive finite chance (however small) of receiving $\tranShk_{t+n} = \tranShkMin$ in every future period, which would require the consumer to set $\cNrm$ to zero in order to guarantee that the intertemporal budget constraint holds. Since consumption of zero yields negative infinite utility, \citet{Zeldes1989} and \citet{Deaton1991} show that the solution to the realist consumer's problem is not well defined for values of $\mNrm < \mNrmMin$, and the limiting value of the realist's $\cNrm$ is zero as $\mNrm \downarrow \mNrmMin$, where $\modRte(\logmNrmEx) \to 0$ as $\logmNrmEx \to -\infty$ (established in \citet{CarrollShanker2024}).
+\begin{equation}
+\label{eq:cFuncPes}
+\cFuncPes(\mNrm) = (\mNrm+\hNrmPes)\MPCmin.
+\end{equation}
+
+We will call a `realist' the consumer who correctly perceives the true probabilities of the future risks and optimizes accordingly.
+
+A first useful point is that, for the realist, a lower bound for the level of market resources is the natural borrowing constraint $\mNrmMin = -\hNrmPes$ derived by \citet{Aiyagari1994} and \citet{Huggett1993}, because if $\mNrm$ equalled this value then there would be a positive finite chance (however small) of receiving $\tranShk_{t+n} = \tranShkMin$ in every future period, which would require the consumer to set $\cNrm$ to zero in order to guarantee that the intertemporal budget constraint holds. Since consumption of zero yields infinite marginal utility, \citet{Zeldes1989} and \citet{Deaton1991} show that the solution to the realist consumer's problem is not well defined for values of $\mNrm \leq \mNrmMin$, and the limiting value of the realist's $\cNrm$ is zero as $\mNrm \downarrow \mNrmMin$ (established in \citet{CarrollShanker2024}).
 
 It is convenient to define `excess' market resources as the amount by which actual resources exceed the lower bound, and `excess' human wealth as the amount by which mean expected human wealth exceeds guaranteed minimum human wealth:
 
@@ -240,14 +249,14 @@ It is convenient to define `excess' market resources as the amount by which actu
 \end{aligned}
 \end{equation}
 
-We now define the optimal consumption rules for the two perfect foresight problems. The `pessimist' perceives human wealth to be equal to its minimum feasible value $\hNrmPes$ with certainty, so consumption is given by the perfect foresight solution
+We now rewrite the optimal consumption rules for the two perfect foresight problems in terms of excess resources and human wealth. The `pessimist' perceives human wealth to be equal to its minimum feasible value $\hNrmPes$ with certainty, and so consumes a constant fraction of current excess resources
 
 \begin{equation}
-\label{eq:cFuncPes}
-\cFuncPes(\mNrm) = (\mNrm+\hNrmPes)\MPCmin = \mNrmEx\MPCmin.
+\label{eq:cFuncPesExcess}
+\cFuncPes(\mNrm) = \mNrmEx\MPCmin.
 \end{equation}
 
-The `optimist,' on the other hand, pretends that there is no uncertainty about future income, and therefore consumes
+The `optimist,' on the other hand, pretends that there is no uncertainty about future income, and therefore consumes the same fraction out of current excess resources \textit{and} excess human wealth
 
 \begin{equation}
 \label{eq:cFuncOptExcess}
@@ -256,21 +265,25 @@ The `optimist,' on the other hand, pretends that there is no uncertainty about f
 
 \subsection{The Moderation Ratio}
 
-It seems obvious that the spending of the realist will be strictly greater than that of the pessimist and strictly less than that of the optimist.
+Whereas the pessimist believes that they need to save enough to smooth consumption through guaranteed adverse future income outcomes, a realist needs only save enough to insure against this eventuality (while reoptimizing each period as information becomes available).  However, the adverse outcome remains a possibility even for a high-resource individual, necessitating some degree of precautionary saving.  It therefore seems clear that the spending of the realist will be strictly greater than that of the pessimist and strictly less than that of the optimist, as shown in Figure~\ref{fig:IntExpFOCInvPesReaOptNeedHi}.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\linewidth]{files/a309120ddc133b3d7048b585cff5da3f.png}
+\includegraphics[width=0.7\linewidth]{files/70b589b40913762202a6d2fc798176e6.png}
 \caption[]{Moderation Illustrated: $\cFuncPes < \cFuncApprox < \cFuncOpt$}
 \label{fig:IntExpFOCInvPesReaOptNeedHi}
 \end{figure}
 
-The proof is more difficult than might be imagined, but the necessary work is done in \citet{CarrollShanker2024} so we will take the proposition as a fact and proceed by manipulating the inequality:
+The proof is more difficult than might be imagined, but the necessary work is done in \citet{CarrollShanker2024} so we will take the proposition as a fact:
+
+\begin{equation}
+\cFuncPes(\mNrmMin+\mNrmEx) < \cFuncReal(\mNrmMin+\mNrmEx) < \cFuncOpt(\mNrmMin+\mNrmEx)
+\end{equation}
+
+Subtracting $\cFuncPes(\mNrmMin+\mNrmEx)$ in each of these inequalities and using equations \{eq\} \texttt{eq:cFuncPesExcess} and \{eq\} \texttt{eq:cFuncOptExcess} gives
 
 \begin{equation}
 \begin{array}{rcl}
-\cFuncOpt(\mNrmMin+\mNrmEx) > & \cFuncReal(\mNrmMin+\mNrmEx) & > \cFuncPes(\mNrmMin+\mNrmEx) \\
--\cFuncOpt(\mNrmMin+\mNrmEx) < & -\cFuncReal(\mNrmMin+\mNrmEx) & < -\cFuncPes(\mNrmMin+\mNrmEx) \\
 0 < & \cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx) & < \hNrmEx \MPCmin \\
 0 < & \underbrace{\left(\frac{\cFuncReal(\mNrmMin+\mNrmEx)-\cFuncPes(\mNrmMin+\mNrmEx)}{\hNrmEx \MPCmin}\right)}_{\equiv \modRte} & < 1
 \end{array}
@@ -302,7 +315,7 @@ Given $\logitModRte$, the consumption function can be recovered from
 \cFuncReal = \cFuncPes+\overbrace{\frac{1}{1+\exp(-\logitModRte)}}^{=\modRte} \hNrmEx \MPCmin.
 \end{equation}
 
-Thus, the procedure is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation (\ref{eq:cFuncHi}).
+Thus, the method of moderation (MoM) is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation (\ref{eq:cFuncHi}).
 
 Because this method relies upon the fact that the problem is easy to solve if the decision maker has unreasonable views (either in the optimistic or the pessimistic direction), and because the correct solution is always between these immoderate extremes, we call our solution procedure the `method of moderation.'
 
@@ -310,16 +323,9 @@ Results are shown in Figure~\ref{fig:ExtrapProblemSolved}; a reader with very go
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\linewidth]{files/d62ef7e2065a99cef624e7261a86f76d.png}
-\caption[]{Extrapolated $\cFuncApprox_{T -1}$ Constructed Using the Method of Moderation}
+\includegraphics[width=0.7\linewidth]{files/8613bb28095622671faad1264dbe0b98.png}
+\caption[]{Extrapolated $\cFuncApprox$ Constructed Using the Method of Moderation}
 \label{fig:ExtrapProblemSolved}
-\end{figure}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\linewidth]{files/fc457085e346a73d82774274b956cd2d.png}
-\caption[]{EGM vs MoM: Identical Sparse Grids, Different Extrapolation Behavior}
-\label{fig:DirectComparison}
 \end{figure}
 
 \section{Extensions}
@@ -328,7 +334,14 @@ Results are shown in Figure~\ref{fig:ExtrapProblemSolved}; a reader with very go
 
 \citet{CarrollShanker2024} derives an explicit formula for the MPC at the natural borrowing constraint: $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$ where $\WorstProb$ is the unemployment probability derived by \citet{CarrollToche2009}. This provides a tighter upper bound near the constraint, extending the explicit limiting MPC formulas established in buffer-stock theory by \citet{MaToda2021SavingRateRich}. Strict concavity of the consumption function implies $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$ for low wealth, while the optimist's bound $\cFuncReal(\mNrm) < \cFuncOpt(\mNrm) = (\mNrmEx+\hNrmEx)\MPCmin$ is tighter for high wealth.
 
-The two upper bounds intersect at the cusp point:
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.7\linewidth]{files/ef3d9880d11627d2c7b82807e847262c.png}
+\caption[]{A Tighter Upper Bound}
+\label{fig:IntExpFOCInvPesReaOptNeed45}
+\end{figure}
+
+As shown in \{ref\} \texttt{fig:IntExpFOCInvPesReaOptNeed45}, the two upper bounds intersect at the cusp point:
 
 \begin{equation}
 \label{eq:mNrmCusp}
@@ -337,7 +350,7 @@ The two upper bounds intersect at the cusp point:
 
 This intersection occurs in the feasible region since $\MPCmax > \MPCmin$ under the stated conditions (the MPC is highest when wealth is lowest).
 
-For $\mNrm < \mNrmCusp$, define the low-region moderation ratio using the tighter bound:
+For $\mNrm < \mNrmCusp$, define the low-resource moderation ratio using the tighter bound:
 
 \begin{equation}
 \label{eq:modRteLoTightUpBd}
@@ -348,19 +361,21 @@ This ratio measures how far consumption per unit of wealth exceeds the optimist'
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\linewidth]{files/a8b3d640b8a8b35394597a616e8d8ab0.png}
-\caption[]{A Tighter Upper Bound}
-\label{fig:IntExpFOCInvPesReaOptNeed45}
-\end{figure}
+The MoM also contributes to literature which aims to improve the precisison of dynamic stochastic optimization solutions, such as \citep{Chipeniuk2020}. Table 1 demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.7\linewidth]{files/39cd982237ccbe9795c6f267c8d2b19f.png}
-\caption[]{Cusp Point: Intersection of Optimist and Tighter Upper Bounds}
-\label{fig:CuspPoint}
-\end{figure}
+\bigskip\noindent
+\begin{tabular}{p{\dimexpr 0.167\linewidth-2\tabcolsep}p{\dimexpr 0.167\linewidth-2\tabcolsep}p{\dimexpr 0.167\linewidth-2\tabcolsep}p{\dimexpr 0.167\linewidth-2\tabcolsep}p{\dimexpr 0.167\linewidth-2\tabcolsep}p{\dimexpr 0.167\linewidth-2\tabcolsep}}
+\toprule
+Method & $[m_0,m_1]$ & $[m_1,m_2]$ & $[m_2,m_3]$ & $[m_3,m_4]$ & $[m_4,\overline{m}]$ \\
+\hline
+EGM & 8.5(-2) & 1.8(-4) & 2.5(-5) & 7.3(-6) & 1.1(-1) \\
+MoM & 2.9(-3) & 4.3(-9) & 6.6(-7) & 1.3(-7) & 2.4(-3) \\
+\bottomrule
+\end{tabular}
+
+\bigskip
+
+Table 1: Approximation errors. Orders of magnitude in parentheses.
 
 \subsection{Value Function}
 
@@ -370,14 +385,14 @@ Often it is useful to know the value function as well as the consumption rule. F
 
 The numerical accuracy of the method of moderation depends critically on the quality of function approximation between gridpoints \citep{Santos2000}. Our bracketing approach complements work that bounds numerical errors in dynamic economic models \citep{JuddMaliarMaliar2017}. Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation \citep{Fritsch1980} offers a considerable advantage.
 
-The moderation ratio derivative measures how quickly the realist approaches the optimist as resources increase:
+The moderation ratio derivative measures how quickly the realist approaches the optimist as resources increase.  Differentiating \{eq\} \texttt{eq:modRte} with respect to $\logmNrmEx$ we obtain
 
 \begin{equation}
 \label{eq:modRteMu}
 \frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\mNrmEx (\partial \cFuncReal/\partial \mNrm - \MPCmin)}{\MPCmin \hNrmEx}.
 \end{equation}
 
-Differentiating (\ref{eq:cFuncHi}) with respect to $\mNrm$ yields a moderation form for the marginal propensity to consume:
+Rearranging this yields a moderation form for the marginal propensity to consume:
 
 \begin{equation}
 \label{eq:MPCModeration}
@@ -395,20 +410,22 @@ Theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$
 
 For Hermite interpolation, compute $\modRteMu$ at gridpoints, then derive $\logitModRteMu = \modRteMu/[\modRte(1 -\modRte)]$ for slope data. By matching both the level and the derivative of the $\cFuncReal$ function at the gridpoints, \citet{BenvenisteScheinkman1979} and \citet{MilgromSegal2002} show that the consumption rule derived from such interpolation numerically satisfies the Euler equation at each gridpoint for which the problem has been solved. These techniques extend naturally to the value function approximation.
 
+For monotone cubic Hermite schemes \citep{Fritsch1980, FritschButland1984, deBoor2001}, theoretical slopes may be adjusted to enforce monotonicity \citep{Hyman1983}. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
+
 \subsection{Stochastic Rate of Return}
 
-For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\risky}/2,\std^{2}_{\risky})$, \citet{Samuelson1969, Merton1969, Merton1971} showed that for a consumer without labor income (or with perfectly forecastable labor income) the consumption function is linear, with an MPC $= 1 - (\DiscFac \Ex[\Risky^{1 -\CRRA}])^{1/\CRRA}$. See \citet{CRRA-RateRisk, BBZ2016SkewedWealth} for extensions. Simply substitute this stochastic MPC for $\MPCmin$ throughout our formulas. The pessimist and optimist still perceive their income streams with certainty, but both face the same stochastic return; thus the Merton-Samuelson result applies to them and their consumption functions remain linear. The realist, however, faces both labor income uncertainty and rate-of-return risk, so the moderation ratio captures the combined precautionary response to both sources of uncertainty. All moderation ratio calculations proceed identically. Extensions to serially correlated returns require tracking the return state as an additional state variable, complicating the analysis but not fundamentally altering the approach.
+For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\risky}/2,\std^{2}_{\risky})$, \citet{Samuelson1969, Merton1969, Merton1971} showed that for a consumer without labor income (or with perfectly forecastable labor income) the consumption function is linear, with an MPC $= 1 - (\DiscFac \Ex[\Risky^{1 -\CRRA}])^{1/\CRRA}$. See \citet{CRRA-RateRisk, BBZ2016SkewedWealth, CKW2021Aggregation} for extensions. Simply substitute this stochastic MPC for $\MPCmin$ throughout our formulas. The pessimist and optimist still perceive their income streams with certainty, but both face the same stochastic return; thus the Merton-Samuelson result applies to them and their consumption functions remain linear. The realist, however, faces both labor income uncertainty and rate-of-return risk, so the moderation ratio captures the combined precautionary response to both sources of uncertainty. All moderation ratio calculations proceed identically. Extensions to serially correlated returns require tracking the return state as an additional state variable, complicating the analysis but not fundamentally altering the approach. As \{ref\} \texttt{fig:StochasticBounds} shows, consumption remains bounded between the pessimist and the optimist, each of which consume slightly less in the face of return uncertainty.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.7\linewidth]{files/908dac8c8ea5ecd0d412feeb510e976b.png}
+\includegraphics[width=0.7\linewidth]{files/28cdef50aa508ac709d377513b9f36ba.png}
 \caption[]{Effect of Return Uncertainty on Consumption Bounds}
 \label{fig:StochasticBounds}
 \end{figure}
 
 \section{Conclusion}
 
-The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the `true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.
+The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the `true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.
 
 
 \appendix
@@ -416,7 +433,7 @@ The method proposed here is not universally applicable. For example, the method 
 
 \subsection{Patience Conditions Details}
 
-The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$ ensures autarky (consuming zero forever) has finite disutility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) \citep{Carroll1997, SolvingMicroDSOPs, CarrollShanker2024}.
+The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$ ensures autarky (consuming the permanent component of income each period) has finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) \citep{Carroll1997, SolvingMicroDSOPs, CarrollShanker2024}.
 
 \subsection{Human Wealth Formulas}
 
@@ -429,22 +446,6 @@ The pessimist's human wealth (assuming $\tranShk_{t+n}=\tranShkMin~\forall~n>0$)
 The minimal MPC (perfect foresight consumer with horizon $T -t$) has three forms \citep{Carroll2001MPCBound}: backward recursion $\MPCmin_{t}=\MPCmin_{t+1}/(\MPCmin_{t+1}+\AbsPatFac/\Rfree)$ with $\MPCmin_T=1$; forward sum $\MPCmin_{t}=(\sum_{n=0}^{T -t}(\AbsPatFac/\Rfree)^{n})^{ -1}$; or infinite-horizon $\MPCmin=1 -\AbsPatFac/\Rfree = 1 -(\Rfree \DiscFac)^{1/\CRRA}/\Rfree$.
 
 The maximal MPC \citep{CarrollToche2009} satisfies backward recursion $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) (1 + \MPCmax_{t+1})$ with $\MPCmax_T = 1$; forward sum $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) \sum_{n=0}^{T -t}\left(\WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)\right)^{n}$; or infinite-horizon $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$.
-
-\subsection{Moderation Ratio Slope Formula}
-
-The moderation ratio slope needed for Hermite interpolation is derived from differentiating (\ref{eq:modRte}) from the main text. Using the chain rule:
-
-\begin{equation}
-\label{eq:modRteMuDeriv}
-\frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})-\cFuncPes(\mNrmMin+e^{\logmNrmEx})}{\hNrmEx \MPCmin}\right].
-\end{equation}
-
-Since $\partial e^{\logmNrmEx}/\partial \logmNrmEx = e^{\logmNrmEx} = \mNrmEx$ and $\cFuncPes$ is linear with slope $\MPCmin$, this yields
-
-\begin{equation}
-\label{eq:modRteMuFinal}
-\frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\mNrmEx (\partial \cFuncReal/\partial \mNrm - \MPCmin)}{\MPCmin \hNrmEx}.
-\end{equation}
 
 \subsection{Asymptotic Linearity and Extrapolation}
 
@@ -473,17 +474,11 @@ where $\mNrmCuspEx\equiv\mNrmCusp -\mNrmMin > 0$ since $\MPCmax > \MPCmin$. For 
 \end{array}
 \end{equation}
 
-We define the low-region moderation ratio as
-
-\begin{equation}
-\modRteLoTightUpBd(\logmNrmEx) = \frac{\cFuncReal(\mNrmMin+e^{\logmNrmEx})e^{-\logmNrmEx}-\MPCmin}{\MPCmax-\MPCmin},
-\end{equation}
-
-which measures how far consumption per unit of wealth exceeds the pessimist's MPC ($\MPCmin$) relative to the maximum possible excess ($\MPCmax - \MPCmin$).
+This motivates the definition of the low-resource moderation ratio as in \{eq\} \texttt{eq:modRteLoTightUpBd}.
 
 \subsection{Value Function Derivation}
 
-Under perfect foresight, consumption grows at constant rate $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T -t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T -t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1 -\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T -t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{ -1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc = \MPCmin^{ -1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
+Under perfect foresight, consumption grows at constant rate equal to the absolute patience factor $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T -t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T -t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1 -\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T -t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{ -1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc_{t}^{T} \to \PDVCoverc = \MPCmin^{ -1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
 
 The optimist's value function satisfies
 
@@ -496,7 +491,7 @@ The optimist's value function satisfies
 \end{aligned}
 \end{equation}
 
-The general expression becomes
+The infinite horizon expression becomes
 
 \begin{equation}
 \label{eq:vFuncPF}
@@ -504,7 +499,6 @@ The general expression becomes
 \vFuncOpt(\mNrm) &= \uFunc(\cFuncOpt(\mNrm))\PDVCoverc \\
 &= \uFunc(\cFuncOpt(\mNrm))\MPCmin^{-1} \\
 &= \uFunc((\mNrmEx+\hNrmEx)\MPCmin) \MPCmin^{-1} \\
-&= \left[(\mNrmEx+\hNrmEx)^{1-\CRRA}/(1-\CRRA)\right] \cdot \left[\MPCmin^{1-\CRRA} \cdot \MPCmin^{-1}\right] \\
 &= \uFunc(\mNrmEx+\hNrmEx)\MPCmin^{-\CRRA}.
 \end{aligned}
 \end{equation}
@@ -545,38 +539,30 @@ Inverting these approximations yields
 
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
 
-\subsection{Hermite Interpolation: Slope Derivations}
+\subsection{I.I.D. Stochastic Returns: MPC Derivation}
 
-The logit transformation slope follows from the chain rule \citep{Santos2000, JuddMaliarMaliar2017}:
-
-\begin{equation}
-\label{eq:logitModRteMu}
-\frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial}{\partial \logmNrmEx}\left[\log\modRte - \log(1-\modRte)\right] = \frac{\modRteMu}{\modRte(1 - \modRte)}
-\end{equation}
-
-where $\modRteMu$ is from (\ref{eq:modRteMuFinal}). For monotone cubic Hermite schemes \citep{Fritsch1980, FritschButland1984, deBoor2001}, theoretical slopes may be adjusted to enforce monotonicity \citep{Hyman1983}. The Fritsch-Carlson algorithm modifies slopes at local extrema, while Fritsch-Butland uses harmonic mean weighting. Both preserve the shape-preserving property essential for consumption functions that must be strictly increasing.
-
-The MPC weight derivation starts from differentiating (\ref{eq:cFuncHi}) from the main text with respect to $\mNrm$:
+The fact that a linear consumption function with an MPC $= 1 - (\DiscFac \Ex[\Risky^{1 -\CRRA}])^{1/\CRRA}$ satisfies the Euler equation with i.i.d. returns and no labor income can be derived by the method of undetermined coefficients.  In particular, assume that $\cFuncOpt(\mNrm) = \mNrm\MPCmin$, with a time-independent MPC $\MPCmin$ to be determined.  Substituting this into the Euler equation, we have
 
 \begin{equation}
-\frac{\partial \cFuncReal}{\partial \mNrm} = \frac{\partial \cFuncPes}{\partial \mNrm} + \frac{\partial}{\partial \mNrm}\left[\modRte \hNrmEx \MPCmin\right].
+\label{eq:stochReturnsEulerEqn}
+\begin{aligned}
+1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\cNrm_{t+1}}{\cNrm_t}\right)^{-\CRRA}\\
+&= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\mNrm_{t+1}}{\mNrm_t}\right)^{-\CRRA}
+\end{aligned}
 \end{equation}
 
-Since $\cFuncPes$ has constant MPC and $\hNrmEx$ is constant, $\partial \cFuncPes/\partial \mNrm = \MPCmin$ and $\partial \modRte/\partial \mNrm = (\partial \modRte/\partial \logmNrmEx) \cdot (\partial \logmNrmEx/\partial \mNrmEx) \cdot (\partial \mNrmEx/\partial \mNrm) = \modRteMu \cdot (1/\mNrmEx) \cdot 1$. This yields
+where the second equality uses the assumed form of the consumption function.  Since there is no labor income, $\mNrm_{t+1} = \Risky_{t+1}(\mNrm_t - \cNrm_t)$.  Substituting this into the above we obtain
 
 \begin{equation}
-\frac{\partial \cFuncReal}{\partial \mNrm} = \MPCmin + \frac{\modRteMu \hNrmEx \MPCmin}{\mNrmEx} = \MPCmin\left(1 + \frac{\hNrmEx}{\mNrmEx}\modRteMu\right).
+\label{eq:stochReturnsEulerEqnContd}
+\begin{aligned}
+1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\Risky_{t+1}(\mNrm_t - \cNrm_t)}{\mNrm_t}\right)^{-\CRRA} \\
+&= \DiscFac \Ex_t\Risky_{t+1} \left(\Risky_{t+1}(1-\MPCmin)\right)^{-\CRRA}
+\end{aligned}
 \end{equation}
+Solving for $\MPCmin$ and recalling that returns are i.i.d. gives $\MPCmin=1 - (\DiscFac \Ex[\Risky^{1 -\CRRA}])^{1/\CRRA}$.
 
-Factoring as a weighted average between $\MPCmin$ and $\MPCmax$ gives (\ref{eq:MPCModeration}) from the main text, with weight
-
-\begin{equation}
-\MPCmod = \frac{\MPCmin}{\MPCmax-\MPCmin} \cdot \frac{\hNrmEx}{\mNrmEx} \cdot \modRteMu.
-\end{equation}
-
-\subsection{Stochastic Returns: MGF Derivation}
-
-The moment generating function (MGF) for lognormal returns provides the key formula. For $\log \Risky \sim \Nrml(\mu, \sigma^2)$, the MGF is $\Ex[e^{sX}] = \exp(\mu s + \sigma^2 s^2/2)$ where $X = \log \Risky$. Setting $s = 1 -\CRRA$ and $\mu = r + \equityPrem - \std_{\risky}^2/2$ yields
+In the particular case of lognormal returns, the MPC can be written in closed form.  The moment generating function (MGF) for lognormal returns provides the key formula. For $\log \Risky \sim \Nrml(\mu, \sigma^2)$, the MGF is $\Ex[e^{sX}] = \exp(\mu s + \sigma^2 s^2/2)$ where $X = \log \Risky$. Setting $s = 1 -\CRRA$ and $\mu = r + \equityPrem - \std_{\risky}^2/2$ yields\footnote{Here we can interpret $\equityPrem$ as the risk premium, that is, the additional average return from holding a risky asset compared to the risk-free rate $r$.  Adjusting the average log return by the asset volatility ensures that increasing $\std_{\risky}^2$ constitutes a mean-preserving spread of the level of return.}
 
 \begin{equation}
 \Ex[\Risky^{1-\CRRA}] = \exp\left((1-\CRRA)\left(r+\equityPrem - \frac{\std_{\risky}^2}{2}\right) + \frac{(1-\CRRA)^2\std_{\risky}^2}{2}\right).
@@ -588,11 +574,11 @@ Simplifying the variance terms: $(1 -\CRRA)^2\std_{\risky}^2/2 - (1 -\CRRA)\std_
 \Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem) + (1-\CRRA)(1-2\CRRA)\std_{\risky}^2/2).
 \end{equation}
 
-For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.
+\subsection{Correlated Returns: Shock Discretization}
 
-\subsection{Shock Discretization}
+For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.  Moreover, continuous shock distributions require discretization.
 
-Continuous shock distributions require discretization. The Tauchen method \citep{tauchen1986} constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method \citep{TauchenHussey1991} uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1 -\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis. The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.
+The Tauchen method \citep{tauchen1986} constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method \citep{TauchenHussey1991} uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1 -\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis.
 
 
 

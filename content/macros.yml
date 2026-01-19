@@ -17,8 +17,8 @@ project:
     "\\CRRA": "\\rho" # coefficient of relative risk aversion
     "\\rfree": "\\text{r}" # net risk-free interest rate
     "\\Rfree": "\\text{R}" # gross risk-free interest factor
-    "\\risky": "\\mathbf{r}" # net risky return
-    "\\Risky": "\\mathbf{R}" # gross risky return
+    "\\risky": "\\text{r}" # net risky return
+    "\\Risky": "\\text{R}" # gross risky return
     "\\equityPrem": "\\pi" # equity premium
     "\\RNrmByG": "\\mathcal{R}" # shorthand for R/𝒢 (note: in MPC_max context, use R/𝒢^ρ)
     "\\AbsPatFac": "\\Phi" # absolute patience factor
@@ -36,7 +36,7 @@ project:
     "\\tranShkMin": "\\underline{\\tranShk}" # minimal transitory shock
     "\\tranShkEmpMin": "\\underline{\\tranShkEmp}" # lower bound of transitory shock
     "\\tranShkEmpMax": "\\bar{\\tranShkEmp}" # upper bound of transitory shock
-    "\\WorstProb": "\\wp" # unemployment probability in Friedman-Muth process
+    "\\WorstProb": "q" # unemployment probability in Friedman-Muth process
 
     # ============================================================
     # STATE VARIABLES - LEVELS
@@ -72,7 +72,7 @@ project:
     # ============================================================
     "\\mNrmEx": "\\Delta \\mNrm" # excess market resources (m − mMin)
     "\\hNrmEx": "\\Delta \\hNrm" # excess human wealth (h − hPes)
-    "\\logmNrmEx": "\\boldsymbol{\\mu}" # log-excess resources (μ ≡ log Δm)
+    "\\logmNrmEx": "\\mu" # log-excess resources (μ ≡ log Δm)
 
     # ============================================================
     # SPECIAL POINTS AND THRESHOLDS
@@ -85,7 +85,7 @@ project:
     # ============================================================
     # UTILITY FUNCTION
     # ============================================================
-    "\\uFunc": "\\mathbf{u}" # utility function
+    "\\uFunc": "u" # utility function
     "\\uPrime": "\\uFunc'" # first derivative of utility function
     "\\uDoublePrime": "\\uFunc''" # second derivative of utility function
     "\\uTriplePrime": "\\uFunc'''" # third derivative of utility function
@@ -93,7 +93,7 @@ project:
     # ============================================================
     # VALUE FUNCTION
     # ============================================================
-    "\\vFunc": "\\mathbf{v}" # value function
+    "\\vFunc": "V" # value function
     "\\vFuncOpt": "\\bar{\\vFunc}" # optimist value function
     "\\vFuncPes": "\\underline{\\vFunc}" # pessimist value function
     "\\vFuncReal": "\\hat{\\vFunc}" # realist value function
@@ -104,7 +104,7 @@ project:
     # ============================================================
     # INVERSE VALUE FUNCTION
     # ============================================================
-    "\\vInv": "{\\scriptsize \\boldsymbol{\\Lambda}}" # inverse value transformation (small)
+    "\\vInv": "\\Lambda" # inverse value transformation (small)
     "\\vInvOpt": "\\bar{\\vInv}" # optimist inverse value function
     "\\vInvPes": "\\underline{\\vInv}" # pessimist inverse value function
     "\\vInvReal": "\\hat{\\vInv}" # realist inverse value function
@@ -115,11 +115,11 @@ project:
     # ============================================================
     # CONSUMPTION FUNCTION
     # ============================================================
-    "\\cFunc": "\\mathbf{c}" # generic consumption function (base)
+    "\\cFunc": "c" # generic consumption function (base)
     "\\cFuncOpt": "\\bar{\\cFunc}" # optimist consumption
     "\\cFuncPes": "\\underline{\\cFunc}" # pessimist consumption
     "\\cFuncReal": "\\hat{\\cFunc}" # realist consumption
-    "\\cFuncApprox": "\\grave{\\cFunc}" # generic approximated consumption
+    "\\cFuncApprox": "\\cFuncReal" # generic approximated consumption
     "\\cFuncLoTightUpBd": "\\grave{\\check{\\cFunc}}" # tighter upper bound - low region
     "\\cFuncMidTightUpBd": "\\grave{\\tilde{\\cFunc}}" # tighter upper bound - middle region
     "\\cFuncHiTightUpBd": "\\grave{\\hat{\\cFunc}}" # tighter upper bound - high region
@@ -127,21 +127,21 @@ project:
     # ============================================================
     # MARGINAL PROPENSITY TO CONSUME (MPC)
     # ============================================================
-    "\\MPC": "\\boldsymbol{\\kappa}" # generic MPC symbol
+    "\\MPC": "\\kappa" # generic MPC symbol
     "\\MPCmin": "\\underline{\\MPC}" # minimal MPC
     "\\MPCmax": "\\bar{\\MPC}" # maximal MPC
-    "\\MPCmod": "\\boldsymbol{\\eta}" # MPC moderation weight (eta)
+    "\\MPCmod": "\\eta" # MPC moderation weight (eta)
 
     # ============================================================
     # MODERATION FRAMEWORK - CONSUMPTION (omega/chi)
     # ============================================================
     # Consumption moderation ratio (omega)
-    "\\modRte": "\\boldsymbol{\\omega}" # moderation ratio
-    "\\modRteLoTightUpBd": "\\grave{\\check{\\modRte}}" # tighter upper bound - low region
+    "\\modRte": "\\omega" # moderation ratio
+    "\\modRteLoTightUpBd": "\\modRte" # tighter upper bound - low region
     "\\modRteMu": "\\partial \\modRte / \\partial \\logmNrmEx" # first derivative of consumption modRte wrt mu
 
     # Consumption logit transformation (chi)
-    "\\logitModRte": "\\boldsymbol{\\chi}" # logit moderation ratio
+    "\\logitModRte": "\\chi" # logit moderation ratio
     "\\logitModRteApprox": "\\grave{\\logitModRte}" # approximated logit moderation ratio
     "\\logitModRteMu": "\\partial \\logitModRte / \\partial \\logmNrmEx" # first derivative of logit moderation wrt mu
     "\\asympSlope": "\\alpha" # asymptotic slope of logit transformation
@@ -150,13 +150,13 @@ project:
     # MODERATION FRAMEWORK - VALUE FUNCTION (Omega/Chi)
     # ============================================================
     # Value function moderation ratio (Omega)
-    "\\valModRte": "\\boldsymbol{\\Omega}" # value moderation ratio
+    "\\valModRte": "\\Omega" # value moderation ratio
     "\\valModRteReal": "\\hat{\\valModRte}" # realist value moderation ratio
     "\\valModRteApprox": "\\grave{\\valModRte}" # approximated value moderation ratio
     "\\valModRteRealDerivmu": "\\partial \\valModRteReal / \\partial \\logmNrmEx" # first derivative of valModRteReal wrt mu
 
     # Value function logit transformation (Chi)
-    "\\logitValModRteReal": "\\hat{\\boldsymbol{X}}" # realist logit value moderation ratio
+    "\\logitValModRteReal": "\\hat{X}" # realist logit value moderation ratio
     "\\logitValModRteApprox": "\\grave{\\boldsymbol{X}}" # approximated logit value moderation ratio
     "\\logitValModRteRealDerivmu": "\\partial \\logitValModRteReal / \\partial
       \\logmNrmEx" # first derivative of logitValModRteReal wrt mu
