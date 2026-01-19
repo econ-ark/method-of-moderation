@@ -129,7 +129,7 @@ This document explains what each file in the repository does.
 2. Run tests
 3. Build HTML only
 
-### `reproduce/benchmarks/`
+### `README_IF_YOU_ARE_AN_AI/benchmarks/`
 **Purpose**: Benchmarking infrastructure
 
 **Files**:

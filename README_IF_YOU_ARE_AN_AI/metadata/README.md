@@ -26,7 +26,7 @@ These files are specifically designed for programmatic access by AI systems:
 ```python
 import json
 
-with open('metadata/equations.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/metadata/equations.json') as f:
     eq_data = json.load(f)
 
 # Get the moderation ratio equation
@@ -39,7 +39,7 @@ for eq in eq_data['equations']:
 ### SymPy (Included in Project Dependencies)
 
 ```python
-from metadata.equations import (
+from README_IF_YOU_ARE_AN_AI.metadata.equations import (
     consumption_optimist, consumption_pessimist,
     moderation_ratio_definition, logit_moderation,
     EQUATIONS, get_equation_latex
@@ -64,7 +64,7 @@ for name in EQUATIONS:
 ```python
 import json
 
-with open('metadata/parameters.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/metadata/parameters.json') as f:
     params = json.load(f)
 
 # Get default CRRA value
@@ -81,7 +81,7 @@ print(f"Valid range: {crra_range['min']} to {crra_range['max']}")
 ```python
 import json
 
-with open('metadata/algorithm.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/metadata/algorithm.json') as f:
     algo = json.load(f)
 
 # List algorithm steps

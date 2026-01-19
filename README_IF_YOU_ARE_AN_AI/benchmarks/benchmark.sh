@@ -6,9 +6,9 @@
 # and system information for benchmarking purposes.
 #
 # Usage:
-#   ./reproduce/benchmarks/benchmark.sh           # Benchmark full reproduction
-#   ./reproduce/benchmarks/benchmark.sh --min     # Benchmark minimal reproduction
-#   ./reproduce/benchmarks/benchmark.sh --min --notes "Testing M1 Mac"
+#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh           # Benchmark full reproduction
+#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min     # Benchmark minimal reproduction
+#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min --notes "Testing M1 Mac"
 
 set -euo pipefail
 
@@ -38,7 +38,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         *)
             echo "Unknown option: $1"
-            echo "Usage: $0 [--min] [--notes "note"]"
+            echo "Usage: $0 [--min] [--notes \"note\"]"
             exit 1
             ;;
     esac

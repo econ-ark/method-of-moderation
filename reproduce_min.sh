@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 detect_platform_venv() {
     local platform=""
     local arch=""
-    
+
     # Detect platform
     case "$(uname -s)" in
         Darwin)
@@ -41,7 +41,7 @@ detect_platform_venv() {
             return
             ;;
     esac
-    
+
     echo "$SCRIPT_DIR/.venv-$platform-$arch"
 }
 

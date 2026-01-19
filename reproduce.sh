@@ -13,7 +13,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 detect_platform_venv() {
     local platform=""
     local arch=""
-    
+
     # Detect platform
     case "$(uname -s)" in
         Darwin)
@@ -41,7 +41,7 @@ detect_platform_venv() {
             return
             ;;
     esac
-    
+
     echo "$SCRIPT_DIR/.venv-$platform-$arch"
 }
 
@@ -77,7 +77,7 @@ echo ""
 
 # Execute computational notebook
 echo "Step 4/5: Executing computational notebook..."
-uv run jupyter nbconvert --to notebook --execute --inplace code/notebook.ipynb
+uv run jupyter nbconvert --to notebook --execute --inplace code/method-of-moderation.ipynb
 echo "✓ Notebook executed successfully"
 echo ""
 
@@ -92,8 +92,8 @@ fi
 if [ -f "content/exports/moderation_with_appendix.pdf" ]; then
     echo "✓ Paper+Appendix PDF: content/exports/moderation_with_appendix.pdf"
 fi
-if [ -f "code/notebook.ipynb" ]; then
-    echo "✓ Executed notebook: code/notebook.ipynb"
+if [ -f "code/method-of-moderation.ipynb" ]; then
+    echo "✓ Executed notebook: code/method-of-moderation.ipynb"
 fi
 echo ""
 
