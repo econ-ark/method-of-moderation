@@ -138,7 +138,7 @@ $$
 \cFuncPes(\mNrmMin+\mNrmEx) < \cFuncReal(\mNrmMin+\mNrmEx) < \cFuncOpt(\mNrmMin+\mNrmEx)
 $$
 
-Subtracting $\cFuncPes(\mNrmMin+\mNrmEx)$ in each of these inequalities and using equations {eq} `eq:cFuncPesExcess` and {eq} `eq:cFuncOptExcess` gives
+Subtracting $\cFuncPes(\mNrmMin+\mNrmEx)$ in each of these inequalities and using equations {eq}`eq:cFuncPesExcess` and {eq}`eq:cFuncOptExcess` gives
 
 $$
 \begin{array}{rcl}
