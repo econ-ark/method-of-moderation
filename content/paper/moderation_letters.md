@@ -53,7 +53,7 @@ subject to $\aNrm_{t} + \cNrm_{t} = \mNrm_{t}$, where $\mNrm$ denotes income or 
 
 While our method can be adapted to a range of stochastic labor income processes, to fix ideas we suppose income evolves via the Friedman-Muth process ({cite:t}`Friedman1957` distinguished permanent from transitory income; {cite:t}`Muth1960` provided the stochastic framework).  That is, $\yNrm_{t+1} = \pNrm_{t+1}\tranShk_{t+1}$ where $\pNrm$ denotes permanent labor income and $\tranShk_{t+1}$ a transitory component.  Permanent income growth is given by $\pNrm_{t+1} = \pNrm_{t} \PermGroShk_{t+1}$, $\PermGroShk_{t+1} = \PermGroFac_{t+1} \permShk_{t+1}$. Here $\PermGroFac_{t+1}$ is deterministic income growth, while $\permShk_{t_1}$ are permanent shocks with mean unity and bounded support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$.  Transitory shocks $\tranShk_{t+1}$ take value $0$ with probability $\WorstProb > 0$ (unemployment) or $\tranShkEmp_{t+1}/(1-\WorstProb)$ otherwise, with $\Ex_t[\tranShkEmp_{t+1}]=1$.
 
-This problem can be rewritten (see {cite:t}`SolvingMicroDSOPs` for a proof) in a more convenient form in which choice and state variables are normalized by the level of permanent income, e.g., replacing $\mNrm$ with $\mNrm/\pNrm$. When that is done, the Bellman equation for the transformed version of the consumer's problem is
+This problem can be rewritten (see {cite:t}`SolvingMicroDSOPs` for a proof) in a more convenient form in which choice and state variables are normalized by the level of permanent income, e.g., replacing $\mNrm_t$ with $\mNrm_t/\pNrm_t$. When that is done, the Bellman equation for the transformed version of the consumer's problem is
 
 ```{math}
 :label: eq:vNormed
@@ -202,7 +202,7 @@ Extrapolated $\cFuncApprox$ Constructed Using the Method of Moderation
 A Tighter Upper Bound
 :::
 
-As shown in {ref} `fig:IntExpFOCInvPesReaOptNeed45`, the two upper bounds intersect at the cusp point:
+As shown in {ref}`fig:IntExpFOCInvPesReaOptNeed45`, the two upper bounds intersect at the cusp point:
 
 ```{math}
 :label: eq:mNrmCusp
@@ -222,7 +222,7 @@ This ratio measures how far consumption per unit of wealth exceeds the optimist'
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-The MoM also contributes to literature which aims to improve the precisison of dynamic stochastic optimization solutions, such as {cite:p}`Chipeniuk2020`. Table 1 demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+The MoM also contributes to literature which aims to improve the precisison of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. Table 1 demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
 
 | Method   | $[m_0,m_1]$ | $[m_1,m_2]$  | $[m_2,m_3]$ | $[m_3,m_4]$ | $[m_4,\overline{m}]$|
 | :-------- | :-------: | :--------: | :-------: | :--------: | :-------: |
