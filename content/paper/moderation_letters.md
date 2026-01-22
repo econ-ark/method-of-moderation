@@ -239,7 +239,7 @@ Often it is useful to know the value function as well as the consumption rule. F
 
 The numerical accuracy of the method of moderation depends critically on the quality of function approximation between gridpoints {cite:p}`Santos2000`. Our bracketing approach complements work that bounds numerical errors in dynamic economic models {cite:p}`JuddMaliarMaliar2017`. Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation {cite:p}`Fritsch1980` offers a considerable advantage.
 
-The moderation ratio derivative measures how quickly the realist approaches the optimist as resources increase.  Differentiating {eq} `eq:modRte` with respect to $\logmNrmEx$ we obtain
+The moderation ratio derivative measures how quickly the realist approaches the optimist as resources increase.  Differentiating {eq}`eq:modRte` with respect to $\logmNrmEx$ we obtain
 
 ```{math}
 :label: eq:modRteMu
