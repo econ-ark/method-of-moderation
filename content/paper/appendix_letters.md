@@ -62,7 +62,7 @@ $$
 \end{array}
 $$
 
-This motivates the definition of the low-resource moderation ratio as in {eq} `eq:modRteLoTightUpBd`.
+This motivates the definition of the low-resource moderation ratio as in {eq}`eq:modRteLoTightUpBd`.
 
 ## Value Function Derivation
 
