@@ -129,13 +129,24 @@ This document explains what each file in the repository does.
 2. Run tests
 3. Build HTML only
 
-### `README_IF_YOU_ARE_AN_AI/benchmarks/`
+### `reproduce/benchmarks/`
 **Purpose**: Benchmarking infrastructure
 
 **Files**:
-- `benchmark.sh`: Wrapper script
+- `benchmark.sh`: Wrapper script for running benchmarks
 - `capture_system_info.py`: System info capture
 - `schema.json`: Benchmark format schema
+- `BENCHMARKING_GUIDE.md`: Detailed usage guide
+- `results/`: Benchmark output directory
+
+### `metadata/`
+**Purpose**: Machine-readable metadata for AI systems
+
+**Files**:
+- `algorithm.json`: Structured algorithm description
+- `parameters.json`: Parameter definitions with bounds
+- `equations.json`: Key equations in multiple formats
+- `equations.py`: Live SymPy symbolic equations
 
 ---
 
