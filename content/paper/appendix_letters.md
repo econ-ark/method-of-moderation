@@ -22,7 +22,7 @@ exports:
 
 ## Patience Conditions Details
 
-The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ ensures autarky (consuming the permanent component of income each period) has finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
+The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ ensures that autarky (saving nothing, consuming all income each period) yields finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
 
 ## Human Wealth Formulas
 
@@ -35,10 +35,6 @@ The pessimist's human wealth (assuming $\tranShk_{t+n}=\tranShkMin~\forall~n>0$)
 The minimal MPC (perfect foresight consumer with horizon $T-t$) has three forms {cite:p}`Carroll2001MPCBound`: backward recursion $\MPCmin_{t}=\MPCmin_{t+1}/(\MPCmin_{t+1}+\AbsPatFac/\Rfree)$ with $\MPCmin_T=1$; forward sum $\MPCmin_{t}=(\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n})^{-1}$; or infinite-horizon $\MPCmin=1-\AbsPatFac/\Rfree = 1-(\Rfree \DiscFac)^{1/\CRRA}/\Rfree$.
 
 The maximal MPC {cite:p}`CarrollToche2009` satisfies backward recursion $\MPCmax_{t}=\MPCmax_{t+1}/(\MPCmax_{t+1}+\WorstProb^{1/\CRRA}\AbsPatFac/\Rfree)$ with $\MPCmax_T=1$; forward sum $\MPCmax_{t}=(\sum_{n=0}^{T-t}(\WorstProb^{1/\CRRA}\AbsPatFac/\Rfree)^{n})^{-1}$; or infinite-horizon $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$.
-
-## Asymptotic Linearity and Extrapolation
-
-Under the GIC, the logit-transformed moderation ratio $\logitModRte(\logmNrmEx)$ is asymptotically linear with slope $\asympSlope = \lim_{\logmNrmEx \to +\infty} \frac{\partial \logitModRte}{\partial \logmNrmEx} \geq 0$ as $\logmNrmEx \to +\infty$. This slope may equal zero in theory, but is strictly positive on finite grids. For practical implementation, extrapolate $\logitModRte$ linearly using the positive boundary slope computed at the highest gridpoint. This linear extrapolation preserves $\modRte\in(0,1)$ and hence $\cFuncPes < \cFuncApprox < \cFuncOpt$ throughout the extrapolation domain, even if the theoretical limiting slope vanishes. The asymptotic linearity property is crucial because it allows the method to accurately represent the consumption function far beyond the range of gridpoints where the Euler equation was solved, without ever violating the theoretical bounds.
 
 ## Cusp Point Calculation
 
@@ -67,7 +63,7 @@ This motivates the definition of the low-resource moderation ratio as in {eq}`eq
 
 ## Value Function Derivation
 
-Under perfect foresight, consumption grows at constant rate equal to the absolute patience factor $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. This yields the key identity $\PDVCoverc_{t}^{T} \to \PDVCoverc = \MPCmin^{-1}$ in the infinite-horizon limit, connecting the PDV-to-consumption ratio to the minimal MPC.
+Under perfect foresight, consumption grows at constant rate equal to the absolute patience factor $\AbsPatFac$: $\cLvl_{t+n}=\cLvl_{t}\AbsPatFac^{n}$. The present discounted value of consumption satisfies $\PDV_{t}^{T}(\cLvl)=\sum_{n=0}^{T-t}\DiscFac^{n}\cLvl_{t}\AbsPatFac^{n}=\cLvl_{t}\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}$, where we use $\DiscFac\AbsPatFac^{1-\CRRA}=\AbsPatFac/\Rfree$. Dividing by consumption yields the PDV-to-consumption ratio $\PDVCoverc_{t}^{T}=\PDV_{t}^{T}(\cLvl)/\cLvl_{t}=\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n}=\MPCmin_{t}^{-1}$, which is unchanged for normalized variables. Defining $\PDVCoverc \equiv \lim_{T\to\infty} \PDVCoverc_{t}^{T}$, this yields the key identity $\PDVCoverc = \MPCmin^{-1}$, connecting the infinite-horizon PDV-to-consumption ratio to the minimal MPC.
 
 The optimist's value function satisfies
 
@@ -145,10 +141,7 @@ where the second equality uses the assumed form of the consumption function.  Si
 
 ```{math}
 :label: eq:stochReturnsEulerEqnContd
-\begin{aligned}
-1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\Risky_{t+1}(\mNrm_t - \cNrm_t)}{\mNrm_t}\right)^{-\CRRA} \\
-&= \DiscFac \Ex_t\Risky_{t+1} \left(\Risky_{t+1}(1-\MPCmin)\right)^{-\CRRA}
-\end{aligned}
+1 = \DiscFac \Ex_t\left[\Risky_{t+1} \left(\Risky_{t+1}(1-\MPCmin)\right)^{-\CRRA}\right]
 ```
 Solving for $\MPCmin$ and recalling that returns are i.i.d. gives $\MPCmin=1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$.
 
@@ -166,9 +159,3 @@ $$
 
 [^lognormal-returns-intuition]:
     Here we can interpret $\equityPrem$ as the risk premium, that is, the additional average return from holding a risky asset compared to the risk-free rate $r$.  Adjusting the average log return by the asset volatility ensures that increasing $\std_{\risky}^2$ constitutes a mean-preserving spread of the level of return.
-
-## Correlated Returns: Shock Discretization
-
-For serially correlated returns, the return state becomes an additional state variable, requiring two-dimensional interpolation of the moderation ratio.  Moreover, continuous shock distributions require discretization.
-
-The Tauchen method {cite:p}`tauchen1986` constructs a Markov chain by dividing the state space into bins. The Tauchen-Hussey method {cite:p}`TauchenHussey1991` uses Gaussian quadrature, often requiring fewer states for comparable accuracy. For unemployment shocks, assign probability $\WorstProb$ to zero income and $(1-\WorstProb)$ across positive realizations. Choose gridpoints and shock points via convergence analysis.
