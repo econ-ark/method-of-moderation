@@ -11,7 +11,7 @@ method-of-moderation/
 ├── Dockerfile                    # Standalone Docker build
 ├── .devcontainer/
 │   └── devcontainer.json         # VS Code/Cursor DevContainer config
-└── reproduce/
+└── .agents/reproduce/
     └── docker/
         ├── setup.sh              # SST: Shared environment setup
         └── README.md             # This file
@@ -62,7 +62,7 @@ docker run -it --rm -p 8888:8888 method-of-moderation \
 
 ```bash
 # Run the setup script directly
-bash reproduce/docker/setup.sh
+bash .agents/reproduce/docker/setup.sh
 
 # The script auto-detects your platform and creates the appropriate venv
 # For example, on macOS Apple Silicon: .venv-darwin-arm64
@@ -99,7 +99,7 @@ The setup script (`setup.sh`) performs these steps:
 
 To modify the environment setup:
 
-1. Edit `reproduce/docker/setup.sh`
+1. Edit `.agents/reproduce/docker/setup.sh`
 2. Changes automatically apply to both Docker and DevContainer builds
 
 ## Troubleshooting
@@ -144,5 +144,5 @@ docker build --no-cache -t method-of-moderation .
 
 # Local: remove venv and re-run setup
 rm -rf .venv-*
-bash reproduce/docker/setup.sh
+bash .agents/reproduce/docker/setup.sh
 ```

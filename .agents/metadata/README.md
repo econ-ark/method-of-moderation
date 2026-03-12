@@ -26,7 +26,7 @@ These files are specifically designed for programmatic access by AI systems:
 ```python
 import json
 
-with open('README_IF_YOU_ARE_AN_AI/metadata/equations.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/.agents/metadata/equations.json') as f:
     eq_data = json.load(f)
 
 # Get the moderation ratio equation
@@ -64,7 +64,7 @@ for name in EQUATIONS:
 ```python
 import json
 
-with open('README_IF_YOU_ARE_AN_AI/metadata/parameters.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/.agents/metadata/parameters.json') as f:
     params = json.load(f)
 
 # Get default CRRA value
@@ -81,7 +81,7 @@ print(f"Valid range: {crra_range['min']} to {crra_range['max']}")
 ```python
 import json
 
-with open('README_IF_YOU_ARE_AN_AI/metadata/algorithm.json') as f:
+with open('README_IF_YOU_ARE_AN_AI/.agents/metadata/algorithm.json') as f:
     algo = json.load(f)
 
 # List algorithm steps

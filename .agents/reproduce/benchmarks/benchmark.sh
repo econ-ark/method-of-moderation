@@ -6,9 +6,9 @@
 # and system information for benchmarking purposes.
 #
 # Usage:
-#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh           # Benchmark full reproduction
-#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min     # Benchmark minimal reproduction
-#   ./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min --notes "Testing M1 Mac"
+#   ./.agents/reproduce/benchmarks/benchmark.sh           # Benchmark full reproduction
+#   ./.agents/reproduce/benchmarks/benchmark.sh --min     # Benchmark minimal reproduction
+#   ./.agents/reproduce/benchmarks/benchmark.sh --min --notes "Testing M1 Mac"
 
 set -euo pipefail
 

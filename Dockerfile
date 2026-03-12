@@ -1,5 +1,5 @@
 # Method of Moderation Dockerfile
-# Single Source of Truth: reproduce/docker/setup.sh
+# Single Source of Truth: .agents/reproduce/docker/setup.sh
 #
 # Build:   docker build -t method-of-moderation .
 # Run:     docker run -it --rm method-of-moderation
@@ -40,7 +40,7 @@ USER vscode
 RUN find /workspace -name "*.sh" -type f -exec chmod +x {} \;
 
 # Run setup (creates architecture-specific venv)
-RUN bash /workspace/reproduce/docker/setup.sh
+RUN bash /workspace/.agents/reproduce/docker/setup.sh
 
 # Set runtime environment
 # Note: The actual venv path depends on architecture (e.g., .venv-linux-x86_64 or .venv-linux-aarch64)

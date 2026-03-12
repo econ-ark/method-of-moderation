@@ -11,7 +11,7 @@ The binder setup draws from the same source as Docker and DevContainer:
 | ------------------- | -------------------------------------------------- |
 | Python dependencies | `pyproject.toml` + `uv.lock` (installed via `uv`)  |
 | System dependencies | Same as `Dockerfile` (Node.js 18, curl, git, make) |
-| Environment setup   | Mirrors `reproduce/docker/setup.sh`                |
+| Environment setup   | Mirrors `.agents/reproduce/docker/setup.sh`                |
 
 ## Files
 
@@ -54,7 +54,7 @@ docker build -t method-of-moderation .
 docker run -it --rm -p 8888:8888 method-of-moderation jupyter lab --ip=0.0.0.0 --no-browser
 
 # Option 2: Use the setup script directly
-bash reproduce/docker/setup.sh
+bash .agents/reproduce/docker/setup.sh
 source .venv-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)/bin/activate
 jupyter lab
 ```
@@ -77,7 +77,7 @@ jupyter lab
         │                    │                     │
         ▼                    ▼                     ▼
 ┌───────────────┐   ┌─────────────────┐   ┌─────────────────┐
-│ reproduce/    │   │ reproduce/      │   │ uv export       │
+│ .agents/reproduce/    │   │ .agents/reproduce/      │   │ uv export       │
 │ docker/       │   │ docker/         │   │ --frozen        │
 │ setup.sh      │   │ setup.sh        │   │ + uv pip install│
 └───────────────┘   └─────────────────┘   └─────────────────┘
