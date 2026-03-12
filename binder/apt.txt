@@ -1,0 +1,9 @@
+# System dependencies for Method of Moderation
+# These are installed via apt-get before the Python environment is set up
+
+# Build tools
+curl
+git
+make
+
+# Node.js 18 is installed via environment.yml (conda-forge)

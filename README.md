@@ -1,6 +1,7 @@
 # The Method of Moderation
 
 [![Actions Status][actions-badge]][actions-link]
+[![Binder][binder-badge]][binder-link]
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 [![REMARK](https://img.shields.io/badge/REMARK-v1.0.0-blue)](https://github.com/econ-ark/REMARK)
 
@@ -37,7 +38,7 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 - [**Full Paper with Appendix (PDF)**](content/exports/moderation_with_appendix.pdf) - Complete paper including appendix
 
 ### Code & Interactive Content
-- [**Jupyter Notebook**](code/notebook.ipynb) - Complete computational notebook with examples
+- [**Jupyter Notebook**](code/method-of-moderation.ipynb) - Complete computational notebook with examples
 
 ### Links
 - **Documentation**: [MyST Build](_build/html/index.html) (local build)
@@ -86,6 +87,8 @@ This work was supported by the Alfred P. Sloan Foundation under grant G-2017-983
 <!-- prettier-ignore-start -->
 [actions-badge]:            https://github.com/econ-ark/method-of-moderation/workflows/CI/badge.svg
 [actions-link]:             https://github.com/econ-ark/method-of-moderation/actions
+[binder-badge]:             https://mybinder.org/badge_logo.svg
+[binder-link]:              https://mybinder.org/v2/gh/econ-ark/method-of-moderation/main
 [github-discussions-badge]: https://img.shields.io/static/v1?label=Discussions&message=Ask&color=blue&logo=github
 [github-discussions-link]:  https://github.com/econ-ark/method-of-moderation/discussions
 <!-- prettier-ignore-end -->

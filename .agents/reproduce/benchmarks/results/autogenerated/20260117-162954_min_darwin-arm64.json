@@ -1,0 +1,57 @@
+{
+  "benchmark_version": "1.0.0",
+  "benchmark_id": "20260117-162954_min_darwin-arm64",
+  "timestamp": "2026-01-17T16:29:54Z",
+  "timestamp_end": "2026-01-17T16:29:59Z",
+  "reproduction_mode": "min",
+  "exit_status": 0,
+  "duration_seconds": 5,
+  "system": {
+    "os": "Darwin",
+    "os_version": "24.4.0",
+    "kernel": "Darwin Kernel Version 24.4.0: Fri Apr 11 18:32:50 PDT 2025; root:xnu-11417.101.15~117/RELEASE_ARM64_T6041",
+    "hostname": "ccarroll",
+    "cpu": {
+      "model": "Apple M4 Max",
+      "architecture": "arm64",
+      "cores_physical": 16,
+      "cores_logical": 16,
+      "frequency_mhz": null
+    },
+    "memory": {
+      "total_gb": 64.0,
+      "available_gb": null
+    },
+    "disk": {
+      "type": "SSD",
+      "free_gb": 110.36
+    }
+  },
+  "environment": {
+    "python_version": "3.13.3",
+    "environment_type": "conda",
+    "virtual_env": null,
+    "key_packages": {
+      "econ-ark": "not installed",
+      "mystmd": "not installed",
+      "numpy": "not installed",
+      "scipy": "not installed",
+      "matplotlib": "not installed",
+      "numba": "not installed",
+      "jupyter": "not installed",
+      "ipywidgets": "not installed",
+      "pytest": "not installed"
+    }
+  },
+  "git": {
+    "commit": "6b00dd205f971fb931444e817949a177d100bc75",
+    "branch": "main",
+    "dirty": true
+  },
+  "metadata": {
+    "user": "ccarroll",
+    "session_id": "3856",
+    "ci": false,
+    "notes": "System test"
+  }
+}

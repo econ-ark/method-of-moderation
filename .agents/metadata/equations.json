@@ -1,0 +1,121 @@
+{
+  "_metadata": {
+    "description": "Method of Moderation equations in machine-readable format",
+    "notation": "Unicode mathematical symbols matching paper notation",
+    "generated_from": "README_IF_YOU_ARE_AN_AI/.agents/metadata/equations.py"
+  },
+  "equations": {
+    "utility": {
+      "name": "CRRA Utility Function",
+      "description": "Constant relative risk aversion utility",
+      "latex_unicode": "𝐮(c) = \\frac{c^{1-ρ}}{1-ρ}",
+      "latex_macros": "\\uFunc(\\cNrm) = \\frac{\\cNrm^{1-\\CRRA}}{1-\\CRRA}",
+      "sympy_latex": "\\frac{c^{1 - ρ}}{1 - ρ}",
+      "sympy_repr": "Mul(Pow(Symbol('c', real=True, positive=True), Add(Integer(1), Mul(Integer(-1), Symbol('ρ', real=True, positive=True)))), Pow(Add(Integer(1), Mul(Integer(-1), Symbol('ρ', real=True, positive=True))), Integer(-1)))"
+    },
+    "marginal_utility": {
+      "name": "Marginal Utility",
+      "description": "First derivative of utility",
+      "latex_unicode": "𝐮'(c) = c^{-ρ}",
+      "latex_macros": "\\uPrime(\\cNrm) = \\cNrm^{-\\CRRA}",
+      "sympy_latex": "c^{- ρ}",
+      "sympy_repr": "Pow(Symbol('c', real=True, positive=True), Mul(Integer(-1), Symbol('ρ', real=True, positive=True)))"
+    },
+    "patience_factor": {
+      "name": "Absolute Patience Factor",
+      "description": "Key parameter for impatience conditions",
+      "latex_unicode": "Þ = (βR)^{1/ρ}",
+      "latex_macros": "\\AbsPatFac = (\\DiscFac \\Rfree)^{1/\\CRRA}",
+      "sympy_latex": "\\left(R β\\right)^{\\frac{1}{ρ}}",
+      "sympy_repr": "Pow(Mul(Symbol('R', real=True, positive=True), Symbol('β', real=True, positive=True)), Pow(Symbol('ρ', real=True, positive=True), Integer(-1)))"
+    },
+    "mpc_min": {
+      "name": "Minimum MPC",
+      "description": "MPC of perfect foresight consumer",
+      "latex_unicode": "𝛋_{min} = 1 - \\frac{Þ}{R}",
+      "latex_macros": "\\MPCmin = 1 - \\frac{\\AbsPatFac}{\\Rfree}",
+      "sympy_latex": "1 - \\frac{Þ}{R}",
+      "sympy_repr": "Add(Integer(1), Mul(Integer(-1), Pow(Symbol('R', real=True, positive=True), Integer(-1)), Symbol('Þ', real=True, positive=True)))"
+    },
+    "mpc_max": {
+      "name": "Maximum MPC",
+      "description": "Upper bound on MPC",
+      "latex_unicode": "𝛋_{max} = 1 - ℘^{1/ρ} \\frac{Þ}{R}",
+      "latex_macros": "\\MPCmax = 1 - \\WorstProb^{1/\\CRRA} \\frac{\\AbsPatFac}{\\Rfree}",
+      "sympy_latex": "1 - \\frac{Þ ℘^{\\frac{1}{ρ}}}{R}",
+      "sympy_repr": "Add(Integer(1), Mul(Integer(-1), Pow(Symbol('R', real=True, positive=True), Integer(-1)), Symbol('Þ', real=True, positive=True), Pow(Symbol('℘', real=True, positive=True), Pow(Symbol('ρ', real=True, positive=True), Integer(-1)))))"
+    },
+    "human_wealth": {
+      "name": "Human Wealth (Optimist)",
+      "description": "PDV of expected future income",
+      "latex_unicode": "h̄ = \\frac{Γ}{R - Γ}",
+      "latex_macros": "\\hNrmOpt = \\frac{\\PermGroFac}{\\Rfree - \\PermGroFac}",
+      "sympy_latex": "\\frac{Γ}{R - Γ}",
+      "sympy_repr": "Mul(Symbol('Γ', real=True, positive=True), Pow(Add(Symbol('R', real=True, positive=True), Mul(Integer(-1), Symbol('Γ', real=True, positive=True))), Integer(-1)))"
+    },
+    "consumption_optimist": {
+      "name": "Optimist Consumption",
+      "description": "Upper bound consumption function",
+      "latex_unicode": "𝐜̄(m) = 𝛋_{min} (m + h̄)",
+      "latex_macros": "\\cFuncOpt(\\mNrm) = \\MPCmin (\\mNrm + \\hNrmOpt)",
+      "sympy_latex": "𝛋_{min} \\left(h̄ + m\\right)",
+      "sympy_repr": "Mul(Symbol('𝛋_min', real=True, positive=True), Add(Symbol('h̄', real=True), Symbol('m', real=True, positive=True)))"
+    },
+    "consumption_pessimist": {
+      "name": "Pessimist Consumption",
+      "description": "Lower bound consumption function",
+      "latex_unicode": "𝐜̲(m) = 𝛋_{min} (m - m_{min})",
+      "latex_macros": "\\cFuncPes(\\mNrm) = \\MPCmin (\\mNrm - \\mNrmMin)",
+      "sympy_latex": "𝛋_{min} \\left(m - m_{min}\\right)",
+      "sympy_repr": "Mul(Symbol('𝛋_min', real=True, positive=True), Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True))))"
+    },
+    "moderation_ratio": {
+      "name": "Moderation Ratio",
+      "description": "Position between bounds (0 < 𝛚 < 1)",
+      "latex_unicode": "𝛚 = \\frac{𝐜̂ - 𝐜̲}{𝐜̄ - 𝐜̲}",
+      "latex_macros": "\\modRte = \\frac{\\cFuncReal - \\cFuncPes}{\\cFuncOpt - \\cFuncPes}",
+      "sympy_latex": "\\frac{𝐜̂ - 𝛋_{min} \\left(m - m_{min}\\right)}{𝛋_{min} \\left(h̄ + m\\right) - 𝛋_{min} \\left(m - m_{min}\\right)}",
+      "sympy_repr": "Mul(Add(Symbol('𝐜̂', real=True, positive=True), Mul(Integer(-1), Symbol('𝛋_min', real=True, positive=True), Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True))))), Pow(Add(Mul(Symbol('𝛋_min', real=True, positive=True), Add(Symbol('h̄', real=True), Symbol('m', real=True, positive=True))), Mul(Integer(-1), Symbol('𝛋_min', real=True, positive=True), Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True))))), Integer(-1)))"
+    },
+    "log_excess_resources": {
+      "name": "Log Excess Resources",
+      "description": "Transformed state variable",
+      "latex_unicode": "μ = \\log(m - m_{min})",
+      "latex_macros": "\\logmNrmEx = \\log(\\mNrm - \\mNrmMin)",
+      "sympy_latex": "\\log{\\left(m - m_{min} \\right)}",
+      "sympy_repr": "log(Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True))))"
+    },
+    "logit_moderation": {
+      "name": "Chi Function (Logit)",
+      "description": "Asymptotically linear transformation",
+      "latex_unicode": "𝛘 = \\log\\left(\\frac{𝛚}{1-𝛚}\\right)",
+      "latex_macros": "\\logitModRte = \\log\\left(\\frac{\\modRte}{1-\\modRte}\\right)",
+      "sympy_latex": "\\log{\\left(\\frac{𝛚}{1 - 𝛚} \\right)}",
+      "sympy_repr": "log(Mul(Symbol('𝛚', real=True, positive=True), Pow(Add(Integer(1), Mul(Integer(-1), Symbol('𝛚', real=True, positive=True))), Integer(-1))))"
+    },
+    "expit_moderation": {
+      "name": "Inverse Logit (Expit)",
+      "description": "Inverse chi transformation",
+      "latex_unicode": "𝛚 = \\frac{1}{1 + e^{-𝛘}}",
+      "latex_macros": "\\modRte = \\frac{1}{1 + e^{-\\logitModRte}}",
+      "sympy_latex": "\\frac{1}{1 + e^{- 𝛘}}",
+      "sympy_repr": "Pow(Add(Integer(1), exp(Mul(Integer(-1), Symbol('𝛘', real=True)))), Integer(-1))"
+    },
+    "consumption_reconstructed": {
+      "name": "Reconstructed Consumption",
+      "description": "Final consumption formula from Method of Moderation",
+      "latex_unicode": "𝐜̂(m) = 𝐜̲(m) + 𝛚̂ (𝐜̄(m) - 𝐜̲(m))",
+      "latex_macros": "\\cFuncReal(\\mNrm) = \\cFuncPes(\\mNrm) + \\hat{\\modRte} (\\cFuncOpt(\\mNrm) - \\cFuncPes(\\mNrm))",
+      "sympy_latex": "𝛋_{min} \\left(m - m_{min}\\right) + \\frac{𝛋_{min} \\left(h̄ + m\\right) - 𝛋_{min} \\left(m - m_{min}\\right)}{1 + e^{- 𝛘̂}}",
+      "sympy_repr": "Add(Mul(Symbol('𝛋_min', real=True, positive=True), Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True)))), Mul(Pow(Add(Integer(1), exp(Mul(Integer(-1), Symbol('𝛘̂', real=True)))), Integer(-1)), Add(Mul(Symbol('𝛋_min', real=True, positive=True), Add(Symbol('h̄', real=True), Symbol('m', real=True, positive=True))), Mul(Integer(-1), Symbol('𝛋_min', real=True, positive=True), Add(Symbol('m', real=True, positive=True), Mul(Integer(-1), Symbol('m_min', real=True)))))))"
+    },
+    "cusp_point": {
+      "name": "Cusp Point",
+      "description": "Where tight bound crosses pessimist",
+      "latex_unicode": "m^* = m_{min} + \\frac{𝛋_{min} Δh}{𝛋_{max} - 𝛋_{min}}",
+      "latex_macros": "\\mNrmCusp = \\mNrmMin + \\frac{\\MPCmin \\hNrmEx}{\\MPCmax - \\MPCmin}",
+      "sympy_latex": "m_{min} + \\frac{Δh 𝛋_{min}}{𝛋_{max} - 𝛋_{min}}",
+      "sympy_repr": "Add(Symbol('m_min', real=True), Mul(Symbol('Δh', real=True, positive=True), Symbol('𝛋_min', real=True, positive=True), Pow(Add(Symbol('𝛋_max', real=True, positive=True), Mul(Integer(-1), Symbol('𝛋_min', real=True, positive=True))), Integer(-1))))"
+    }
+  }
+}

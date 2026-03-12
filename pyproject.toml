@@ -19,6 +19,7 @@ dependencies = [
     "numba>=0.59.0",  # Ensure Python 3.11 compatibility
     "numpy>=2.0.2",
     "scipy>=1.15.3",
+    "sympy>=1.12",
     "voila>=0.5.8",
 ]
 
@@ -45,6 +46,10 @@ extend-select = [
   "I",        # isort
   "UP",       # pyupgrade
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# Notebooks have different import conventions
+"*.ipynb" = ["E402", "F404"]
 
 
 

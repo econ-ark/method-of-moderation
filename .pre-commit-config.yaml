@@ -3,13 +3,6 @@ ci:
   autofix_commit_msg: "style: pre-commit fixes"
 
 repos:
-  - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.14
-    hooks:
-      - id: pip-compile
-        args: [pyproject.toml, --output-file, requirements.txt]
-        files: ^(pyproject\.toml|requirements\.txt)$
-
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: "v6.0.0"
     hooks:
