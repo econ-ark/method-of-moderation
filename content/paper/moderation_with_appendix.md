@@ -1,5 +1,6 @@
 ---
-# Combined paper with appendix for PDF export (inherits title, keywords, bibliography from myst.yml)
+# Combined paper with appendix for PDF export (inherits keywords, bibliography from myst.yml)
+title: The Method of Moderation
 abstract: abstract.md
 parts:
   jel_codes: D14; C61; G11

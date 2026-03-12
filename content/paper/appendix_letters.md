@@ -6,6 +6,7 @@ abstract: |
   This appendix provides detailed mathematical derivations and technical results supporting the Method of Moderation. Topics include: value function transformations and their relationship to the inverse value function; explicit formulas for minimal and maximal marginal propensities to consume; cusp point calculations for tighter upper bounds; Hermite interpolation slope formulas and MPC derivations; patience conditions ensuring well-defined solutions; and extensions to stochastic returns with explicit formulas for portfolio problems.
 keywords:
   - Dynamic Stochastic Optimization
+  - Consumption-Saving Models
   - Numerical Methods
 parts:
   jel_codes: C63; D81; E21
@@ -33,7 +34,7 @@ The pessimist's human wealth (assuming $\tranShk_{t+n}=\tranShkMin~\forall~n>0$)
 
 The minimal MPC (perfect foresight consumer with horizon $T-t$) has three forms {cite:p}`Carroll2001MPCBound`: backward recursion $\MPCmin_{t}=\MPCmin_{t+1}/(\MPCmin_{t+1}+\AbsPatFac/\Rfree)$ with $\MPCmin_T=1$; forward sum $\MPCmin_{t}=(\sum_{n=0}^{T-t}(\AbsPatFac/\Rfree)^{n})^{-1}$; or infinite-horizon $\MPCmin=1-\AbsPatFac/\Rfree = 1-(\Rfree \DiscFac)^{1/\CRRA}/\Rfree$.
 
-The maximal MPC {cite:p}`CarrollToche2009` satisfies backward recursion $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) (1 + \MPCmax_{t+1})$ with $\MPCmax_T = 1$; forward sum $\MPCmax_{t} = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree) \sum_{n=0}^{T-t}\left(\WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)\right)^{n}$; or infinite-horizon $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$.
+The maximal MPC {cite:p}`CarrollToche2009` satisfies backward recursion $\MPCmax_{t}=\MPCmax_{t+1}/(\MPCmax_{t+1}+\WorstProb^{1/\CRRA}\AbsPatFac/\Rfree)$ with $\MPCmax_T=1$; forward sum $\MPCmax_{t}=(\sum_{n=0}^{T-t}(\WorstProb^{1/\CRRA}\AbsPatFac/\Rfree)^{n})^{-1}$; or infinite-horizon $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$.
 
 ## Asymptotic Linearity and Extrapolation
 
@@ -157,10 +158,10 @@ $$
 \Ex[\Risky^{1-\CRRA}] = \exp\left((1-\CRRA)\left(r+\equityPrem - \frac{\std_{\risky}^2}{2}\right) + \frac{(1-\CRRA)^2\std_{\risky}^2}{2}\right).
 $$
 
-Simplifying the variance terms: $(1-\CRRA)^2\std_{\risky}^2/2 - (1-\CRRA)\std_{\risky}^2/2 = (1-\CRRA)[(1-\CRRA)-1]\std_{\risky}^2/2 = (1-\CRRA)(-\CRRA)\std_{\risky}^2/2$, giving the final form
+Simplifying the variance terms: $(1-\CRRA)^2\std_{\risky}^2/2 - (1-\CRRA)\std_{\risky}^2/2 = (1-\CRRA)[(1-\CRRA)-1]\std_{\risky}^2/2 = -\CRRA(1-\CRRA)\std_{\risky}^2/2$, giving the final form
 
 $$
-\Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem) + (1-\CRRA)(1-2\CRRA)\std_{\risky}^2/2).
+\Ex[\Risky^{1-\CRRA}] = \exp\left((1-\CRRA)\left(r+\equityPrem - \CRRA\std_{\risky}^2/2\right)\right).
 $$
 
 [^lognormal-returns-intuition]:
