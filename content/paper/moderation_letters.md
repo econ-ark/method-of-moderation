@@ -222,14 +222,18 @@ This ratio measures how far consumption per unit of wealth exceeds the optimist'
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-The MoM also contributes to literature which aims to improve the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. Table 1 demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+The MoM also contributes to literature which aims to improve the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. {ref}`tbl:approx-errors` demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+
+:::{table} Maximum absolute approximation errors by interval. Orders of magnitude in parentheses.
+:label: tbl:approx-errors
+:align: center
 
 | Method   | $[m_0,m_1]$ | $[m_1,m_2]$  | $[m_2,m_3]$ | $[m_3,m_4]$ | $[m_4,\overline{m}]$|
 | :-------- | :-------: | :--------: | :-------: | :--------: | :-------: |
 | EGM  | 8.6(-3)   | 1.8(-4) | 2.5(-5) | 7.3(-6) | 1.1(-1) |
 | MoM | 2.9(-3)    | 4.3(-6) | 6.6(-7) | 1.3(-7) | 2.4(-3) |
 
-Table 1: Approximation errors. Orders of magnitude in parentheses.
+:::
 
 ## Value Function
 
