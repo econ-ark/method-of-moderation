@@ -39,6 +39,25 @@ For deep understanding, examine:
 1. **`code/moderation.py`** - The ~150-line docstring provides a complete mathematical specification
 2. **`content/paper/moderation_letters.md`** - The full paper in MyST Markdown
 3. **`code/method-of-moderation.ipynb`** - Working examples with 13 figures
+4. **`code/method-of-moderation-symbolic.ipynb`** - Symbolic verification of paper derivations
+
+## Machine-Readable Metadata
+
+For programmatic access, see the `metadata/` directory:
+
+- **`metadata/algorithm.json`** - Structured algorithm steps
+- **`metadata/parameters.json`** - Parameter definitions with bounds and units
+- **`metadata/equations.json`** - Key equations in LaTeX, SymPy, and Python formats
+- **`metadata/equations.py`** - Live SymPy symbolic equations (importable)
+
+## Benchmarking
+
+To track reproduction times, see `reproduce/benchmarks/`:
+
+```bash
+./reproduce/benchmarks/benchmark.sh min   # Quick benchmark
+./reproduce/benchmarks/benchmark.sh full  # Full benchmark
+```
 
 ## Reproduction
 
