@@ -226,8 +226,8 @@ The MoM also contributes to literature which aims to improve the precision of dy
 
 | Method   | $[m_0,m_1]$ | $[m_1,m_2]$  | $[m_2,m_3]$ | $[m_3,m_4]$ | $[m_4,\overline{m}]$|
 | :-------- | :-------: | :--------: | :-------: | :--------: | :-------: |
-| EGM  | 8.5(-2)   | 1.8(-4) | 2.5(-5) | 7.3(-6) | 1.1(-1) |
-| MoM | 2.9(-3)    | 4.3(-9) | 6.6(-7) | 1.3(-7) | 2.4(-3) |
+| EGM  | 8.6(-3)   | 1.8(-4) | 2.5(-5) | 7.3(-6) | 1.1(-1) |
+| MoM | 2.9(-3)    | 4.3(-6) | 6.6(-7) | 1.3(-7) | 2.4(-3) |
 
 Table 1: Approximation errors. Orders of magnitude in parentheses.
 
