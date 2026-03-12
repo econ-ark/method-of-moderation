@@ -46,7 +46,7 @@ project:
     "\\cLvl": "\\mathbf{c}" # consumption level
     "\\mLvl": "\\mathbf{m}" # market resources (cash-on-hand)
     "\\pLvl": "\\mathbf{p}" # permanent labor income level
-    "\\yLvl": "\\mathbf{y}" # non-capital income
+    "\\yLvl": "\\mathbf{y}" # labor income
 
     # ============================================================
     # STATE VARIABLES - NORMALIZED
@@ -57,7 +57,7 @@ project:
     "\\hNrm": "h" # normalized human wealth
     "\\mNrm": "m" # normalized market resources
     "\\pNrm": "p" # normalized permanent income
-    "\\yNrm": "y" # normalized non-capital income
+    "\\yNrm": "y" # normalized labor income
 
     # ============================================================
     # STATE VARIABLES - BOUNDS AND CONSTRAINTS

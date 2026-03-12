@@ -296,7 +296,8 @@ MATPLOTLIB_STYLE = {
     # Professional light panel background for subtle visual refinement
     "axes.facecolor": ARK_PANEL_LIGHT,  # Clean, light background
     "figure.facecolor": "white",
-    "figure.dpi": 110,
+    "figure.dpi": 150,
+    "savefig.dpi": 300,  # High resolution for PDF/print quality
     # --- Spines ---
     "axes.spines.top": False,
     "axes.spines.right": False,
