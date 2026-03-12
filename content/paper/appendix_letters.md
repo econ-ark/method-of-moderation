@@ -127,6 +127,7 @@ Inverting these approximations yields
 
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
 
+(stochastic-returns-mgf-derivation)=
 ## I.I.D. Stochastic Returns: MPC Derivation
 
 The fact that a linear consumption function with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ satisfies the Euler equation with i.i.d. returns and no labor income can be derived by the method of undetermined coefficients.  In particular, assume that $\cFuncOpt(\mNrm) = \mNrm\MPCmin$, with a time-independent MPC $\MPCmin$ to be determined.  Substituting this into the Euler equation, we have

@@ -1,9 +1,11 @@
 ---
-# Page-specific frontmatter (inherits title, keywords, bibliography from myst.yml)
+# Page-specific frontmatter (inherits keywords, bibliography from myst.yml)
+title: The Method of Moderation
 abstract: abstract.md
 parts:
   jel_codes: D14; C61; G11
 exports:
+  - cff
   - format: tex+pdf
     template: arxiv_two_column
     output: ../exports/moderation_letters.pdf
@@ -49,7 +51,7 @@ This utility function satisfies prudence ($\uFunc''' > 0$), which induces precau
 \max_{\cNrm_t,\aNrm_t}~\Ex_{t}\left[\sum_{n=0}^{T-t}\DiscFac^{n} \uFunc(\cNrm_{t+n})\right]
 ```
 
-subject to $\aNrm_{t} + \cNrm_{t} = \mNrm_{t}$, where $\mNrm$ denotes market resources and $\aNrm$ denotes assets. We focus on resources of the form $\mNrm_{t+1} = \aNrm_{t}\Rfree_{t+1} + \yNrm_{t+1}$, where $\Rfree_{t+1}$ denotes the interest rate, and $\yNrm_{t+1}$ labor income.  Initially we take $\Rfree_{t+1}$ to be deterministic, and relax this later. 
+subject to $\aNrm_{t} + \cNrm_{t} = \mNrm_{t}$, where $\mNrm$ denotes market resources and $\aNrm$ denotes assets. We focus on resources of the form $\mNrm_{t+1} = \aNrm_{t}\Rfree_{t+1} + \yNrm_{t+1}$, where $\Rfree_{t+1}$ denotes the interest rate, and $\yNrm_{t+1}$ labor income.  Initially we take $\Rfree_{t+1}$ to be deterministic, and relax this later.
 
 While our method can be adapted to a range of stochastic labor income processes, to fix ideas we suppose income evolves via the Friedman-Muth process ({cite:t}`Friedman1957` distinguished permanent from transitory income; {cite:t}`Muth1960` provided the stochastic framework).  That is, $\yNrm_{t+1} = \pNrm_{t+1}\tranShk_{t+1}$ where $\pNrm$ denotes permanent labor income and $\tranShk_{t+1}$ a transitory component.  Permanent income growth is given by $\pNrm_{t+1} = \pNrm_{t} \PermGroShk_{t+1}$, $\PermGroShk_{t+1} = \PermGroFac_{t+1} \permShk_{t+1}$. Here $\PermGroFac_{t+1}$ is deterministic income growth, while $\permShk_{t+1}$ are permanent shocks with mean unity and bounded support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$.  Transitory shocks $\tranShk_{t+1}$ take value $0$ with probability $\WorstProb > 0$ (unemployment) or $\tranShkEmp_{t+1}/(1-\WorstProb)$ otherwise, with $\Ex_t[\tranShkEmp_{t+1}]=1$.
 
@@ -123,7 +125,7 @@ The 'optimist,' on the other hand, pretends that there is no uncertainty about f
 
 ## The Moderation Ratio
 
-Whereas the pessimist believes that they need to save enough to smooth consumption through guaranteed adverse future income outcomes, a realist needs only save enough to insure against this eventuality (while reoptimizing each period as information becomes available).  However, the adverse outcome remains a possibility even for a high-resource individual, necessitating some degree of precautionary saving.  It therefore seems clear that the spending of the realist will be strictly greater than that of the pessimist and strictly less than that of the optimist, as shown in {ref}`fig:IntExpFOCInvPesReaOptNeedHi`. 
+Whereas the pessimist believes that they need to save enough to smooth consumption through guaranteed adverse future income outcomes, a realist needs only save enough to insure against this eventuality (while reoptimizing each period as information becomes available).  However, the adverse outcome remains a possibility even for a high-resource individual, necessitating some degree of precautionary saving.  It therefore seems clear that the spending of the realist will be strictly greater than that of the pessimist and strictly less than that of the optimist, as shown in {ref}`fig:IntExpFOCInvPesReaOptNeedHi`.
 
 :::{figure} #fig:truth-bounded-by-theory
 :label: fig:IntExpFOCInvPesReaOptNeedHi

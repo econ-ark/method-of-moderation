@@ -78,14 +78,6 @@ project:
   downloads:
     - file: content/exports/moderation_with_appendix.pdf
       title: Download PDF
-  exports:
-    - cff
-    - format: tex+pdf
-      template: arxiv_two_column
-      output: content/exports/moderation_with_appendix.pdf
-      articles:
-        - content/paper/moderation_with_appendix.md
-
   toc:
     - file: content/paper/moderation_letters.md
     - file: content/paper/appendix_letters.md
