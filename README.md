@@ -26,7 +26,8 @@ This project is structured as a [REMARK](https://github.com/econ-ark/REMARK) (Re
 
 In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A realist (someone who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between pessimist's and the optimist's. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
 
-**Keywords**: Dynamic Stochastic Optimization
+**Keywords**: Dynamic Stochastic Optimization, Consumption-Saving Models, Numerical Methods
+
 **JEL Classification**: D14; C61; G11
 
 ## Content

@@ -68,7 +68,7 @@ Transform the moderation ratio using the logit function:
 ```
 
 **Key property**: The function `χ(μ)` is asymptotically linear as `μ → ∞`.
-This means `χ'(μ) → 0`, which prevents extrapolation errors.
+The limiting slope `χ'(μ) → s ≥ 0` may vanish in theory, but is strictly positive on finite grids. Linear extrapolation using the boundary slope preserves `ω ∈ (0,1)` throughout.
 
 ### Step 6: Interpolate χ Function
 

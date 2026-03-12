@@ -1,4 +1,4 @@
-# README_IF_YOU_ARE_AN_AI
+# AI-Readable Documentation
 
 This directory contains documentation specifically designed for AI systems and search engines trying to understand the content of this repository.
 
@@ -52,11 +52,11 @@ For programmatic access, see the `metadata/` directory:
 
 ## Benchmarking
 
-To track reproduction times, see `reproduce/benchmarks/`:
+To track reproduction times, see `.agents/reproduce/benchmarks/`:
 
 ```bash
-./reproduce/benchmarks/benchmark.sh min   # Quick benchmark
-./reproduce/benchmarks/benchmark.sh full  # Full benchmark
+./.agents/reproduce/benchmarks/benchmark.sh --min   # Quick benchmark
+./.agents/reproduce/benchmarks/benchmark.sh         # Full benchmark
 ```
 
 ## Reproduction

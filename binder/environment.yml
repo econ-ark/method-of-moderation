@@ -1,7 +1,7 @@
 # Binder environment configuration
 # Single Source of Truth: pyproject.toml + uv.lock (dependencies installed via uv in postBuild)
 #
-# This minimal conda environment provides Python 3.12, pip, and Node.js 18.
+# This minimal conda environment provides Python 3.12, pip, and Node.js 22.
 # All project dependencies are installed from pyproject.toml using uv.
 
 name: moderation
@@ -12,4 +12,4 @@ channels:
 dependencies:
   - python=3.12
   - pip
-  - nodejs=18 # Required by MyST for documentation
+  - nodejs=22 # Required by MyST for documentation

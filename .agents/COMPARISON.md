@@ -104,7 +104,7 @@ This document compares the Method of Moderation to standard numerical methods fo
 
 ## Numerical Accuracy Comparison
 
-For the baseline parameterization (ρ=2, β=0.96, R=1.03):
+For the baseline parameterization (ρ=2, β=0.96, R=1.02):
 
 | Method | Max Error at m=10 | Max Error at m=50 | Max Error at m=100 |
 |--------|------------------|------------------|-------------------|

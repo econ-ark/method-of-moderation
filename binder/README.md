@@ -10,21 +10,21 @@ The binder setup draws from the same source as Docker and DevContainer:
 | Component           | Source                                             |
 | ------------------- | -------------------------------------------------- |
 | Python dependencies | `pyproject.toml` + `uv.lock` (installed via `uv`)  |
-| System dependencies | Same as `Dockerfile` (Node.js 18, curl, git, make) |
+| System dependencies | Same as `Dockerfile` (Node.js 22, curl, git, make) |
 | Environment setup   | Mirrors `.agents/reproduce/docker/setup.sh`                |
 
 ## Files
 
 | File              | Purpose                                             |
 | ----------------- | --------------------------------------------------- |
-| `environment.yml` | Conda env (Python 3.12, pip, Node.js 18)            |
+| `environment.yml` | Conda env (Python 3.12, pip, Node.js 22)            |
 | `apt.txt`         | System packages (curl, git, make)                   |
 | `postBuild`       | Installs uv and project dependencies                |
 | `README.md`       | This file                                           |
 
 ## How It Works
 
-1. **Binder reads `environment.yml`** → Creates conda environment with Python 3.12 and Node.js 18
+1. **Binder reads `environment.yml`** → Creates conda environment with Python 3.12 and Node.js 22
 2. **Binder reads `apt.txt`** → Installs system packages via apt-get
 3. **Binder runs `postBuild`** → Installs uv and all Python dependencies
 
@@ -62,24 +62,25 @@ jupyter lab
 ## Relationship to Other Environments
 
 ```
-                ┌─────────────────────────┐
-                │  pyproject.toml         │  ← Single Source of Truth
-                │  uv.lock                │    (dependencies + lock)
-                └───────────┬─────────────┘
+              ┌───────────────────────────┐
+              │  pyproject.toml           │  ← Single Source of Truth
+              │  uv.lock                  │    (dependencies + lock)
+              └─────────────┬─────────────┘
                             │
       ┌─────────────────────┼─────────────────────┐
       │                     │                     │
       ▼                     ▼                     ▼
 ┌───────────────┐   ┌─────────────────┐   ┌─────────────────┐
-│   Dockerfile  │   │  devcontainer   │   │     Binder      │
-│               │   │     .json       │   │   postBuild     │
+│  Dockerfile   │   │  devcontainer   │   │     Binder      │
+│               │   │    .json        │   │   postBuild     │
 └───────┬───────┘   └────────┬────────┘   └────────┬────────┘
         │                    │                     │
         ▼                    ▼                     ▼
 ┌───────────────┐   ┌─────────────────┐   ┌─────────────────┐
-│ .agents/reproduce/    │   │ .agents/reproduce/      │   │ uv export       │
-│ docker/       │   │ docker/         │   │ --frozen        │
-│ setup.sh      │   │ setup.sh        │   │ + uv pip install│
+│ .agents/      │   │ .agents/        │   │ uv export       │
+│ reproduce/    │   │ reproduce/      │   │ --frozen        │
+│ docker/       │   │ docker/         │   │ + uv pip install│
+│ setup.sh      │   │ setup.sh        │   │                 │
 └───────────────┘   └─────────────────┘   └─────────────────┘
 ```
 

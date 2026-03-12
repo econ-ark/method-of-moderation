@@ -77,7 +77,7 @@ ensure_uv_in_path() {
 
 # Detect workspace directory from script path
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
-WORKSPACE_DIR="${WORKSPACE_DIR:-$(cd "$SCRIPT_DIR/../.." && pwd)}"
+WORKSPACE_DIR="${WORKSPACE_DIR:-$(cd "$SCRIPT_DIR/../../.." && pwd)}"
 
 # Get platform-specific venv path
 VENV_PATH=$(get_platform_venv_path "$WORKSPACE_DIR")

@@ -129,7 +129,7 @@ This document explains what each file in the repository does.
 2. Run tests
 3. Build HTML only
 
-### `reproduce/benchmarks/`
+### `.agents/reproduce/benchmarks/`
 **Purpose**: Benchmarking infrastructure
 
 **Files**:
@@ -200,5 +200,5 @@ This document explains what each file in the repository does.
 ### `.devcontainer/devcontainer.json`
 **Purpose**: VS Code DevContainer configuration
 
-### `reproduce/docker/setup.sh`
+### `.agents/reproduce/docker/setup.sh`
 **Purpose**: Shared setup script for Docker/DevContainer

@@ -12,7 +12,7 @@ echo "🚀 Setting up Method of Moderation Binder environment..."
 # Binder clones the repo to the user's home directory
 REPO_DIR="${HOME}"
 
-# Node.js 18 is installed via environment.yml (conda)
+# Node.js 22 is installed via environment.yml (conda)
 echo "✓ Node.js $(node --version)"
 echo "✓ npm $(npm --version)"
 

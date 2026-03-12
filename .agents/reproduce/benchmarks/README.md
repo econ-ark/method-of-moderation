@@ -17,26 +17,26 @@ Track and document the time required to reproduce Method of Moderation results a
 
 ```bash
 # Benchmark minimal reproduction (<5 minutes)
-./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min
+./.agents/reproduce/benchmarks/benchmark.sh --min
 
 # Benchmark full reproduction (all tests, paper, notebooks)
-./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh
+./.agents/reproduce/benchmarks/benchmark.sh
 
 # With notes
-./README_IF_YOU_ARE_AN_AI/benchmarks/benchmark.sh --min --notes "Testing M1 Max performance"
+./.agents/reproduce/benchmarks/benchmark.sh --min --notes "Testing M1 Max performance"
 ```
 
 ### Viewing Results
 
 ```bash
 # View latest benchmark
-cat README_IF_YOU_ARE_AN_AI/benchmarks/results/latest.json | jq .
+cat .agents/reproduce/benchmarks/results/latest.json | jq .
 
 # View system info from latest
-cat README_IF_YOU_ARE_AN_AI/benchmarks/results/latest.json | jq '.system'
+cat .agents/reproduce/benchmarks/results/latest.json | jq '.system'
 
 # Check duration
-cat README_IF_YOU_ARE_AN_AI/benchmarks/results/latest.json | jq '.duration_seconds'
+cat .agents/reproduce/benchmarks/results/latest.json | jq '.duration_seconds'
 ```
 
 ## Benchmark Format
@@ -54,7 +54,7 @@ Each benchmark includes:
 ## Directory Structure
 
 ```
-README_IF_YOU_ARE_AN_AI/benchmarks/
+.agents/reproduce/benchmarks/
 ├── README.md                    # This file
 ├── BENCHMARKING_GUIDE.md        # Detailed usage guide
 ├── schema.json                  # JSON schema for validation

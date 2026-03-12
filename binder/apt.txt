@@ -6,4 +6,4 @@ curl
 git
 make
 
-# Node.js 18 is installed via environment.yml (conda-forge)
+# Node.js 22 is installed via environment.yml (conda-forge)
