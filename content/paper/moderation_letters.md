@@ -195,7 +195,9 @@ Extrapolated $\cFuncApprox$ Constructed Using the Method of Moderation
 
 ## A Tighter Upper Bound
 
-{cite:t}`CarrollShanker2024` derives an explicit formula for the MPC at the natural borrowing constraint: $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$ where $\WorstProb$ is the unemployment probability derived by {cite:t}`CarrollToche2009`. This provides a tighter upper bound near the constraint, extending the explicit limiting MPC formulas established in buffer-stock theory by {cite:t}`MaToda2021SavingRateRich`. Strict concavity of the consumption function implies $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$ for low wealth, while the optimist's bound $\cFuncReal(\mNrm) < \cFuncOpt(\mNrm) = (\mNrmEx+\hNrmEx)\MPCmin$ is tighter for high wealth.
+The method described above does not guarantee that the approximated consumption function respects the constraint $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$, where $\MPCmax$ is the MPC at the natural borrowing constraint. Near the constraint, the optimist's bound $\cFuncOpt$ becomes loose because it is calibrated to the low MPC that prevails at high wealth. A tighter upper bound for low-wealth consumers eliminates this slack.
+
+{cite:t}`CarrollShanker2024` derives an explicit formula for this maximal MPC: $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$ where $\WorstProb$ is the unemployment probability derived by {cite:t}`CarrollToche2009`, extending the explicit limiting MPC formulas established in buffer-stock theory by {cite:t}`MaToda2021SavingRateRich`. Strict concavity of the consumption function implies $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$ for low wealth, while the optimist's bound $\cFuncReal(\mNrm) < \cFuncOpt(\mNrm) = (\mNrmEx+\hNrmEx)\MPCmin$ is tighter for high wealth.
 
 :::{figure} #fig:mom-consumption-function
 :label: fig:IntExpFOCInvPesReaOptNeed45
@@ -222,7 +224,7 @@ For $\mNrm < \mNrmCusp$, define the low-resource moderation ratio using the tigh
 
 This ratio measures how far consumption per unit of wealth exceeds the optimist's MPC, relative to the maximum possible excess. Applying the logit transformation and interpolating as before yields consumption satisfying both upper bounds throughout.
 
-For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation (see Section 4.3) matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
+For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation {cite:p}`Fritsch1980` (see Section 4.3) matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
 The MoM also contributes to literature which aims to improve the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. {ref}`tbl:approx-errors` demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the average absolute difference between the true consumption function and each approximation.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
 
@@ -239,7 +241,17 @@ The MoM also contributes to literature which aims to improve the precision of dy
 
 ## Value Function
 
-Often it is useful to know the value function as well as the consumption rule. Fortunately, many of the tricks used when solving for the consumption rule have a direct analogue in approximation of the value function. Define the inverse value function transformation $\vInvOpt = ((1-\CRRA)\vFuncOpt)^{1/(1-\CRRA)}$, which under perfect foresight equals $(\mNrmEx+\hNrmEx)\MPCmin^{-\CRRA/(1-\CRRA)}$ (linear in market resources). Analogously to the consumption moderation ratio, we define a value moderation ratio $\valModRteReal$ that measures the proximity of the realist's inverse value to the optimist's (see equation {eq}`eq:valModRteReal` in the Appendix for the precise definition). The logit transformation $\logitValModRteReal$ is applied as before. Interpolate $\logitValModRteReal$ at gridpoints and invert to obtain $\vFuncReal = \uFunc(\vInvReal)$.
+Often it is useful to know the value function as well as the consumption rule. Fortunately, many of the tricks used when solving for the consumption rule have a direct analogue in approximation of the value function. Define the inverse value function transformation
+
+$$
+\vInvOpt = \left((1-\CRRA)\vFuncOpt\right)^{1/(1-\CRRA)}
+$$
+
+which under perfect foresight equals $(\mNrmEx+\hNrmEx)\MPCmin^{-\CRRA/(1-\CRRA)}$ (linear in market resources). Analogously to the consumption moderation ratio, we define a value moderation ratio $\valModRteReal$ that measures the proximity of the realist's inverse value to the optimist's (see equation {eq}`eq:valModRteReal` in the Appendix for the precise definition). The logit transformation $\logitValModRteReal$ is applied as before. Interpolate $\logitValModRteReal$ at gridpoints and invert to obtain
+
+$$
+\vFuncReal = \uFunc(\vInvReal).
+$$
 
 ## Hermite Interpolation
 
