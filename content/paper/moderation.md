@@ -737,7 +737,7 @@ showed that for a consumer without labor income (or with perfectly forecastable
 labor income) the consumption function is linear, with an MPC.[^crra-rate-risk]
 
 [^crra-rate-risk]:
-    The Merton-Samuelson rule implies linear consumption $\cFunc(\mNrm) = \MPC\,\mNrm$ with $\MPC$ from {eq}`eq:MPCExact`. For lognormal $\log \Risky \sim \Nrml(r+\equityPrem-\std_{\risky}^{2}/2,\std_{\risky}^{2})$, the MGF yields $\Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem) + (1-\CRRA)(1-2\CRRA)\std_{\risky}^{2}/2)$. This extends to our framework by substituting stochastic-return MPC for perfect foresight MPC. See {cite:t}`CRRA-RateRisk,BBZ2016SkewedWealth`.
+    The Merton-Samuelson rule implies linear consumption $\cFunc(\mNrm) = \MPC\,\mNrm$ with $\MPC$ from {eq}`eq:MPCExact`. For lognormal $\log \Risky \sim \Nrml(r+\equityPrem-\std_{\risky}^{2}/2,\std_{\risky}^{2})$, the MGF yields $\Ex[\Risky^{1-\CRRA}] = \exp((1-\CRRA)(r+\equityPrem - \CRRA\std_{\risky}^{2}/2))$. This extends to our framework by substituting stochastic-return MPC for perfect foresight MPC. See {cite:t}`CRRA-RateRisk,BBZ2016SkewedWealth`.
 
 ```{math}
 :label: eq:MPCExact
