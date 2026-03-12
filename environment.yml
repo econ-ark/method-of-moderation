@@ -1,0 +1,23 @@
+# Notebook.link environment (JupyterLite / emscripten-forge)
+#
+# This file is read by notebook.link to create a browser-based WASM environment.
+# It is SEPARATE from binder/environment.yml (which configures MyBinder/repo2docker).
+#
+# Limitations of the WASM environment:
+#   - numba is not available (no JIT compilation in browser)
+#   - econ-ark (HARK) requires numba, so full model execution is not possible
+#   - Use MyBinder or Docker for full reproducibility
+#
+# Available packages are from emscripten-forge (WASM builds of conda packages).
+
+name: moderation
+channels:
+  - emscripten-forge
+  - conda-forge
+dependencies:
+  - xeus-python
+  - numpy
+  - scipy
+  - matplotlib
+  - sympy
+  - ipywidgets

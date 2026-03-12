@@ -1,8 +1,10 @@
-# Binder environment configuration
-# Single Source of Truth: pyproject.toml + uv.lock (dependencies installed via uv in postBuild)
+# MyBinder / repo2docker environment (Docker-based)
+#
+# This file is read by MyBinder and repo2docker to create a Docker container.
+# It is SEPARATE from the root environment.yml (which configures notebook.link).
 #
 # This minimal conda environment provides Python 3.12, pip, and Node.js 22.
-# All project dependencies are installed from pyproject.toml using uv.
+# All project dependencies are installed from pyproject.toml by postBuild using uv.
 
 name: moderation
 channels:

@@ -2,6 +2,7 @@
 
 [![Actions Status][actions-badge]][actions-link]
 [![Binder][binder-badge]][binder-link]
+[![notebook.link](https://img.shields.io/badge/launch-notebook.link-E66581.svg)](https://notebook.link/github/econ-ark/method-of-moderation/)
 [![GitHub Discussion][github-discussions-badge]][github-discussions-link]
 [![REMARK](https://img.shields.io/badge/REMARK-v1.0.0-blue)](https://github.com/econ-ark/REMARK)
 
