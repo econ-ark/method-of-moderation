@@ -1,12 +1,10 @@
 ---
-# MyST frontmatter (inherits authors, bibliography from myst.yml)
-title: Illustrative Notebook
-short_title: Notebook
-description: A pedagogical introduction to the Method of Moderation with interactive code examples.
-# Jupytext configuration
 jupyter:
+  description: A pedagogical introduction to the Method of Moderation with interactive
+    code examples.
   jupytext:
     formats: ipynb,md
+    notebook_metadata_filter: title,short_title,description,-language_info
     text_representation:
       extension: .md
       format_name: markdown
@@ -16,6 +14,8 @@ jupyter:
     display_name: .venv
     language: python
     name: python3
+  short_title: Notebook
+  title: Illustrative Notebook
 ---
 
 (notebook:illustrative)=
