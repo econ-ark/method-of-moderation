@@ -52,12 +52,21 @@ Classes
 IndShockEGMConsumerType : HARK consumer type using standard endogenous grid method
     Baseline implementation for comparison with Method of Moderation
 IndShockMoMConsumerType : HARK consumer type using Method of Moderation
-    Superior implementation with excellent extrapolation properties
+    Primary implementation with excellent extrapolation properties
+IndShockMoMCuspConsumerType : MoM with three-piece cusp approximation
+    Extension that uses the tighter MPCmax bound below the cusp point
+IndShockMoMStochasticRConsumerType : MoM under stochastic returns
+    Extension for problems with risky rate of return; uses the
+    Merton-Samuelson linear consumption rule for the optimist and pessimist
+TransformedFunctionMoM : Generalized moderated-function wrapper (consumption or value)
+TransformedFunctionMoMCusp : Three-piece moderated-function wrapper for the cusp variant
 
 Core Solvers
 ------------
 endogenous_grid_method : Standard EGM solver (baseline for comparison)
 method_of_moderation : Method of Moderation solver (primary implementation)
+method_of_moderation_cusp : MoM solver with three-piece cusp approximation
+method_of_moderation_stochastic_r : MoM solver for stochastic-returns problems
 
 Helper Functions
 ----------------
@@ -71,7 +80,7 @@ Mathematical Utility Functions
 log_mnrm_ex : Log excess market resources transformation mu = log(m - m_min)
 moderate : Moderation ratio calculation omega = (c_real - c_pes)/(c_opt - c_pes)
 logit_moderate : Asymptotically linear transformation chi = log(omega/(1-omega))
-expit_moderate : Inverse chi transformation omega = 1/(1 + exp(chi))
+expit_moderate : Inverse chi transformation omega = 1/(1 + exp(-chi))
 TransformedFunctionMoM : Generalized function transformer using Method of Moderation
 
 Numerical Stability Features
@@ -110,10 +119,10 @@ References
 
 Notes
 -----
-All consumption functions include auxiliary bounds (cOptFunc, cPesFunc, cTightFunc)
-to enable Method of Moderation analysis and comparison across solution methods.
-These bounds correspond to the optimist, pessimist, and tighter upper bound
-consumption functions described in the paper.
+Solutions expose the analytical bounds as nested attributes: `solution.Optimist`,
+`solution.Pessimist`, and `solution.TighterUpperBound` (each carrying its own
+`cFunc`). These bounds correspond to the optimist, pessimist, and tighter
+upper bound consumption functions described in the paper.
 
 """
 
@@ -311,7 +320,7 @@ def _build_cfunc_mom(
     """Construct consumption function for MoM path (chi/omega over mu + TransformedFunctionMoM)."""
     # mu grid and derivative inputs
     mNrmEx = mNrm - mNrmMin
-    hNrmEx = hNrm + mNrmMin
+    hNrmEx = hNrm + mNrmMin  # = hNrmOpt - hNrmPes (eq:ExcessDef); mNrmMin = -hNrmPes
     mu = log_mnrm_ex(mNrm, mNrmMin)
 
     # Moderation ratio (always computed)
@@ -426,13 +435,17 @@ def _build_vfunc_mom(
 ):
     """Construct beginning-of-period value function for MoM path via chi/omega over mu."""
     mNrmEx = mNrm - mNrmMin
-    hNrmEx = hNrm + mNrmMin
+    hNrmEx = hNrm + mNrmMin  # = hNrmOpt - hNrmPes (eq:ExcessDef); mNrmMin = -hNrmPes
     mu = log_mnrm_ex(mNrm, mNrmMin)
 
     vNvrsOptFunc = optimist.vFunc.vFuncNvrs
     vNvrsPesFunc = pessimist.vFunc.vFuncNvrs
 
     modRte = moderate(mNrm, vNvrsOptFunc, vNvrs, vNvrsPesFunc)
+    # Clip to (eps, 1-eps) so logit_moderate does not see omega = 0 or 1 at the
+    # borrowing constraint (would yield -inf and a 0 denominator below).
+    eps = 1e-10
+    modRte = np.clip(modRte, eps, 1.0 - eps)
     MPCminNvrs = MPCmin ** (-CRRA / (1.0 - CRRA))
     modRteMu = mNrmEx * (vNvrsP - MPCminNvrs) / (hNrmEx * MPCminNvrs)
     logitModRte = logit_moderate(modRte)
@@ -663,14 +676,13 @@ def prepare_to_solve(
         - BoroCnstNat (float): Natural borrowing constraint
         - mNrmMin (float): Minimum market resources this period
         - MPCmin (float): Lower bound on marginal propensity to consume
-        - MPCmaxUnc (float): Upper bound on MPC (unconstrained case)
-        - MPCmax (float): Upper bound on MPC (constrained if needed)
+        - MPCmax (float): Upper bound on MPC (1.0 when an artificial constraint
+          binds, otherwise the unconstrained `calc_mpc_max` value)
 
     Notes
     -----
-    This function eliminates ~40 lines of repeated code between the two solvers
-    while ensuring identical parameter calculations. All computations follow
-    the standard HARK conventions for consumption-saving models.
+    All computations follow the standard HARK conventions for consumption-saving
+    models.
 
     """
     # Effective discount factor
@@ -837,7 +849,6 @@ def solve_egm_step(
 
     Notes
     -----
-    This function eliminates ~15 lines of repeated code between the two solvers.
     The returned grids form the basis for consumption function interpolation in
     both standard EGM and Method of Moderation approaches.
 
@@ -939,8 +950,7 @@ def construct_value_functions(
 
     Notes
     -----
-    This function consolidates ~25 lines of repeated value function construction
-    code between the two solvers. The inverse utility transformation is essential
+    The inverse utility transformation is essential
     for HARK's numerical stability, particularly near borrowing constraints where
     the value function becomes nearly linear.
 
@@ -1127,10 +1137,9 @@ def endogenous_grid_method(
     -------
     solution_ : ConsumerSolution
         Solution to this period's consumption-saving problem with income risk.
-        Includes auxiliary consumption functions for Method of Moderation bounds:
-        - cOptFunc: Optimist (perfect foresight) consumption function
-        - cPesFunc: Pessimist (worst-case) consumption function
-        - cTightFunc: Tighter upper bound consumption function
+        Carries the analytical bounds for Method of Moderation comparison as
+        nested attributes: `solution.Optimist.cFunc`, `solution.Pessimist.cFunc`,
+        and `solution.TighterUpperBound.cFunc`.
 
     Notes
     -----
@@ -1285,9 +1294,11 @@ class IndShockEGMConsumerType(IndShockConsumerType):
 
     Notes
     -----
-    Solutions include auxiliary consumption functions (cOptFunc, cPesFunc,
-    cTightFunc) to enable direct comparison with Method of Moderation results
-    and to demonstrate the theoretical bounds described in the paper.
+    Solutions expose the analytical bounds as nested attributes
+    (`solution.Optimist.cFunc`, `solution.Pessimist.cFunc`,
+    `solution.TighterUpperBound.cFunc`) to enable direct comparison with
+    Method of Moderation results and to illustrate the theoretical bounds
+    described in the paper.
 
     """
 
@@ -1382,11 +1393,19 @@ def moderate(m, f_opt, f_real, f_pess):
     Parameters
     ----------
     m : float or array
-        Market resources (cash-on-hand) where functions are evaluated
+        Market resources (cash-on-hand) where functions are evaluated. When
+        `f_real` is an already-evaluated array, `m` must contain the same
+        gridpoints `f_real` was evaluated on, since `f_opt` and `f_pess` are
+        called on `m` to recover the bounds at those locations.
     f_opt : callable
         Optimist function (upper bound, perfect foresight behavior)
     f_real : float, array, or callable
-        Realist function values (actual optimal behavior under uncertainty)
+        Realist function values. Two calling conventions are supported:
+        (1) a callable that gets invoked as `f_real(m)`; or
+        (2) an array of values already evaluated at `m` (used for the value-
+        function MoM path, where the inverse-value array is built externally
+        before the moderation step). The function detects the array case via
+        `np.asarray`.
     f_pess : callable
         Pessimist function (lower bound, worst-case behavior)
 
@@ -1511,7 +1530,7 @@ class TransformedFunctionMoM:
 
     This class provides the core moderation logic for functions bounded between
     two lines (optimist and pessimist bounds). It applies the MoM formula:
-    f_real(m) = f_opt(m) - omega(mu) * (f_opt(m) - f_pes(m))
+    f_real(m) = f_pes(m) + omega(mu) * (f_opt(m) - f_pes(m))
 
     This class can be used for any function that needs to be moderated between
     upper and lower bounds, including consumption functions, value functions, etc.
@@ -1519,7 +1538,7 @@ class TransformedFunctionMoM:
     The implementation uses the standard chi transformation approach:
     - mu = log(m - m_min) is the log excess market resources
     - chi(mu) is the interpolated chi function (asymptotically linear)
-    - omega(mu) = 1/(1 + exp(chi(mu))) is the moderation ratio
+    - omega(mu) = 1/(1 + exp(-chi(mu))) is the moderation ratio
     - Provides superior numerical stability for extrapolation
 
     Parameters
@@ -1559,6 +1578,17 @@ class TransformedFunctionMoM:
         self.pessimist_func = pessimist_func
         self.MPCmin = MPCmin  # For bounded MPC formula
         self.MPCmax = MPCmax  # For bounded MPC formula
+
+    @property
+    def x_list(self):
+        """Underlying gridpoints in m-space (back-mapped from the mu grid).
+
+        The interpolant lives in mu = log(m - mNrmMin) space; HARK callers
+        (and `code/verify_table.py`) expect an `x_list` attribute giving the
+        gridpoints in market-resources space. Returns `mNrmMin + exp(mu_grid)`.
+        """
+        mu_grid = np.asarray(self.logitModRteFunc.x_list)
+        return self.mNrmMin + np.exp(mu_grid)
 
     def __call__(self, m):
         """Evaluate the moderated function at market resources m.
@@ -1651,12 +1681,13 @@ class TransformedFunctionMoM:
             # omega = expit(chi), so omega'_mu = omega * (1 - omega) * chi'_mu
             omega_prime_mu = omega * (1 - omega) * chi_prime_mu
 
-            # True derivative formula: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu)
-            # This matches the actual consumption function slope.
-            # Note: MPC can exceed MPCmax near the borrowing constraint where
-            # m_ex is small and the transition is steep. This is economically
-            # meaningful - near the constraint, small changes in resources
-            # lead to large changes in consumption as the constraint binds.
+            # True derivative formula: MPC = MPCmin * (1 + (h_nrm_ex/m_ex) * omega'_mu).
+            # This matches the actual consumption function slope. The paper's
+            # convex-combination form (eq:MPCModeration) holds AT Euler-equation
+            # gridpoints, where CarrollShanker2024 bounds dc/dm in [MPCmin, MPCmax].
+            # Between gridpoints the cubic spline can produce omega'_mu outside
+            # that range and the interpolated MPC may briefly fall outside
+            # [MPCmin, MPCmax]; refine the grid if this matters.
             return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
 
         # 4. General case: use full product rule for functions with different bound slopes
@@ -2013,8 +2044,10 @@ class IndShockMoMConsumerType(IndShockConsumerType):
     - Pessimist consumption: c_pes(m) = kappa_min * (m - m_min) - assumes theta = theta_min
 
     The realist solution is constructed by moderating between these bounds using
-    the asymptotically linear chi transformation chi(mu) = log((1-kappa)/kappa), which ensures
-    excellent extrapolation behavior and prevents negative precautionary saving.
+    the asymptotically linear chi transformation chi(mu) = log(omega/(1-omega)),
+    where omega = (c_real - c_pes) / (c_opt - c_pes) is the moderation ratio.
+    This formulation ensures excellent extrapolation behavior and prevents
+    negative precautionary saving.
 
     Attributes
     ----------
@@ -2036,7 +2069,8 @@ class IndShockMoMConsumerType(IndShockConsumerType):
     >>> consumer = IndShockMoMConsumerType()
     >>> consumer.solve()
     >>> # Solution has excellent extrapolation properties (Figure 2 in paper)
-    >>> gap = lambda m: consumer.solution[0].cOptFunc(m) - consumer.solution[0].cFunc(m)
+    >>> sol = consumer.solution[0]
+    >>> gap = lambda m: sol.Optimist.cFunc(m) - sol.cFunc(m)
     >>> # gap(m) > 0 for all m (no negative precautionary saving)
 
     References
@@ -2199,6 +2233,19 @@ class TransformedFunctionMoMCusp:
         self.MPCmin = MPCmin
         self.MPCmax = MPCmax
 
+    @property
+    def x_list(self):
+        """Combined gridpoints in m-space from both cusp sub-regions.
+
+        Concatenates the low-region (`mu_low = log(m - mNrmMin)` below the cusp)
+        and high-region grids, back-mapped to m-space via `mNrmMin + exp(mu)`,
+        and sorts so callers see a monotone increasing grid.
+        """
+        mu_low = np.asarray(self.logitModRteFuncLow.x_list)
+        mu_high = np.asarray(self.logitModRteFuncHigh.x_list)
+        mu_combined = np.concatenate([mu_low, mu_high])
+        return np.sort(self.mNrmMin + np.exp(mu_combined))
+
     def __call__(self, m):
         """Evaluate consumption using three-piece approximation."""
         m = np.asarray(m)
@@ -2244,7 +2291,6 @@ class TransformedFunctionMoMCusp:
         low_mask = m < self.mNrmCusp
         if np.any(low_mask):
             m_low = m[low_mask]
-            m_ex[low_mask]
             mu_low = log_mnrm_ex(m_low, self.mNrmMin)
 
             chi_low = self.logitModRteFuncLow(mu_low)
@@ -2317,7 +2363,7 @@ def _build_cfunc_mom_cusp(
 
     # mu grid and derivative inputs
     mNrmEx = mNrm - mNrmMin
-    hNrmEx = hNrm + mNrmMin
+    hNrmEx = hNrm + mNrmMin  # = hNrmOpt - hNrmPes (eq:ExcessDef); mNrmMin = -hNrmPes
     mu = log_mnrm_ex(mNrm, mNrmMin)
 
     # Split grid at cusp point
@@ -2364,8 +2410,11 @@ def _build_cfunc_mom_cusp(
     cNrm_low = cNrm[low_mask]
     mu_low = mu[low_mask]
 
-    # Moderation ratio using tight bound
+    # Moderation ratio using tight bound; clip to (eps, 1-eps) before logit
+    # so log(0) / log(1) cannot poison the interpolant near the constraint.
+    eps = 1e-10
     modRte_low = moderate_tight(mNrm_low, mNrmMin, cNrm_low, MPCmin, MPCmax)
+    modRte_low = np.clip(modRte_low, eps, 1.0 - eps)
     logitModRte_low = logit_moderate(modRte_low)
 
     if CubicBool:
@@ -2396,6 +2445,8 @@ def _build_cfunc_mom_cusp(
     mu_high = mu[high_mask]
 
     modRte_high = moderate(mNrm_high, optimist.cFunc, cNrm_high, pessimist.cFunc)
+    # Same clip as the low region; protects logit_moderate at omega in {0, 1}.
+    modRte_high = np.clip(modRte_high, eps, 1.0 - eps)
     logitModRte_high = logit_moderate(modRte_high)
 
     if CubicBool:
@@ -2955,9 +3006,25 @@ def method_of_moderation_stochastic_r(
         uFunc,
     )
 
-    # Compute realized MPCmin from the stochastic solution
-    # (limiting MPC as m → ∞, from the slope of the consumption function)
-    mpc_at_high_m = (cNrm[-1] - cNrm[-2]) / (mNrm[-1] - mNrm[-2])
+    # Compute realized MPCmin from the stochastic solution: a 2-point finite
+    # difference of the consumption function at the top of the grid.
+    # Validate before using: if it falls outside (0, 1) the bound is structurally
+    # corrupt and would silently poison every subsequent moderation interpolant.
+    dm = mNrm[-1] - mNrm[-2]
+    if dm <= 0 or not np.isfinite(dm):
+        raise ValueError(
+            "Stochastic-R MPCmin estimation failed: top two gridpoints are "
+            f"not strictly increasing (mNrm[-1]={mNrm[-1]}, mNrm[-2]={mNrm[-2]}). "
+            "Refine the asset grid before retrying.",
+        )
+    mpc_at_high_m = (cNrm[-1] - cNrm[-2]) / dm
+    if not (0.0 < mpc_at_high_m < 1.0) or not np.isfinite(mpc_at_high_m):
+        raise ValueError(
+            f"Stochastic-R MPCmin estimate {mpc_at_high_m!r} is outside (0, 1); "
+            "the finite-difference at the top of the grid is unreliable. Refine "
+            "the asset grid, or supply MPCmin analytically via the Merton-"
+            "Samuelson formula 1 - (DiscFac * E[Risky^(1-CRRA)])^(1/CRRA).",
+        )
     MPCmin = mpc_at_high_m  # Use the realized limiting MPC
 
     # Create behavioral bounds for moderation

@@ -445,6 +445,71 @@ def test_hermite_slope_formulas(sol_mom):
     assert all_passed, "Hermite slope formula test failed!"
 
 
+def test_no_negative_precautionary_saving_in_extrapolation():
+    """Paper's central claim: sparse-grid MoM has no negative precautionary saving.
+
+    The reproduction package's headline figure shows that with a 5-point sparse
+    grid (the same calibration as Table 1), standard EGM produces negative
+    precautionary saving when extrapolating past the top gridpoint, while MoM
+    does not. This test asserts the MoM half of that claim quantitatively.
+    Failure here means the paper's central correctness claim has regressed.
+    """
+    print("\n" + "=" * 70)
+    print("TEST: No negative precautionary saving in extrapolation (sparse grid)")
+    print("=" * 70)
+
+    # Match the Table 1 / verify_table.py calibration.
+    params = {
+        "CRRA": 2.0,
+        "DiscFac": 0.96,
+        "Rfree": [1.02],
+        "TranShkStd": [1.0],
+        "cycles": 1,
+        "LivPrb": [1.0],
+        "vFuncBool": True,
+        "CubicBool": True,
+        "PermGroFac": [1.0],
+        "PermShkStd": [0.0],
+        "TranShkCount": 7,
+        "UnempPrb": 0.0,
+        "BoroCnstArt": None,
+    }
+    sparse_grid = {
+        "aXtraMin": 0.001,
+        "aXtraMax": 4,
+        "aXtraCount": 5,
+        "aXtraNestFac": -1,
+    }
+
+    mom = IndShockMoMConsumerType(**(params | sparse_grid))
+    mom.solve()
+    sol_mom = mom.solution[0]
+
+    # The top of the MoM grid is around m = 4; evaluate well past it to test
+    # extrapolation specifically.
+    m_extrapolate = np.linspace(5.0, 30.0, 100)
+    c_opt = sol_mom.Optimist.cFunc(m_extrapolate)
+    c_mom = sol_mom.cFunc(m_extrapolate)
+    c_pes = sol_mom.Pessimist.cFunc(m_extrapolate)
+
+    # Precautionary saving = c_opt - c_real should remain strictly positive.
+    precautionary_gap = c_opt - c_mom
+    min_gap = float(precautionary_gap.min())
+    print(f"  m range: [{m_extrapolate[0]:.1f}, {m_extrapolate[-1]:.1f}]")
+    print(f"  min precautionary gap (c_opt - c_mom) = {min_gap:.6e}")
+    assert min_gap > 0.0, (
+        f"Sparse-grid MoM produced non-positive precautionary saving "
+        f"(min gap = {min_gap}) in the extrapolation region. "
+        "This contradicts the paper's central correctness claim."
+    )
+    print("  ✓ MoM precautionary gap remains positive across extrapolation region")
+
+    # And c_pes < c_mom < c_opt should hold throughout.
+    assert np.all(c_mom > c_pes - 1e-12), "MoM consumption fell below pessimist bound"
+    assert np.all(c_mom < c_opt + 1e-12), "MoM consumption exceeded optimist bound"
+    print("  ✓ Bounds c_pes <= c_mom <= c_opt hold across extrapolation region")
+
+
 def test_stochastic_mpc_formula():
     """Test that stochastic returns reduce MPC (more precautionary saving).
 
@@ -525,6 +590,7 @@ def run_all_tests():
     test_cusp_point_formula(sol_cusp)
     test_mpc_bounds_everywhere(sol_mom)
     test_hermite_slope_formulas(sol_mom)
+    test_no_negative_precautionary_saving_in_extrapolation()
     test_stochastic_mpc_formula()
 
     print("\n" + "=" * 70)
