@@ -23,6 +23,8 @@ jupyter:
 # The Method of Moderation: Illustrative Notebook
 
 ```python tags=["hide-input"]
+from IPython.display import HTML, display
+
 # Import Econ-ARK styling and display header
 from style import (
     HEADER_HTML_NOTEBOOK,
@@ -33,10 +35,6 @@ from style import (
 # Apply Econ-ARK branding and styling
 apply_ark_style()
 apply_notebook_css()
-
-
-# Display Econ-ARK header (for Jupyter notebooks)
-from IPython.display import HTML, display
 
 display(HTML(HEADER_HTML_NOTEBOOK))
 ```
@@ -109,10 +107,6 @@ IndShockTruth.solve()
 IndShockTruthSol = IndShockTruth.solution[0]
 
 # Unpack theoretical bounds (same for all methods)
-TruthOpt = IndShockTruthSol.Optimist
-TruthPes = IndShockTruthSol.Pessimist
-TruthTight = IndShockTruthSol.TighterUpperBound
-
 # Sparse EGM solution (standard approach)
 IndShockEGMApprox = IndShockEGMConsumerType(**(params | sparse_grid))
 IndShockEGMApprox.solve()
@@ -209,7 +203,8 @@ MoM builds on EGM's computational efficiency while enforcing theoretical bounds.
 MoM steps (notation matches the paper):
 1. Solve standard EGM for realist consumption at gridpoints
 2. Transform to $\logmNrmEx = \log(\mNrm - \mNrmMin)$
-3. Compute $\modRte(\logmNrmEx) = (\cFuncReal - \cFuncPes)/(\cFuncOpt - \cFuncPes) \in [0,1]$ (Eq. {eq}`eq:modRte`)
+3. Compute $\modRte(\logmNrmEx) = (\cFuncReal - \cFuncPes)/(\cFuncOpt - \cFuncPes) \in (0,1)$ (Eq. {eq}`eq:modRte`)
+   (equivalently $\modRte = (\cFuncReal - \cFuncPes)/(\MPCmin\,\hNrmEx)$ since $\cFuncOpt - \cFuncPes = \MPCmin\,\hNrmEx$)
 4. Apply logit: $\logitModRte = \log(\modRte/(1-\modRte))$
 5. Interpolate $\logitModRte(\logmNrmEx)$ with derivatives
 6. Reconstruct: $\cFuncReal = \cFuncPes + \modRte \cdot (\cFuncOpt - \cFuncPes)$
@@ -218,7 +213,7 @@ This ensures bound compliance via asymptotically linear extrapolation, as derive
 ```
 
 ```{note} The Transformation
-The logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, +\infty)$ and becomes asymptotically linear with positive slope $\logitModRteMu > 0$ as wealth increases.
+The logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, +\infty)$ and becomes asymptotically linear with non-negative limiting slope $\logitModRteMu \geq 0$ as wealth increases.
 ```
 
 ### Figure 4: MoM Consumption Function
@@ -320,7 +315,7 @@ plot_logit_function(
 ```
 
 ```{important} Why Asymptotic Linearity Matters
-As $\logmNrmEx \to \infty$, $\logitModRte$ becomes linear with slope $\logitModRteMu > 0$. This prevents extrapolation errors, ensures smooth convergence to the optimist bound, and maintains numerical stability.
+As $\logmNrmEx \to \infty$, $\logitModRte$ becomes linear with non-negative limiting slope $\logitModRteMu \geq 0$. This prevents extrapolation errors, ensures smooth convergence to the optimist bound, and maintains numerical stability.
 ```
 
 ```{note} Properties of $\logitModRte(\logmNrmEx)$
@@ -436,6 +431,9 @@ $$
 
 Below the cusp, the tighter bound ($\MPCmax$ slope) constrains; above, the optimist bound constrains. See `IndShockMoMCuspConsumerType` for the three-piece implementation.
 
+See [](#fig:cusp-point) for a visualization of where $\cFuncOpt$ and the tighter bound intersect.
+
+
 ```python
 # | label: fig:cusp-point
 
@@ -484,7 +482,7 @@ plot_stochastic_bounds(
 ```
 
 ```{hint} Stochastic Returns Interpretation
-Deterministic optimist uses $\MPCmin = 1 - (\DiscFac \Rfree)^{1/\CRRA}$; stochastic optimist uses $\MPCmin = 1 - (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. Return uncertainty raises MPC and narrows the feasible region. See {ref}`stochastic-returns-mgf-derivation` for the MGF derivation.
+Deterministic optimist uses $\MPCmin = 1 - (\DiscFac \Rfree)^{1/\CRRA}$; stochastic optimist uses $\MPCmin = 1 - (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. Return uncertainty lowers MPC for $\CRRA > 1$: a mean-preserving spread of $\Risky$ makes $\Risky^{1-\CRRA}$ a convex function of $\Risky$, so $\Ex[\Risky^{1-\CRRA}]$ increases, $(\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ increases, and $\MPCmin = 1 - (\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ falls. Consumers facing return risk consume slightly less out of any given level of wealth. See {ref}`stochastic-returns-mgf-derivation` for the MGF derivation.
 ```
 
 ## Summary
@@ -498,3 +496,8 @@ MoM solves the extrapolation problem by interpolating a **moderation ratio** via
 * **Computational Efficiency**: Builds on EGM with minimal overhead.
 
 For complete theoretical development see {ref}`the-method-of-moderation`.
+
+
+## Symbolic Mathematics
+
+The equations in this notebook are also available as SymPy expressions, enabling symbolic differentiation, simplification, and code generation. See [`method-of-moderation-symbolic.ipynb`](method-of-moderation-symbolic.ipynb) for a walk-through, and `.agents/metadata/equations.py` / `.agents/metadata/equations.json` for the underlying definitions.

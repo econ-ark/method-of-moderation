@@ -47,15 +47,16 @@ This document explains what each file in the repository does.
 - Matplotlib theme configuration
 
 ### `code/method-of-moderation.ipynb`
-**Purpose**: Illustrative Jupyter notebook demonstrating the method (Unicode-symbol prose)
+**Purpose**: The illustrative Jupyter notebook for the paper. Listed in `myst.yml`
+under the project TOC and serves the figures referenced from
+`content/paper/moderation_letters.md` via `:::{figure} #fig:...` cross-references.
 
 **Structure**:
 - 33 cells (15 code, 17 markdown, 1 raw)
 - Generates 13 figures
 - Progresses through: Model → Problem → Solution → Extensions
-
-### `code/method-of-moderation-myst.ipynb`
-**Purpose**: Mirror of `method-of-moderation.ipynb` whose prose cells use the paper's MyST LaTeX macros instead of Unicode symbols. Same code cells, same outputs.
+- Markdown cells use the paper's MyST LaTeX macros (`\cFunc`, `\MPCmin`, etc.)
+  so the prose stays in sync with the paper source.
 
 ### `code/method-of-moderation-symbolic.ipynb`
 **Purpose**: Companion notebook that imports `.agents/metadata/equations.py` and walks through the SymPy symbolic derivations referenced in the paper. Useful for verifying the algebra interactively.

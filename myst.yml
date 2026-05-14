@@ -81,7 +81,7 @@ project:
   toc:
     - file: content/paper/moderation_letters.md
     - file: content/paper/appendix_letters.md
-    - file: code/notebook.ipynb
+    - file: code/method-of-moderation.ipynb
 
 extends:
   - content/macros.yml
