@@ -105,7 +105,7 @@ For the realist's problem, we define $\vInvReal = \left((1-\CRRA)\vFuncReal(\mNr
 \valModRteReal(\logmNrmEx) = \left(\frac{\vInvReal(\mNrmMin+e^{\logmNrmEx})-\vInvPes(\mNrmMin+e^{\logmNrmEx})}{\hNrmEx \MPCmin \,\PDVCoverc^{1/(1-\CRRA)}}\right)
 ```
 
-and:
+and the logit-transformed counterpart:
 
 ```{math}
 :label: eq:ChiUpper
@@ -125,15 +125,15 @@ Inverting these approximations yields
 from which the value function approximation is $\vFuncReal = \uFunc(\vInvReal)$.
 
 (stochastic-returns-mgf-derivation)=
-## I.I.D. Stochastic Returns: MPC Derivation
+## I.I.D. Stochastic Returns: MPC derivation
 
 The fact that a linear consumption function with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ satisfies the Euler equation with i.i.d. returns and no labor income can be derived by the method of undetermined coefficients.  In particular, assume that $\cFuncOpt(\mNrm) = \mNrm\MPCmin$, with a time-independent MPC $\MPCmin$ to be determined.  Substituting this into the Euler equation, we have
 
 ```{math}
 :label: eq:stochReturnsEulerEqn
 \begin{aligned}
-1 &= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\cNrm_{t+1}}{\cNrm_t}\right)^{-\CRRA}\\
-&= \DiscFac \Ex_t\Risky_{t+1} \left(\frac{\mNrm_{t+1}}{\mNrm_t}\right)^{-\CRRA}
+1 &= \DiscFac \Ex_t\left[\Risky_{t+1} \left(\frac{\cNrm_{t+1}}{\cNrm_t}\right)^{-\CRRA}\right]\\
+&= \DiscFac \Ex_t\left[\Risky_{t+1} \left(\frac{\mNrm_{t+1}}{\mNrm_t}\right)^{-\CRRA}\right]
 \end{aligned}
 ```
 

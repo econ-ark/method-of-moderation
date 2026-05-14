@@ -28,7 +28,7 @@ uncertainty, the optimal consumption function has a simple analytical solution. 
 assumptions, the consumer who faces an uninsurable labor income risk will
 consume less than a consumer with the same path for expected income but who does
 not perceive any uncertainty as being attached to that future income. The
-'realistic' consumer, who _does_ perceive the risks, will engage in
+'realist' consumer, who _does_ perceive the risks, will engage in
 'precautionary saving' {cite:p}`Leland1968,Sandmo1970,Kimball1990`, so the perfect foresight riskless solution provides an
 upper bound to the solution that will actually be optimal. A lower bound is
 provided by the behavior of a consumer who has the subjective belief that the
@@ -371,7 +371,7 @@ immoderate extremes, we call our solution procedure the 'method of moderation.'
 
 Results are shown in {ref}`fig:ExtrapProblemSolved`; a reader with very good
 eyesight might be able to detect the barest hint of a discrepancy between the
-Truth and the Approximation at the far righthand edge of the figure - a stark
+Truth and the Approximation at the far right-hand edge of the figure, a stark
 contrast with the calamitous divergence evident in {ref}`fig:ExtrapProblem`.
 
 ```{figure} ../images/ExtrapProblemSolvedPlot
@@ -604,7 +604,7 @@ period with assets exceeding the lower bound will not expect to be constrained
 next period. (Recall again that we are merely constructing an object that is
 guaranteed to be an _upper bound_ for the value that the 'realist' consumer will
 experience.) At the gridpoints defined by the solution of the consumption
-problem can then construct
+problem we can then construct
 
 $$
 \vInvOpt(\mNrm) = ((1-\CRRA)\vFuncOpt(\mNrm))^{1/(1-\CRRA)}
@@ -625,7 +625,7 @@ A Tighter Upper Bound
 
 ## Hermite Interpolation
 
-The numerical accuracy of the method of moderation depends critically on the quality of function approximation between gridpoints {cite:p}`Santos2000`. Our bracketing approach complements work that bounds numerical errors in dynamic economic models {cite:p}`JuddMaliarMaliar2017`. Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation {cite:p}`Fritsch1980,FritschButland1984,Hyman1983` offers a considerable advantage. By matching both the level and the derivative of the $\cFuncReal$ function at the gridpoints, the consumption rule derived from such interpolation numerically satisfies the Euler equation at each gridpoint for which the problem has been solved {cite:p}`BenvenisteScheinkman1979,MilgromSegal2002`.
+The numerical accuracy of the method of moderation depends critically on the quality of function approximation between gridpoints {cite:p}`Santos2000`. Our bracketing approach complements work that bounds numerical errors in dynamic economic models {cite:p}`JuddMaliarMaliar2017`. Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation {cite:p}`Fritsch1980,FritschButland1984,Hyman1983` offers a considerable advantage. By matching both the level and the derivative of $\cFuncReal$ at the gridpoints, where the derivative is obtained from the envelope condition {cite:p}`BenvenisteScheinkman1979,MilgromSegal2002` together with the EGM Euler equation, the interpolated consumption rule satisfies the Euler equation exactly at each solved gridpoint.
 
 The theoretical foundation for this approach rests on the moderation ratio $\modRte$. This ratio captures how close the realist's consumption is to the optimist's behavior relative to the gap between optimist and pessimist. Since its log-gap argument $\logmNrmEx$ moves with cash-on-hand relative to human wealth, the derivative measures how quickly the realist approaches the optimist as available resources increase:
 
@@ -634,14 +634,14 @@ The theoretical foundation for this approach rests on the moderation ratio $\mod
 \frac{\partial \modRte}{\partial \logmNrmEx} = \frac{\mNrmEx (\partial \cFuncReal/\partial \mNrm - \MPCmin)}{\MPCmin \hNrmEx}.
 ```
 
-For numerical stability and interpretation on an unbounded scale, we apply the transformation defined in {ref}`eq:chi` to the moderation ratio. The derivative of this transformation is:
+For numerical stability and interpretation on an unbounded scale, we apply the transformation defined in {eq}`eq:chi` to the moderation ratio. The derivative of this transformation is:
 
 ```{math}
 :label: eq:logitModRteMu
 \frac{\partial \logitModRte}{\partial \logmNrmEx} = \frac{\partial \modRte / \partial \logmNrmEx}{\modRte(1 - \modRte)}.
 ```
 
-This expression provides the slope data for cubic Hermite interpolation.[^hermite-slopes] Differentiating {ref}`eq:cFuncHi` yields a moderation form for the MPC:[^mpc-derivation]
+This expression provides the slope data for cubic Hermite interpolation.[^hermite-slopes] Differentiating {eq}`eq:cFuncHi` yields a moderation form for the MPC:[^mpc-derivation]
 
 ```{math}
 :label: eq:MPCModeration
@@ -658,7 +658,7 @@ where
 The weight $\MPCmod \in [0,1]$ at gridpoints by construction, since equation {eq}`eq:MPCModeration` can be rewritten as $\MPCmod = (\partial \cFuncReal/\partial \mNrm - \MPCmin)/(\MPCmax - \MPCmin)$ and theory guarantees $\MPCmin \leq \partial \cFuncReal/\partial \mNrm \leq \MPCmax$ at points where the Euler equation is solved. Between gridpoints, the interpolated moderation ratio derivative $\modRteMu$ should preserve this property when the grid is sufficiently refined. The weight reflects precautionary intensity: it increases when market resources are low relative to human wealth ($\hNrmEx/\mNrmEx$ large) and when the moderation ratio responds sharply to changes in log excess resources ($\modRteMu$ large). As $\mNrmEx \to \infty$, $\MPCmod \to 0$ and the MPC approaches the optimist's; as $\mNrmEx \to 0$, $\MPCmod \to 1$ and the MPC approaches the pessimist's.
 
 [^mpc-derivation]:
-    Differentiating {ref}`eq:cFuncHi` with respect to $\mNrm$ and applying the chain rule: $\partial \cFuncReal/\partial \mNrm = \MPCmin \left(1 + \hNrmEx/\mNrmEx \cdot \modRteMu\right)$. The moderation form follows by factoring: $\MPCmod(\MPCmax-\MPCmin) = \MPCmin \cdot \hNrmEx/\mNrmEx \cdot \modRteMu$. Note that $\modRteMu = \modRte(1-\modRte) \cdot \logitModRteMu$ from the chain rule, where $\modRte(1-\modRte) = \partial\modRte/\partial\logitModRte$ is the standard sigmoid derivative, but working directly with $\modRteMu$ provides superior numerical stability since the moderation ratio $\modRte \in [0,1]$ is naturally bounded.
+    Differentiating {eq}`eq:cFuncHi` with respect to $\mNrm$ and applying the chain rule: $\partial \cFuncReal/\partial \mNrm = \MPCmin \left(1 + \hNrmEx/\mNrmEx \cdot \modRteMu\right)$. The moderation form follows by factoring: $\MPCmod(\MPCmax-\MPCmin) = \MPCmin \cdot \hNrmEx/\mNrmEx \cdot \modRteMu$. Note that $\modRteMu = \modRte(1-\modRte) \cdot \logitModRteMu$ from the chain rule, where $\modRte(1-\modRte) = \partial\modRte/\partial\logitModRte$ is the standard sigmoid derivative, but working directly with $\modRteMu$ provides superior numerical stability since the moderation ratio $\modRte \in [0,1]$ is naturally bounded.
 
 We can apply analogous techniques to the value function. Under perfect foresight, consumption grows at a constant rate, making $\PDVCoverc$ constant. This implies that the inverse value function for the optimist has a constant slope with respect to cash-on-hand:
 
@@ -670,7 +670,7 @@ We can apply analogous techniques to the value function. Under perfect foresight
 \end{aligned}
 ```
 
-The result in {ref}`eq:vInvOptDeriv` has important implications for the structure of the value function.[^vInvOpt-linearity]
+The result in {eq}`eq:vInvOptDeriv` has important implications for the structure of the value function.[^vInvOpt-linearity]
 
 Consider the value analogue of the moderation ratio, which compares the realist's value to the optimist's. The derivative of this ratio with respect to the log-gap argument is:
 
@@ -679,7 +679,7 @@ Consider the value analogue of the moderation ratio, which compares the realist'
 \frac{\partial \valModRteReal}{\partial \logmNrmEx} = \frac{\mNrmEx (\vInvRealDeriv - \vInvOptDeriv)}{\hNrmEx \vInvOptDeriv}
 ```
 
-where $\vInvOptDeriv = \MPCmin^{-\CRRA/(1-\CRRA)}$ from {ref}`eq:vInvOptDeriv` and $\vInvRealDeriv$ is the derivative of the realist's inverse value function. Note that for the pessimist's inverse value function, the derivative equals $\vInvOptDeriv$ since both are linear perfect foresight solutions.
+where $\vInvOptDeriv = \MPCmin^{-\CRRA/(1-\CRRA)}$ from {eq}`eq:vInvOptDeriv` and $\vInvRealDeriv$ is the derivative of the realist's inverse value function. Note that for the pessimist's inverse value function, the derivative equals $\vInvOptDeriv$ since both are linear perfect foresight solutions.
 
 Applying the same transformation to the value-based moderation ratio converts the bounded ratio into an unconstrained slope:
 
@@ -705,7 +705,7 @@ The first- and second-derivative connections are:
 \end{aligned}
 ```
 
-Moreover, if we use the double-derivative calculated in {ref}`eq:vFuncRealDerivatives` to produce a higher-order Hermite polynomial, our approximation will also match the marginal propensity to consume at the gridpoints.[^hermite-higher-order]
+Moreover, if we use the double-derivative calculated in {eq}`eq:vFuncRealDerivatives` to produce a higher-order Hermite polynomial, our approximation will also match the marginal propensity to consume at the gridpoints.[^hermite-higher-order]
 
 These results provide the theoretical foundation for constructing high-quality cubic Hermite interpolants that preserve both the economic structure and numerical accuracy of the model between gridpoints.
 
