@@ -2,7 +2,7 @@
 # Minimal reproduction script for Method of Moderation REMARK
 # This script performs a quick validation (<5 minutes)
 
-set -e  # Exit immediately if any command fails
+set -euo pipefail  # -e: exit on error; -u: error on unset variable; pipefail: detect failures in pipelines
 
 # ============================================================================
 # Platform Detection for Platform-Specific Virtual Environment
@@ -60,6 +60,10 @@ echo ""
 # Install dependencies
 echo "Step 1/3: Installing dependencies..."
 uv sync
+uv run python -c "import HARK, numpy, scipy, matplotlib" || {
+    echo "❌ Core packages failed to import after 'uv sync'." >&2
+    exit 1
+}
 echo "✓ Dependencies installed"
 echo ""
 

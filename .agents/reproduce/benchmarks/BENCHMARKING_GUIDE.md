@@ -81,8 +81,8 @@ Example structure:
 ```json
 {
   "benchmark_version": "1.0.0",
-  "benchmark_id": "20250117-143022_min_darwin-arm64",
-  "timestamp": "2025-01-17T14:30:22Z",
+  "benchmark_id": "20260117-162842_min_darwin-arm64",
+  "timestamp": "2026-01-17T16:28:42Z",
   "reproduction_mode": "min",
   "exit_status": 0,
   "duration_seconds": 245,
@@ -134,8 +134,8 @@ jq 'del(.system.hostname, .metadata.user, .environment.virtual_env)' \
    results/benchmark.json > benchmark_anonymous.json
 
 # Commit reference benchmark
-git add -f .agents/reproduce/benchmarks/results/saved/20250117_reference_m1max.json
-git commit -m "Add reference benchmark: M1 Max 2021"
+git add -f .agents/reproduce/benchmarks/results/saved/20260117_reference_m4max_darwin-arm64.json
+git commit -m "Add reference benchmark: M4 Max 2024"
 ```
 
 ## Use Cases

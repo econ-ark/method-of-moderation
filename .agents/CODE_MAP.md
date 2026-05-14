@@ -33,7 +33,7 @@ This document explains what each file in the repository does.
 - `plot_logit_function()`: Figure showing χ(μ)
 - `plot_consumption_bounds()`: Optimist/pessimist/realist comparison
 - `plot_precautionary_gaps()`: Approximation quality
-- `plot_mpc_bounds()`: MPC bounded by theory
+- `plot_mom_mpc()`: MPC bounded by theory
 - `plot_value_functions()`: Value function approximations
 - `plot_cusp_point()`: Cusp point visualization
 
@@ -47,12 +47,21 @@ This document explains what each file in the repository does.
 - Matplotlib theme configuration
 
 ### `code/method-of-moderation.ipynb`
-**Purpose**: Illustrative Jupyter notebook demonstrating the method
+**Purpose**: Illustrative Jupyter notebook demonstrating the method (Unicode-symbol prose)
 
 **Structure**:
-- 32 cells (15 code, 16 markdown)
+- 33 cells (15 code, 17 markdown, 1 raw)
 - Generates 13 figures
 - Progresses through: Model → Problem → Solution → Extensions
+
+### `code/method-of-moderation-myst.ipynb`
+**Purpose**: Mirror of `method-of-moderation.ipynb` whose prose cells use the paper's MyST LaTeX macros instead of Unicode symbols. Same code cells, same outputs.
+
+### `code/method-of-moderation-symbolic.ipynb`
+**Purpose**: Companion notebook that imports `.agents/metadata/equations.py` and walks through the SymPy symbolic derivations referenced in the paper. Useful for verifying the algebra interactively.
+
+### `code/verify_table.py`
+**Purpose**: Standalone sanity-check script that reproduces Table 1 (`tbl:approx-errors`) by solving EGM and MoM at the paper's sparse grid and printing per-interval errors. Run as `uv run python code/verify_table.py`.
 
 ### `code/test_moderation.py`
 **Purpose**: Test suite (11 tests)
@@ -139,7 +148,7 @@ This document explains what each file in the repository does.
 - `BENCHMARKING_GUIDE.md`: Detailed usage guide
 - `results/`: Benchmark output directory
 
-### `metadata/`
+### `.agents/metadata/`
 **Purpose**: Machine-readable metadata for AI systems
 
 **Files**:

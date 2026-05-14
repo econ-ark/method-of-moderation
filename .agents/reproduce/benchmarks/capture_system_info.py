@@ -1,24 +1,48 @@
 #!/usr/bin/env python3
-"""
-System Information Capture for Method of Moderation Benchmarking
-"""
+"""System Information Capture for Method of Moderation Benchmarking."""
 
+import argparse
 import json
+import logging
 import os
 import platform
 import subprocess
-import sys
+from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 
+logger = logging.getLogger("capture_system_info")
 
-def run_command(cmd, fallback="unknown"):
-    """Run a shell command and return output, or fallback on error."""
+
+def run_command(cmd, fallback="unknown", cwd=None):
+    """Run a shell command and return stdout, or fallback on error.
+
+    Stderr from failed commands is logged at WARNING level rather than swallowed
+    silently, so a non-zero exit or unexpected exception leaves a trace in the
+    benchmark log.
+    """
     try:
         result = subprocess.run(
-            cmd, shell=True, capture_output=True, text=True, timeout=5
+            cmd,
+            shell=True,
+            capture_output=True,
+            text=True,
+            timeout=5,
+            cwd=cwd,
         )
-        return result.stdout.strip() if result.returncode == 0 else fallback
-    except (subprocess.TimeoutExpired, Exception):
+        if result.returncode != 0:
+            logger.warning(
+                "Command failed (exit %s): %s\n  stderr: %s",
+                result.returncode,
+                cmd,
+                result.stderr.strip(),
+            )
+            return fallback
+        return result.stdout.strip()
+    except subprocess.TimeoutExpired:
+        logger.warning("Command timed out: %s", cmd)
+        return fallback
+    except OSError as exc:
+        logger.warning("Command raised OSError (%s): %s", exc, cmd)
         return fallback
 
 
@@ -67,7 +91,7 @@ def get_memory_info():
     """Get memory information in GB."""
     system = platform.system()
 
-    memory_info = {"total_gb": None, "available_gb": None}
+    memory_info: dict[str, float | None] = {"total_gb": None, "available_gb": None}
 
     if system == "Darwin":
         total = run_command("sysctl -n hw.memsize")
@@ -88,33 +112,37 @@ def get_disk_info(path="/"):
     """Get disk information for the given path."""
     try:
         stat = os.statvfs(path)
-        free_gb = round((stat.f_bavail * stat.f_frsize) / (1024**3), 2)
-        disk_type = "unknown"
-
-        if platform.system() == "Darwin":
-            disk_type_cmd = run_command(
-                r"diskutil info / | grep 'Solid State' | awk '{print $3}'"
-            )
-            disk_type = "SSD" if disk_type_cmd == "Yes" else "HDD"
-        elif platform.system() == "Linux":
-            rotational = run_command(
-                r"cat /sys/block/$(df / | tail -1 | awk '{print $1}' | sed 's|/dev/||' | sed 's/[0-9]//g')/queue/rotational 2>/dev/null"
-            )
-            disk_type = (
-                "SSD"
-                if rotational == "0"
-                else "HDD"
-                if rotational == "1"
-                else "unknown"
-            )
-
-        return {"type": disk_type, "free_gb": free_gb}
-    except Exception:
+    except OSError as exc:
+        logger.warning("os.statvfs(%s) failed: %s", path, exc)
         return {"type": "unknown", "free_gb": None}
+
+    free_gb = round((stat.f_bavail * stat.f_frsize) / (1024**3), 2)
+    disk_type = "unknown"
+
+    if platform.system() == "Darwin":
+        disk_type_cmd = run_command(
+            r"diskutil info / | grep 'Solid State' | awk '{print $3}'"
+        )
+        disk_type = "SSD" if disk_type_cmd == "Yes" else "HDD"
+    elif platform.system() == "Linux":
+        rotational = run_command(
+            r"cat /sys/block/$(df / | tail -1 | awk '{print $1}' | sed 's|/dev/||' | sed 's/[0-9]//g')/queue/rotational 2>/dev/null"
+        )
+        disk_type = (
+            "SSD" if rotational == "0" else "HDD" if rotational == "1" else "unknown"
+        )
+
+    return {"type": disk_type, "free_gb": free_gb}
 
 
 def get_python_packages():
-    """Get versions of key Python packages."""
+    """Get versions of key Python packages.
+
+    Uses `importlib.metadata`. If a package is genuinely not installed the
+    entry is `"not installed"`; if metadata lookup fails for some other reason
+    a warning is logged so the operator can investigate rather than silently
+    receive misleading version strings.
+    """
     packages = {}
     key_packages = [
         "econ-ark",
@@ -130,36 +158,27 @@ def get_python_packages():
 
     for pkg in key_packages:
         try:
-            from importlib.metadata import version
-
             packages[pkg] = version(pkg)
-        except Exception:
-            try:
-                import pkg_resources
-
-                packages[pkg] = pkg_resources.get_distribution(pkg).version
-            except Exception:
-                packages[pkg] = "not installed"
+        except PackageNotFoundError:
+            packages[pkg] = "not installed"
+        except (OSError, ValueError) as exc:
+            logger.warning("Version lookup failed for %s: %s", pkg, exc)
+            packages[pkg] = "lookup failed"
 
     return packages
 
 
 def get_git_info(repo_path=None):
-    """Get git repository information."""
+    """Get git repository information without changing the process CWD."""
     if repo_path is None:
         repo_path = Path(__file__).parent.parent.parent
 
-    original_dir = os.getcwd()
-    try:
-        os.chdir(repo_path)
-        commit = run_command("git rev-parse HEAD", "unknown")
-        branch = run_command("git rev-parse --abbrev-ref HEAD", "unknown")
-        dirty = run_command(
-            "git diff --quiet && echo 'false' || echo 'true'", "unknown"
-        )
-        return {"commit": commit, "branch": branch, "dirty": dirty == "true"}
-    finally:
-        os.chdir(original_dir)
+    commit = run_command("git rev-parse HEAD", "unknown", cwd=repo_path)
+    branch = run_command("git rev-parse --abbrev-ref HEAD", "unknown", cwd=repo_path)
+    dirty = run_command(
+        "git diff --quiet && echo 'false' || echo 'true'", "unknown", cwd=repo_path
+    )
+    return {"commit": commit, "branch": branch, "dirty": dirty == "true"}
 
 
 def capture_system_info():
@@ -197,7 +216,7 @@ def capture_system_info():
 
 
 def main():
-    import argparse
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
 
     parser = argparse.ArgumentParser(
         description="Capture system information for benchmarking"
@@ -214,8 +233,9 @@ def main():
     if args.output:
         with open(args.output, "w") as f:
             f.write(output)
-        print(f"System information saved to: {args.output}", file=sys.stderr)
+        logger.info("System information saved to: %s", args.output)
     else:
+        # JSON to stdout is the script's data interface; keep print() here.
         print(output)
 
 

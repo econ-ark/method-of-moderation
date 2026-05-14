@@ -19,8 +19,9 @@ method-of-moderation/
 
 ## Platform-Specific Virtual Environments
 
-The setup creates **architecture-specific virtual environments** to enable
-seamless switching between different platforms without rebuilding venvs:
+The setup creates **architecture-specific virtual environments** so that
+switching between different platforms (host macOS, Linux DevContainer) does
+not require rebuilding the venv each time:
 
 | Platform | Architecture | Venv Directory |
 |----------|--------------|----------------|

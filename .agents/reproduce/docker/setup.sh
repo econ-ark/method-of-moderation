@@ -12,7 +12,7 @@
 #   bash setup.sh                      # Run with default settings
 #   WORKSPACE_DIR=/path bash setup.sh  # Override workspace directory
 
-set -e
+set -euo pipefail
 
 echo "🚀 Setting up Method of Moderation development environment..."
 

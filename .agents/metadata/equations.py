@@ -28,12 +28,18 @@ For AI Systems:
     All equations use Unicode symbols matching the paper's notation.
 """
 
+import logging
+import sys
+
 from sympy import (
     Function,
     Symbol,
     exp,
     log,
+    simplify,
 )
+
+logger = logging.getLogger(__name__)
 
 # =============================================================================
 # Symbol Definitions - Parameters
@@ -177,11 +183,19 @@ m_min_formula = -h_min_formula
 # Moderation Ratio (𝛚)
 # =============================================================================
 
-# Definition: 𝛚 = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
-𝛚_definition = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
+# Definition (paper's canonical form, eq:modRte):
+#     𝛚 = (𝐜_real - 𝐜_pes) / (Δh × 𝛋_min)
+# The denominator is the maximum possible gap between optimist and pessimist,
+# Δh × 𝛋_min, since 𝐜_opt - 𝐜_pes = 𝛋_min (𝐦_ex + Δh) - 𝛋_min 𝐦_ex = Δh × 𝛋_min.
+𝛚_definition = (𝐜_real - 𝐜_pes) / (Δh * 𝛋_min)
 
-# Simplified: 𝛚 = (𝐜_real - 𝐜_pes) / (Δh × 𝛋_min)
-𝛚_simplified = (𝐜_real - 𝐜_pes) / (Δh * 𝛋_min)
+# Equivalent ratio in terms of the optimist's consumption:
+#     𝛚 = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
+# Algebraically equal to 𝛚_definition under 𝐜_opt = 𝛋_min(𝐦_ex + Δh),
+# 𝐜_pes = 𝛋_min 𝐦_ex. Kept as a separate symbol for documentation; the
+# verify_identities() helper below confirms the equivalence symbolically.
+𝛚_alt_denominator = (𝐜_real - 𝐜_pes) / (𝐜_opt - 𝐜_pes)
+𝛚_simplified = 𝛚_definition  # Back-compat alias (now identical to the definition).
 
 # =============================================================================
 # Transformations
@@ -494,12 +508,49 @@ __all__ = [
     "compute_moderation_ratio",
 ]
 
+
+def verify_identities() -> dict[str, bool]:
+    """Symbolically verify the algebraic equivalences that the module claims.
+
+    Returns a mapping of identity name to True/False. Any False entry is also
+    logged at ERROR level so a developer running this module as a script gets
+    a loud failure rather than a silent pass.
+    """
+    results: dict[str, bool] = {}
+
+    # Equivalence of the two omega forms requires the perfect-foresight closed
+    # forms for 𝐜_opt and 𝐜_pes. Substitute those before simplifying.
+    subs = {𝐜_opt: 𝛋_min * (Δm + Δh), 𝐜_pes: 𝛋_min * Δm}
+    diff_omega = simplify(𝛚_definition.subs(subs) - 𝛚_alt_denominator.subs(subs))
+    results["𝛚_definition equals 𝛚_alt_denominator"] = diff_omega == 0
+
+    # Inverse logit cycle: expit(logit(x)) == x for x in (0,1).
+    x = Symbol("x", positive=True)
+    cycle = simplify(1 / (1 + exp(-log(x / (1 - x)))) - x)
+    results["expit(logit(x)) == x"] = cycle == 0
+
+    for name, ok in results.items():
+        if not ok:
+            logger.error("Symbolic identity FAILED: %s", name)
+
+    return results
+
+
 if __name__ == "__main__":
-    # Demo: Print all equations
-    print("Method of Moderation Equations (Unicode SymPy)")
-    print("=" * 60)
+    logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    logger.info("Method of Moderation Equations (Unicode SymPy)")
+    logger.info("=" * 60)
     for name, eq in EQUATIONS.items():
-        print(f"\n{eq['name']}:")
-        print(f"  Unicode: {eq['latex']}")
-        print(f"  Macros:  {eq.get('latex_macro', 'N/A')}")
-        print(f"  SymPy:   {eq['sympy']}")
+        logger.info("\n%s:", eq["name"])
+        logger.info("  Unicode: %s", eq["latex"])
+        logger.info("  Macros:  %s", eq.get("latex_macro", "N/A"))
+        logger.info("  SymPy:   %s", eq["sympy"])
+
+    logger.info("\nVerifying symbolic identities...")
+    identity_results = verify_identities()
+    for name, ok in identity_results.items():
+        status = "OK" if ok else "FAILED"
+        logger.info("  [%s] %s", status, name)
+    if not all(identity_results.values()):
+        sys.exit(1)

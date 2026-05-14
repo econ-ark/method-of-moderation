@@ -72,8 +72,10 @@ fi
 echo ""
 echo "Capturing system information..."
 
-# Capture system info
-python3 "$CAPTURE_SCRIPT" --output /tmp/moderation_sysinfo_$$.json --pretty
+# Capture system info using the project venv Python so reported package
+# versions match the reproduction environment, not the system Python.
+uv run --project "$PROJECT_ROOT" python "$CAPTURE_SCRIPT" \
+    --output /tmp/moderation_sysinfo_$$.json --pretty
 
 echo "Starting reproduction..."
 echo "========================================"
@@ -107,7 +109,7 @@ echo "Generating benchmark report..."
 # Set username (handle unset variable with set -u)
 USER_NAME="${USER:-${USERNAME:-unknown}}"
 
-python3 << PYEOF > "$OUTPUT_FILE"
+uv run --project "$PROJECT_ROOT" python << PYEOF > "$OUTPUT_FILE"
 import json
 import os
 import sys

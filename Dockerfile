@@ -49,15 +49,21 @@ ENV PYTHONPATH="/workspace/code"
 
 # Create entrypoint script that activates the venv
 RUN echo '#!/bin/bash' > /home/vscode/entrypoint.sh && \
-    echo 'set -e' >> /home/vscode/entrypoint.sh && \
+    echo 'set -euo pipefail' >> /home/vscode/entrypoint.sh && \
     echo '' >> /home/vscode/entrypoint.sh && \
     echo '# Determine architecture-specific venv path' >> /home/vscode/entrypoint.sh && \
     echo 'ARCH=$(uname -m)' >> /home/vscode/entrypoint.sh && \
     echo 'VENV_PATH="/workspace/.venv-linux-$ARCH"' >> /home/vscode/entrypoint.sh && \
     echo '' >> /home/vscode/entrypoint.sh && \
-    echo '# Activate venv if it exists' >> /home/vscode/entrypoint.sh && \
+    echo '# Activate venv; fail loudly if it is absent for the current arch.' >> /home/vscode/entrypoint.sh && \
     echo 'if [ -f "$VENV_PATH/bin/activate" ]; then' >> /home/vscode/entrypoint.sh && \
+    echo '    # shellcheck disable=SC1091' >> /home/vscode/entrypoint.sh && \
     echo '    source "$VENV_PATH/bin/activate"' >> /home/vscode/entrypoint.sh && \
+    echo 'else' >> /home/vscode/entrypoint.sh && \
+    echo '    echo "ERROR: No venv at $VENV_PATH (arch=$ARCH)." >&2' >> /home/vscode/entrypoint.sh && \
+    echo '    echo "  Expected one of: /workspace/.venv-linux-x86_64, /workspace/.venv-linux-aarch64." >&2' >> /home/vscode/entrypoint.sh && \
+    echo '    echo "  Rebuild the image on this architecture, or rerun setup.sh in the container." >&2' >> /home/vscode/entrypoint.sh && \
+    echo '    exit 1' >> /home/vscode/entrypoint.sh && \
     echo 'fi' >> /home/vscode/entrypoint.sh && \
     echo '' >> /home/vscode/entrypoint.sh && \
     echo '# Execute the command' >> /home/vscode/entrypoint.sh && \

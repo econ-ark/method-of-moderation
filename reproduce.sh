@@ -2,7 +2,7 @@
 # Full reproduction script for Method of Moderation REMARK
 # This script reproduces all results: tests, paper, and computational notebooks
 
-set -e  # Exit immediately if any command fails
+set -euo pipefail  # -e: exit on error; -u: error on unset variable; pipefail: detect failures in pipelines
 
 # ============================================================================
 # Platform Detection for Platform-Specific Virtual Environment
@@ -60,6 +60,12 @@ echo ""
 # Install dependencies
 echo "Step 1/5: Installing dependencies..."
 uv sync
+# Hard-fail if the core scientific stack didn't actually land in the venv.
+uv run python -c "import HARK, numpy, scipy, matplotlib" || {
+    echo "❌ Core packages failed to import after 'uv sync'." >&2
+    echo "   The reproduction cannot proceed; check uv.lock and Python version." >&2
+    exit 1
+}
 echo "✓ Dependencies installed"
 echo ""
 
@@ -83,17 +89,42 @@ echo ""
 
 # Verify outputs
 echo "Step 5/5: Verifying outputs..."
-if [ -f "_build/html/index.html" ]; then
-    echo "✓ HTML documentation: _build/html/index.html"
+VERIFY_FAILED=0
+check_output() {
+    local file="$1"
+    local label="$2"
+    if [ -f "$file" ]; then
+        echo "✓ ${label}: ${file}"
+    else
+        echo "✗ MISSING ${label}: ${file}" >&2
+        VERIFY_FAILED=1
+    fi
+}
+check_output "_build/html/index.html" "HTML documentation"
+check_output "content/exports/moderation_letters.pdf" "Paper PDF"
+check_output "content/exports/moderation_with_appendix.pdf" "Paper+Appendix PDF"
+
+# The notebook file is tracked in git, so its mere presence proves nothing.
+# Confirm that at least one code cell actually has an execution_count, which is
+# the cheapest sign that nbconvert --execute did its job.
+if uv run python -c "
+import json, sys
+nb = json.load(open('code/method-of-moderation.ipynb'))
+executed = any(
+    c.get('execution_count') for c in nb['cells'] if c.get('cell_type') == 'code'
+)
+sys.exit(0 if executed else 1)
+"; then
+    echo "✓ Executed notebook: code/method-of-moderation.ipynb (has populated execution_count)"
+else
+    echo "✗ Notebook code/method-of-moderation.ipynb has no executed cells." >&2
+    VERIFY_FAILED=1
 fi
-if [ -f "content/exports/moderation_letters.pdf" ]; then
-    echo "✓ Paper PDF: content/exports/moderation_letters.pdf"
-fi
-if [ -f "content/exports/moderation_with_appendix.pdf" ]; then
-    echo "✓ Paper+Appendix PDF: content/exports/moderation_with_appendix.pdf"
-fi
-if [ -f "code/method-of-moderation.ipynb" ]; then
-    echo "✓ Executed notebook: code/method-of-moderation.ipynb"
+
+if [ "$VERIFY_FAILED" -ne 0 ]; then
+    echo "" >&2
+    echo "❌ Verification failed: one or more outputs are missing or unexecuted." >&2
+    exit 1
 fi
 echo ""
 

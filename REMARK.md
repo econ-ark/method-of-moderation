@@ -11,9 +11,9 @@ notebooks:
 
 # The Method of Moderation
 
-A novel technique for solving consumption-saving models that leverages
-analytical optimist and pessimist bounds to produce numerically stable
-approximations with guaranteed theoretical properties.
+A technique for solving consumption-saving models that uses analytical
+optimist and pessimist bounds to produce numerically stable approximations
+with guaranteed theoretical properties.
 
 ## References
 

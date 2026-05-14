@@ -5,7 +5,11 @@
 # This script mirrors the setup from .agents/reproduce/docker/setup.sh but adapted for Binder's
 # conda-based environment where we install into the system Python rather than a venv.
 
-set -e
+set -euo pipefail
+
+# Clean up the temp requirements file no matter how we exit so the failure
+# message points at the real problem (e.g. uv export) rather than the cleanup.
+trap 'rm -f /tmp/requirements.txt' EXIT
 
 echo "🚀 Setting up Method of Moderation Binder environment..."
 
@@ -44,8 +48,7 @@ uv pip install --system -r /tmp/requirements.txt
 # Note: We don't install the project in editable mode because the repo has a
 # flat layout with multiple top-level directories (code/, binder/, content/, .agents/reproduce/).
 # Instead, we add code/ to PYTHONPATH below, which makes the moderation module importable.
-
-rm /tmp/requirements.txt
+# /tmp/requirements.txt is cleaned up by the EXIT trap above.
 
 # ============================================================================
 # Configure environment
@@ -62,8 +65,15 @@ import sys
 # Add code/ directory to Python path (Binder clones to home directory)
 repo_dir = os.environ.get('HOME', '/home/jovyan')
 code_dir = os.path.join(repo_dir, 'code')
-if os.path.isdir(code_dir) and code_dir not in sys.path:
-    sys.path.insert(0, code_dir)
+if os.path.isdir(code_dir):
+    if code_dir not in sys.path:
+        sys.path.insert(0, code_dir)
+else:
+    print(
+        f"WARNING: Expected code directory not found: {code_dir}. "
+        "Notebook cells that `import moderation` will fail until this is "
+        "fixed (check that Binder cloned the repository to $HOME)."
+    )
 PYEOF
 
 # Also set for shell sessions
@@ -103,14 +113,21 @@ echo "   Node.js: $(node --version)"
 myst_version=$(myst --version 2>&1) && echo "   MyST:    $myst_version" || echo "   MyST:    not available"
 echo ""
 
-# List key packages (show warning if imports fail - these are critical)
-if ! python -c "
+# Hard-fail if any of the core packages fail to import. A Binder image where
+# `import HARK` raises is worse than a build failure: users will hit it from
+# inside a Jupyter session with no ability to reinstall, so the build itself
+# must refuse to publish such an image.
+echo "Verifying critical package imports..."
+python -c "
 import HARK; print(f'   HARK:    {HARK.__version__}')
 import numpy; print(f'   NumPy:   {numpy.__version__}')
 import scipy; print(f'   SciPy:   {scipy.__version__}')
 import matplotlib; print(f'   Matplotlib: {matplotlib.__version__}')
-" 2>&1; then
-    echo "   ⚠️ WARNING: Some packages failed to import - check installation"
-fi
+" || {
+    echo "" >&2
+    echo "❌ FATAL: Critical package imports failed; Binder environment is broken." >&2
+    echo "   Refusing to publish a non-functional image." >&2
+    exit 1
+}
 
 echo ""

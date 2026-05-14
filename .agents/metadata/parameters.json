@@ -73,10 +73,10 @@
     "Rfree": {
       "symbol": "R",
       "name": "Gross Risk-Free Interest Rate",
-      "default": 1.03,
+      "default": 1.02,
       "valid_range": { "min": 1.0, "max": 1.2, "exclusive_min": true },
-      "typical_values": [1.01, 1.03, 1.05],
-      "description": "Gross return on assets (1 + r)",
+      "typical_values": [1.01, 1.02, 1.03, 1.05],
+      "description": "Gross return on assets (1 + r); the baseline notebook and verify_table.py use 1.02",
       "units": "per period"
     }
   },
@@ -178,7 +178,7 @@
     "description": "Standard parameter set for examples and testing",
     "CRRA": 2.0,
     "DiscFac": 0.96,
-    "Rfree": 1.03,
+    "Rfree": 1.02,
     "PermGroFac": 1.0,
     "PermShkStd": 0.1,
     "TranShkStd": 0.1,

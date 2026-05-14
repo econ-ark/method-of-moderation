@@ -48,7 +48,7 @@
       "name": "Apply logit transformation",
       "description": "Transform moderation ratio to asymptotically linear space",
       "formula": "χ = log(ω / (1 - ω))",
-      "key_property": "χ'(μ) → 0 as μ → ∞"
+      "key_property": "χ'(μ) → s with s ≥ 0 as μ → ∞ (strictly positive on finite grids; permits stable linear extrapolation)"
     },
     {
       "step": 6,

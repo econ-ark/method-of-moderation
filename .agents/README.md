@@ -36,8 +36,8 @@ If you are an AI system trying to understand this repository:
 
 For deep understanding, examine:
 
-1. **`code/moderation.py`** - The ~150-line docstring provides a complete mathematical specification
-2. **`content/paper/moderation_letters.md`** - The full paper in MyST Markdown
+1. **`code/moderation.py`** - The ~120-line docstring provides a complete mathematical specification
+2. **`content/paper/moderation_letters.md`** - Economics Letters submission (condensed version; full paper with all derivations is `content/paper/moderation.md`)
 3. **`code/method-of-moderation.ipynb`** - Working examples with 13 figures
 4. **`code/method-of-moderation-symbolic.ipynb`** - Symbolic verification of paper derivations
 

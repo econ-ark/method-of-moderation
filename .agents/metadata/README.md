@@ -23,40 +23,53 @@ These files are specifically designed for programmatic access by AI systems:
 
 ### JSON Format (No Dependencies)
 
+`equations.json` stores equations as a dictionary keyed by equation name; each entry has `name`, `description`, `latex_unicode`, `latex_macros`, `sympy_latex`, and `sympy_repr` fields.
+
 ```python
 import json
 
-with open('.agents/metadata/equations.json') as f:
+with open(".agents/metadata/equations.json") as f:
     eq_data = json.load(f)
 
 # Get the moderation ratio equation
-for eq in eq_data['equations']:
-    if eq['id'] == 'moderation_ratio':
-        print(f"LaTeX: {eq['latex']}")
-        print(f"Python: {eq['python']}")
+mod = eq_data["equations"]["moderation_ratio"]
+print(f"LaTeX: {mod['latex_unicode']}")
+print(f"SymPy: {mod['sympy_repr']}")
+
+# Iterate over all equations
+for key, eq in eq_data["equations"].items():
+    print(f"{key}: {eq['name']}")
 ```
 
 ### SymPy (Included in Project Dependencies)
 
+Run from the repository root so that `.agents/metadata/` is importable as a package:
+
 ```python
-from .agents.metadata.equations import (
-    consumption_optimist, consumption_pessimist,
-    moderation_ratio_definition, logit_moderation,
-    EQUATIONS, get_equation_latex
+import sys
+sys.path.insert(0, ".agents")
+
+from metadata.equations import (
+    EQUATIONS,
+    get_equation_latex,
+    𝐜_opt,
+    𝐜_pes,
+    𝛚_simplified,
+    𝛚_logit,
+    m, 𝛋_min, h,
 )
-from sympy import latex, diff, simplify
+from sympy import latex, diff
 
-# Get LaTeX
-print(latex(consumption_optimist))
+# Get LaTeX for the optimist's consumption rule
+print(latex(𝐜_opt))
 
-# Differentiate
-from metadata.equations import m, kappa_min, h
-dc_dm = diff(consumption_optimist, m)
+# Differentiate to recover the optimist's MPC
+dc_dm = diff(𝐜_opt, m)
 print(f"MPC of optimist: {dc_dm}")  # kappa_min
 
 # List all equations
-for name in EQUATIONS:
-    print(f"- {name}: {EQUATIONS[name]['name']}")
+for name, info in EQUATIONS.items():
+    print(f"- {name}: {info['name']}")
 ```
 
 ## Example: Reading Parameters

@@ -19,7 +19,7 @@ $$v(m) = \max_{c} \left\{ u(c) + \beta \mathbb{E}\left[\Psi^{1-\rho} v(m')\right
 
 subject to:
 - $a = m - c$ (budget constraint)
-- $m' = a R + \theta'$ (transition)
+- $m' = (R / \Psi') a + \theta'$ (normalized transition; $\Psi'$ is the permanent-income shock)
 
 ### Euler Equation
 
@@ -95,11 +95,7 @@ $$\chi(\mu) = \log\left(\frac{\omega(\mu)}{1 - \omega(\mu)}\right) = \text{logit
 
 ### Key Property: Asymptotic Linearity
 
-As $\mu \to \infty$:
-
-$$\chi'(\mu) \to 0$$
-
-This means $\chi$ becomes flat for large wealth, preventing extrapolation errors.
+As $\mu \to \infty$, $\chi'(\mu) \to s$ with $s \geq 0$. The limiting slope may equal zero in theory under the GIC, but is strictly positive on any finite grid. We extrapolate $\chi$ linearly using this boundary slope, which preserves $\omega \in (0,1)$ and hence $c_{\text{pes}} < \hat{c} < c_{\text{opt}}$ throughout the extrapolation domain.
 
 ### Inverse Transformation
 

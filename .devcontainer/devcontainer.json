@@ -7,7 +7,7 @@
 
   "postCreateCommand": "bash ${containerWorkspaceFolder}/.agents/reproduce/docker/setup.sh",
 
-  "postStartCommand": "ARCH=$(uname -m); VENV=\"${containerWorkspaceFolder}/.venv-linux-${ARCH}\"; if [ -f \"$VENV/bin/activate\" ]; then source \"$VENV/bin/activate\"; fi",
+  "postStartCommand": "ARCH=$(uname -m); VENV=\"${containerWorkspaceFolder}/.venv-linux-${ARCH}\"; if [ -f \"$VENV/bin/activate\" ]; then source \"$VENV/bin/activate\"; else echo \"WARNING: No venv at $VENV - run .agents/reproduce/docker/setup.sh first\" >&2; fi",
 
   "containerEnv": {
     "PYTHONUNBUFFERED": "1",
