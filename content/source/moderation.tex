@@ -1,4 +1,15 @@
 % -*- mode: LaTeX; TeX-PDF-mode: t; -*- # Tell emacs the file type (for syntax)
+%
+% NOTE (2026): This is the LEGACY LaTeX source. The active version of the
+% paper lives in MyST under content/paper/moderation.md. The chi/logit
+% convention used here is the NEGATIVE of the MyST source:
+%   - This file:    chi = log((1 - kappa) / kappa)  (i.e. negative logit)
+%   - MyST source:  chi = log(omega / (1 - omega))  (standard positive logit)
+% Both are internally consistent with their own reconstruction formulas, but
+% they imply opposite-signed expressions for c_real. The code in
+% code/moderation.py implements the MyST positive-logit convention. Do not
+% reconcile by transplanting equations between the two without checking the
+% sign convention.
 
 % === BEGIN CONTENT FROM C:\Users\alujan\GitHub\llorracc\SolvingMicroDSOPs-Latest\@resources\tex-add-search-paths.tex ===
 % Add the listed directories to the search path
@@ -118,7 +129,7 @@ The resulting solution accurately represents the numerical consumption rule over
 \begin{authorsinfo}
   \name{Carroll: Department of Economics, Johns Hopkins University, Baltimore, MD, \url{http://econ.jhu.edu/people/ccarroll/}, \href{mailto:ccarroll@jhu.edu}{\texttt{ccarroll@jhu.edu}}}
   \name{Tokuoka: International Monetary Fund, Washington, DC, \href{mailto:ktokuoka@imf.org}{\texttt{ktokuoka@imf.org}}}
-  \name{Wu: Weifeng Wu, Fanie Mae, Washington DC, \href{mailto:weifeng\_wu@fanniemae.com}.}
+  \name{Wu: Weifeng Wu, Fannie Mae, Washington DC, \href{mailto:weifeng\_wu@fanniemae.com}.}
 \end{authorsinfo}
 
 \thanks{The views presented in this paper are those of the authors, and should not be attributed to the International Monetary Fund, its Executive Board, or management, or to the European Central Bank.}
@@ -134,7 +145,7 @@ The resulting solution accurately represents the numerical consumption rule over
 \section{Introduction}\label{sec:Intro}
 
 Solving a consumption, investment, portfolio choice, or similar intertemporal optimization problem using numerical methods generally requires the modeler to choose how to represent a policy or value function.
-In the stochastic case, where analytical solutions are generally not available, a common approach is to use low-order polynominal splines that exactly match the function (and maybe some derivatives) at a finite set of gridpoints, and then to assume that interpolated or extrapolated versions of that spline represent the function well at the continuous infinity of unmatched points.
+In the stochastic case, where analytical solutions are generally not available, a common approach is to use low-order polynomial splines that exactly match the function (and maybe some derivatives) at a finite set of gridpoints, and then to assume that interpolated or extrapolated versions of that spline represent the function well at the continuous infinity of unmatched points.
 
 This paper argues that a better approach in the standard consumption problem is to rely upon the fact that without uncertainty, the optimal consumption function has a simple analytical solution.
 The key insight is that, under standard assumptions, the consumer who faces an uninsurable labor income risk will consume less than a consumer with the same path for expected income but who does not perceive any uncertainty as being attached to that future income.
@@ -330,7 +341,7 @@ The consumption function is then constructed by linear interpolation among the g
   holds\ctw{.}{~(this is the multiperiod generalization of the discussion in
     section \ref{subsec:LiqConstrSelfImposed} explaining the derivation of the `natural borrowing constraint' for period $\trmT-1$,
     $\Min{a}_{\prd-1}$).}  Since consumption of zero yields negative
-  infinite utility, the solution to realist consumer's problem is not well
+  infinite utility, the solution to the realist consumer's problem is not well
   defined for values of $m_{\prd} < \Min{m}_{\prd}$, and the limiting
   value of the realist's $c_t$ is zero as $m_{\prd} \downarrow \Min{m}_{\prd}$.
 
