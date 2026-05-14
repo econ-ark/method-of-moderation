@@ -34,16 +34,21 @@ In a risky world, a pessimist assumes the worst will happen. Someone who ignores
 ## Content
 
 ### Paper
-- [**Full Paper (Markdown)**](content/paper/moderation.md) - Complete paper in MyST Markdown format
-- [**Letters Version (Markdown)**](content/paper/moderation_letters.md) - Economics Letters submission format
-- [**Letters PDF**](content/exports/moderation_letters.pdf) - Economics Letters PDF
-- [**Full Paper with Appendix (PDF)**](content/exports/moderation_with_appendix.pdf) - Complete paper including appendix
+
+The Economics Letters submission and its appendix:
+- [Main text, Markdown source](content/paper/moderation_letters.md)
+- [Appendix, Markdown source](content/paper/appendix_letters.md)
+- [Main text, PDF](content/exports/moderation_letters.pdf)
+- [Appendix, PDF](content/exports/appendix_letters.pdf)
+- [Combined PDF (main text + appendix)](content/exports/moderation_with_appendix.pdf)
+
+A long-form working paper draft is also available: [Markdown](content/paper/moderation_extended.md), [PDF](content/exports/moderation_extended.pdf).
 
 ### Code & Interactive Content
 - [**Jupyter Notebook**](code/method-of-moderation.ipynb) - Complete computational notebook with examples
 
 ### Links
-- **Documentation**: [MyST Build](_build/html/index.html) (local build)
+- **Website**: [econ-ark.github.io/method-of-moderation](https://econ-ark.github.io/method-of-moderation/) (MyST-rendered paper, notebooks, and figures)
 - **REMARK Catalog**: [MethodOfModeration](https://github.com/econ-ark/REMARK/blob/master/REMARKs/MethodOfModeration.yml)
 - **Source Code**: [GitHub Repository](https://github.com/econ-ark/method-of-moderation)
 
@@ -64,14 +69,14 @@ See [Reproducibility](#reproducibility) section above for full reproduction inst
 ## Citation
 
 ```bibtex
-@software{carroll2025moderation,
+@software{carroll2026moderation,
   title={The Method of Moderation},
   author={Carroll, Christopher D. and
           Lujan, Alan and
           Chipeniuk, Karsten and
           Tokuoka, Kiichi and
           Wu, Weifeng},
-  year={2025},
+  year={2026},
   url={https://github.com/econ-ark/method-of-moderation},
   license={CC-BY-SA-3.0}
 }

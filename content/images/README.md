@@ -1,6 +1,6 @@
 # Images for "The Method of Moderation"
 
-This directory contains the figures referenced in the document `moderation.md`.
+This directory contains the figures referenced in the paper sources under `content/paper/` (`moderation_extended.md`, `moderation_letters.md`, and `moderation_with_appendix.md`).
 
 ## Current Images
 

@@ -90,8 +90,8 @@ under the project TOC and serves the figures referenced from
 ### `content/paper/moderation_letters.md`
 **Purpose**: Economics Letters submission format (main paper)
 
-### `content/paper/moderation.md`
-**Purpose**: Full paper with complete derivations
+### `content/paper/moderation_extended.md`
+**Purpose**: Extended (long-form) paper with complete derivations
 
 ### `content/paper/appendix_letters.md`
 **Purpose**: Appendix with proofs and extensions
