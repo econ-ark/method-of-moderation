@@ -1494,7 +1494,7 @@ requires-dist = [
     { name = "jupyterlab-myst" },
     { name = "jupytext", specifier = ">=1.17.2" },
     { name = "matplotlib", specifier = ">=3.9.4" },
-    { name = "mystmd", specifier = ">=1.8.2" },
+    { name = "mystmd", specifier = ">=1.9.0" },
     { name = "numba", specifier = ">=0.59.0" },
     { name = "numpy", specifier = ">=2.0.2" },
     { name = "scipy", specifier = ">=1.15.3" },
@@ -1527,15 +1527,15 @@ wheels = [
 
 [[package]]
 name = "mystmd"
-version = "1.8.2"
+version = "1.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "nodeenv" },
     { name = "platformdirs" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/01/94/46889d37174aead85b06b045d5a16b732651d77a8d7bdb603754a9ec17e7/mystmd-1.8.2.tar.gz", hash = "sha256:3a1e329b5f11317f426771f1b2df04643d4f293bc5e1080723a5d07d6cff6c7c", size = 2794564, upload-time = "2026-03-03T17:56:06.066Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6b/40/8f2a7816ddf649671068f6f9f54d813885dee08517b7369dbeb6ca08b487/mystmd-1.9.0.tar.gz", hash = "sha256:bdae4af2966b4e6f20bb8bbb507b3146d340c3ee451ab452cd0982f383588a65", size = 2979307, upload-time = "2026-05-01T15:37:42.733Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/23/b9/b1c270fd4c8270a7171c1d81ae3b52310a69299e7f52822945a259230297/mystmd-1.8.2-py3-none-any.whl", hash = "sha256:cf0175de179df2bc04b202e606360bd5df856c8ca252064bb17de917505dcb49", size = 2825813, upload-time = "2026-03-03T17:56:04.096Z" },
+    { url = "https://files.pythonhosted.org/packages/8a/b0/8d7d1b94daaafe0f798709aed795167fb9c1b0099e2b758645914e010697/mystmd-1.9.0-py3-none-any.whl", hash = "sha256:aed6254d93664543956343d30e215757c7a4d1ce6b5e23fba872607c3d2b1ee0", size = 3011013, upload-time = "2026-05-01T15:37:40.682Z" },
 ]
 
 [[package]]
