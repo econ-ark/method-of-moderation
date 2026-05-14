@@ -22,10 +22,11 @@ The module relies on style.py for all visual styling decisions including:
 Key Figures
 -----------
 - Moderation Ratio: Shows how realist moderates between optimist/pessimist bounds
-- Logit Function: Shows chi transformation for numerical stability
+- Logit Function (`plot_logit_function`): Shows chi(mu) transformation for
+  numerical stability and asymptotic linearity
 - Consumption Bounds: Shows consumption function bounded by theory
 - Precautionary Gaps: Compares approximation quality vs truth
-- MPC Bounds: Shows MPC bounded by theoretical limits
+- MPC Bounds (`plot_mom_mpc`): Shows MPC bounded by theoretical limits
 - Value Functions: Shows value function approximations vs truth
 """
 

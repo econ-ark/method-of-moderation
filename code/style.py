@@ -15,45 +15,42 @@ Responsibilities
 - Helper functions for concept-based color and line style selection
 - External CSS loading for Jupyter notebook styling
 
-Built on normalize.css and HTML5 Boilerplate foundations for cross-browser
-consistency. Contains official ECON-ARK color schemes, plot styles, and modern
-HTML/CSS styling with responsive design and accessibility features. All CSS
-styling is loaded from an external file for better maintainability and easier
-customization.
+A purpose-built stylesheet using CSS custom properties for ECON-ARK brand
+compliance. Contains official ECON-ARK color schemes, plot styles, and
+notebook-friendly typography. CSS lives in `style.css`, loaded from an
+external file for easier customization.
 
 Features
 --------
 - Ultra-minimal CSS with STRICT ECON-ARK brand compliance
 - ONLY approved ECON-ARK brand colors (6 colors, no unauthorized additions)
 - ONLY approved fonts: Roboto and Varela Round (no system font fallbacks)
-- Professional typography hierarchy with full-width ARK blue underlines
+- Professional typography hierarchy with full-width ARK underlines
 - Clean text formatting and alignment utilities
-- Extremely lightweight and brand-compliant (~3KB CSS file)
+- Lightweight stylesheet, brand-compliant
 - Refined professional styling colors for enhanced visual polish
 - Matplotlib plots with professional light panel background and refined colors
 
 External Files
 --------------
-style.css : Ultra-minimal stylesheet (~3KB, 124 lines) including:
-  * Minimal CSS reset (box-sizing, margin/padding reset)
-  * STRICT ECON-ARK brand compliance (6 colors + 2 fonts ONLY)
-  * Professional typography system using Varela Round headings and Roboto body
-  * h1: Bold ARK blue titles, h2: ARK blue with full-width underlines
-  * h3: ARK light blue subsections, h4-h6: ARK blue graduated sizes
-  * Optional .ark-h2.lightblue variant for figure headings
-  * Brand-colored strong/bold text and utility classes
-  * Mobile typography scaling maintaining brand font compliance
+See `style.css` for the live stylesheet. The notebook header uses ECON-ARK
+brand colors and fonts; h2 and h3 selectors get distinct accent colors.
 
 The CSS file is automatically loaded when this module is imported, with
-graceful fallback behavior if the file is not found.
+graceful fallback behavior (warns and returns an empty `<style>` block) if
+the file is not found.
 """
 
 from __future__ import annotations
 
+import logging
+import warnings
 from pathlib import Path
 
 import matplotlib.pyplot as plt
 from cycler import cycler
+
+logger = logging.getLogger(__name__)
 
 # Public API exports
 __all__ = [
@@ -340,12 +337,16 @@ def _load_css_file(filename: str) -> str:
         CSS content wrapped in <style> tags, or empty string if file not found
 
     """
+    css_path = Path(__file__).parent / filename
     try:
-        css_path = Path(__file__).parent / filename
         with css_path.open("r", encoding="utf-8") as f:
             css_content = f.read()
         return f"<style>\n{css_content}\n</style>"
     except FileNotFoundError:
+        warnings.warn(
+            f"CSS file not found: {css_path}. Notebook styling will be missing.",
+            stacklevel=2,
+        )
         return ""
 
 
@@ -382,13 +383,18 @@ def apply_ark_style() -> None:
 
 
 def apply_notebook_css() -> None:
-    """Apply simple notebook CSS styling for Jupyter notebooks."""
+    """Apply simple notebook CSS styling for Jupyter notebooks.
+
+    No-op when IPython is unavailable (e.g. running inside plain Python tests).
+    The debug log lets a developer distinguish "running outside Jupyter" from
+    "IPython is broken" without surfacing noise to end users.
+    """
     try:
         from IPython.display import HTML, display
-
-        display(HTML(NOTEBOOK_CSS))
-    except ImportError:
-        pass  # Running outside Jupyter environment
+    except ImportError as exc:
+        logger.debug("apply_notebook_css: IPython unavailable (%s); skipping", exc)
+        return
+    display(HTML(NOTEBOOK_CSS))
 
 
 def setup_figure(figsize=(12, 8), title=None):
