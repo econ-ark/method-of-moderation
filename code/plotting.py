@@ -32,6 +32,7 @@ Key Figures
 
 from __future__ import annotations
 
+import logging
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -68,6 +69,8 @@ from style import (
 
 if TYPE_CHECKING:
     from matplotlib.axes import Axes
+
+logger = logging.getLogger(__name__)
 
 # Public API exports
 __all__ = [
@@ -308,10 +311,15 @@ def extract_mom_grid_points(
             grid_points_mpc = solution.cFunc.derivative(grid_points_m)
             return grid_points_m, grid_points_mpc
 
-    except (AttributeError, KeyError, IndexError):
-        # Grid extraction can fail for various solution types or incomplete solutions.
-        # Return None to allow plotting to continue without grid point markers.
-        pass
+    except (AttributeError, KeyError, IndexError) as exc:
+        # Grid extraction can fail for various solution types or incomplete
+        # solutions. Log at debug level so HARK API drift is at least traceable;
+        # return None so plotting can continue without grid markers.
+        logger.debug(
+            "MoM grid extraction failed for %s solution: %s",
+            grid_type.value,
+            exc,
+        )
 
     return None, None
 
@@ -353,10 +361,14 @@ def extract_egm_grid_points(
             grid_mpc = solution.cFunc.derivative(grid_m)
             return grid_m, grid_mpc
 
-    except (AttributeError, KeyError, IndexError):
-        # Grid extraction can fail for various solution types or incomplete solutions.
-        # Return None to allow plotting to continue without grid point markers.
-        pass
+    except (AttributeError, KeyError, IndexError) as exc:
+        # See extract_mom_grid_points for the rationale. HARK is pinned to a
+        # moving git rev; surface API drift through the debug log.
+        logger.debug(
+            "EGM grid extraction failed for %s solution: %s",
+            grid_type.value,
+            exc,
+        )
 
     return None, None
 
@@ -734,10 +746,12 @@ def plot_precautionary_gaps(
                         label="Grid boundary",
                     )
 
-        except (AttributeError, KeyError, IndexError, TypeError):
-            # Grid extraction can fail for various solution types or incomplete solutions.
-            # Continue plotting without grid point markers.
-            pass
+        except (AttributeError, KeyError, IndexError, TypeError) as exc:
+            # Inline grid extraction for the precautionary-gaps figure can fail
+            # if the solution does not carry the expected sub-objects. Log at
+            # debug level so HARK API drift is traceable; continue plotting
+            # without grid markers.
+            logger.debug("Inline grid extraction failed: %s", exc)
 
     _configure_standard_axes(
         ax,
@@ -1362,9 +1376,13 @@ def plot_stochastic_bounds(
     r"""Plot comparison of deterministic vs stochastic optimist bounds.
 
     This figure visualizes how stochastic returns affect the theoretical
-    bounds on consumption. The stochastic optimist has a higher MPC
-    (Merton-Samuelson formula) compared to the deterministic optimist,
-    resulting in a lower consumption level at any given wealth.
+    bounds on consumption. For CRRA > 1, the Merton-Samuelson stochastic
+    MPC is *lower* than the deterministic MPC because a mean-preserving
+    spread of returns raises E[R^(1-CRRA)] (Jensen's inequality, since
+    R^(1-CRRA) is convex in R for CRRA > 1). With the same human wealth,
+    a lower MPC at any given level of market resources implies lower
+    consumption: the optimist facing return risk consumes slightly less
+    than the deterministic optimist.
 
     Parameters
     ----------

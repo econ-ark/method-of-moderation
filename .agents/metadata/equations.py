@@ -173,8 +173,11 @@ m_min_formula = -h_min_formula
 𝐜_pes = 𝛋_min * (m - m_min)
 𝐜_pes_excess = 𝛋_min * Δm
 
-# Tighter upper bound: 𝐜_tight(m) = 𝐜_opt - (𝛋_max - 𝛋_min) × Δm
-𝐜_tight = 𝐜_opt - (𝛋_max - 𝛋_min) * Δm
+# Tighter upper bound: 𝐜_tight(m) = 𝛋_max × Δm (= MPCmax × mNrmEx).
+# This is the perfect-foresight consumption of a constrained consumer whose
+# marginal propensity to consume at the borrowing constraint is 𝛋_max.
+# Active for 𝐦 < 𝐦*, where 𝐜_tight crosses 𝐜_opt at the cusp 𝐦*.
+𝐜_tight = 𝛋_max * Δm
 
 # Realist consumption (symbolic placeholder)
 𝐜_real = Symbol("𝐜̂", real=True, positive=True)
@@ -320,7 +323,12 @@ EQUATIONS = {
     },
     "moderation_ratio": {
         "name": "Moderation Ratio",
-        "sympy": 𝛚_definition,
+        # Use the (c_opt - c_pes) form so the sympy expression matches the latex
+        # and latex_macro fields below and matches what `moderation.py:moderate()`
+        # actually computes. The paper's canonical eq:modRte form
+        # (𝐜_real - 𝐜_pes)/(Δh × 𝛋_min) is algebraically equivalent; the helper
+        # `verify_identities()` proves this and is exercised in the unit tests.
+        "sympy": 𝛚_alt_denominator,
         "latex": r"𝛚 = \frac{𝐜̂ - 𝐜̲}{𝐜̄ - 𝐜̲}",
         "latex_macro": r"\modRte = \frac{\cFuncReal - \cFuncPes}{\cFuncOpt - \cFuncPes}",
         "description": "Position between bounds (0 < 𝛚 < 1)",

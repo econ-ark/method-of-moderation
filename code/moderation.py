@@ -339,6 +339,13 @@ def _build_cfunc_mom(
             args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
         )
         MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
+        if not np.isfinite(hNrmEx) or hNrmEx <= 1e-12:
+            raise ValueError(
+                f"hNrmEx={hNrmEx!r}: the pessimist's excess human wealth must be "
+                "strictly positive for the MoM consumption derivative formula to "
+                "apply. Check the impatience and growth-impatience conditions for "
+                "the supplied parameters."
+            )
         modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
         logitModRteMu = modRteMu / (modRte * (1 - modRte))
     else:
@@ -447,6 +454,13 @@ def _build_vfunc_mom(
     eps = 1e-10
     modRte = np.clip(modRte, eps, 1.0 - eps)
     MPCminNvrs = MPCmin ** (-CRRA / (1.0 - CRRA))
+    if not np.isfinite(hNrmEx) or hNrmEx <= 1e-12:
+        raise ValueError(
+            f"hNrmEx={hNrmEx!r}: the pessimist's excess human wealth must be "
+            "strictly positive for the MoM value-function derivative formula "
+            "to apply. Check the impatience and growth-impatience conditions "
+            "for the supplied parameters."
+        )
     modRteMu = mNrmEx * (vNvrsP - MPCminNvrs) / (hNrmEx * MPCminNvrs)
     logitModRte = logit_moderate(modRte)
     logitModRteMu = modRteMu / (modRte * (1 - modRte))
@@ -1438,7 +1452,18 @@ def moderate(m, f_opt, f_real, f_pess):
     """
     f_opt_vals = f_opt(m)
     f_pess_vals = f_pess(m)
-    return (f_real - f_pess_vals) / (f_opt_vals - f_pess_vals)
+    denom = f_opt_vals - f_pess_vals
+    # At the natural borrowing constraint (m == mNrmMin) the two bounds collapse
+    # to the same value and the denominator is zero. Internal callers always feed
+    # grid points strictly above mNrmMin, but the function is exported as a public
+    # utility and may be invoked at the constraint for diagnostics. Return omega
+    # = 0.5 there (the bounds give no information about position) rather than
+    # silently propagating NaN/Inf.
+    return np.where(
+        np.abs(denom) < 1e-14,
+        0.5,
+        (f_real - f_pess_vals) / np.where(np.abs(denom) < 1e-14, 1.0, denom),
+    )
 
 
 def logit_moderate(omega):
@@ -1472,8 +1497,12 @@ def logit_moderate(omega):
     **Asymptotic Properties (ML-consistent convention):**
     - As omega -> 0 (realist -> pessimist): chi -> -infinity
     - As omega -> 1 (realist -> optimist): chi -> +infinity
-    - The derivative chi'(mu) -> 0 as mu -> infinity, ensuring linear extrapolation
-    - This linearity prevents the negative precautionary saving that plagues EGM
+    - The derivative chi'(mu) -> alpha (a non-negative constant) as mu -> infinity,
+      so chi is asymptotically linear in mu and omega approaches 1 only in the limit
+      mu -> +infinity. Linear extrapolation of chi therefore keeps omega in (0,1)
+      and gives a stable continuation of the realist consumption rule beyond the grid.
+    - This asymptotic linearity is what prevents the negative precautionary saving
+      that plagues direct EGM extrapolation.
 
     **Economic Interpretation:**
     - chi < 0: realist closer to pessimist (high precautionary saving)
