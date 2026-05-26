@@ -97,6 +97,12 @@ include-in-header:
       </script>
 ---
 
+# For David Kendrick (1937 - 2024)
+
+- *Stochastic Control for Economic Models* (1981) brought dynamic stochastic optimization into the economics toolkit
+- The buffer-stock problem solved here is a canonical instance of that class: an agent chooses today's action under uncertainty about tomorrow
+- The infrastructure for studying such problems (*JEDC*, founded 1979; *Computational Economics*, co-founded 1988; GAMS, with Meeraus; *Handbook of Computational Economics*, with Amman and Rust) was built largely by him
+
 # The Problem
 
 ## The Basic Problem at Date $t$ {#MaxProb}
@@ -429,5 +435,15 @@ When Might It Not Work?
 - Problems With No Perfect Foresight Solution
   - How Many Such Problems Have A Solution With Shocks?
 - *Should* Work For Value Functions Fairly Generally
+
+## In Memory of David Kendrick (1937 - 2024)
+
+> Not driven by professional fads but by a desire to enhance and communicate research and tools in areas that he found promising.
+>
+> *GAMS Development, 2024*
+
+The journals he founded, the textbooks he wrote, the modeling language he co-developed, and the students he trained shaped the field this paper lives in.
+
+Thank you, David.
 
 ## References
