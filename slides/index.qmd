@@ -97,6 +97,41 @@ include-in-header:
       </script>
 ---
 
+## For David Kendrick (1937 - 2024)
+
+MIT dissertation, 1966 (supervised by Richard Eckaus): Brazilian steel industry, twenty-three integer variables. The computation could not be completed in feasible time. Kendrick halted it by hand and accepted a "good" rather than optimal solution.
+
+He spent the next six decades closing that gap:
+
+- *Stochastic Control for Economic Models* (1981)
+- *JEDC* (founded 1979), *Computational Economics* (1988), the SCE
+- GAMS, with Alexander Meeraus
+- *Handbook of Computational Economics* (1996, with Amman and Rust)
+
+This talk is one application of that program. Its lead author came up at MIT one generation later (PhD 1990).
+
+## Kendrick's Last Question, and This Paper
+
+*Approximating the Value Function for Optimal Experimentation* (Amman, Kendrick, Tucci, *Macroeconomic Dynamics* 2020):
+
+> The value function approach is the preferred method. However, it suffers from the curse of dimensionality... The approximation method allows for a computationally larger class of models, but may produce results that deviate from the optimal solution.
+
+Their decomposition: $J = J_D + J_C + J_P$ (deterministic + cautionary + probing).
+
+Ours: same problem, learning off. The Method of Moderation is an approximation method; the moderation ratio $\modRte$ is doing the work of their $J_C$.
+
+## Kendrick the Scholar
+
+Two principles he repeated:
+
+> Models should be presented so that the reader with minimum effort can understand their structure and data.
+
+> Stand on the shoulders of the previous generations and their models.
+
+GAMS was built for the first. The Method of Moderation tries to honor both.
+
+On every slide that follows, the pessimist, the optimist, and the realist should each say exactly what they contribute.
+
 # The Problem
 
 ## The Basic Problem at Date $t$ {#MaxProb}
@@ -429,5 +464,42 @@ When Might It Not Work?
 - Problems With No Perfect Foresight Solution
   - How Many Such Problems Have A Solution With Shocks?
 - *Should* Work For Value Functions Fairly Generally
+
+## What David Kendrick Built
+
+The discipline this paper lives in:
+
+- *JEDC* (1979), deliberately for economists *and* engineers
+- *Computational Economics* (1988)
+- The Society for Computational Economics (SCE), where he later served as president
+- GAMS, still running models in central banks and finance ministries
+
+This paper's bibliography cites *JEDC* three times. All three are extensions of the endogenous-gridpoint method (Barillas and Fernández-Villaverde 2007; Hintermaier and Koeniger 2010; White 2015). The methodological lineage of MoM lives in the journal he founded.
+
+He received the inaugural David A. Kendrick Distinguished Service Award at the Royal Society in London, July 2010.
+
+## Postscript: Cautionary Saving, Renamed
+
+Amman, Kendrick, and Tucci (2020): cost-to-go $= J_D + J_C + J_P$.
+
+With learning off, $J_P = 0$. What remains:
+
+$$
+\cFuncReal_{t}(\mNrm) = \underbrace{\cFuncPes_{t}(\mNrm)}_{\text{pessimist baseline}} + \underbrace{\modRte_{t} \cdot \hNrmEx_{t}\MPCmin_{t}}_{\text{cautionary adjustment}}
+$$
+
+- Pessimist baseline: perfect-foresight under $\tranShkEmp = \tranShkEmpMin$ (maximally cautious)
+- Moderation ratio $\modRte_{t}$: share of optimism; $1 - \modRte_{t}$ is Kendrick's cautionary share
+- Logit $\logitModRte_{t}$: keeps both ends asymptotically well-behaved
+
+Kendrick's decomposition, in CRRA dress.
+
+## In Memory of David Kendrick (1937 - 2024)
+
+> Not driven by professional fads but by a desire to enhance and communicate research and tools in areas that he found promising.
+>
+> *GAMS Development, 2024*
+
+Thank you, David.
 
 ## References
