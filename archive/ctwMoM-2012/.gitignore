@@ -1,0 +1,4 @@
+# Track only the original zip; extracted contents are derivable from it.
+*
+!.gitignore
+!ctwMoM-2012.zip

@@ -1,0 +1,433 @@
+---
+title: "The Method of Moderation"
+subtitle: "For Solving Dynamic Stochastic Optimization Problems"
+author:
+  - name: Christopher D. Carroll
+    affiliation: "Johns Hopkins University; Econ-ARK"
+  - name: Alan Lujan
+    affiliation: "Johns Hopkins University; Econ-ARK"
+  - name: Karsten Chipeniuk
+    affiliation: "Reserve Bank of New Zealand"
+  - name: Kiichi Tokuoka
+    affiliation: "Japanese Ministry of Finance"
+  - name: Weifeng Wu
+    affiliation: "Fannie Mae"
+format:
+  revealjs:
+    theme: [default, clean-metropolis.scss]
+    slide-number: c/t
+    incremental: false
+    progress: true
+    menu:
+      side: left
+    transition: none
+    background-transition: none
+    html-math-method:
+      method: mathjax
+      url: https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js
+bibliography: ../content/references.bib
+include-in-header:
+  - text: |
+      <script>
+      window.MathJax = {
+        tex: {
+          macros: {
+            cNrm:               "c",
+            cFunc:              "\\mathbf{c}",
+            cFuncOpt:           "\\bar{\\mathbf{c}}",
+            cFuncPes:           "\\underline{\\mathbf{c}}",
+            cFuncReal:          "\\hat{\\mathbf{c}}",
+            cFuncApprox:        "\\grave{\\mathbf{c}}",
+            mNrm:               "m",
+            mNrmEx:             "\\Delta m",
+            mNrmMin:            "\\underline{m}",
+            aNrm:               "a",
+            pNrm:               "p",
+            yNrm:               "y",
+            hNrm:               "h",
+            hNrmOpt:            "\\bar{h}",
+            hNrmPes:            "\\underline{h}",
+            hNrmEx:             "\\Delta h",
+            MPC:                "\\boldsymbol{\\kappa}",
+            MPCmin:             "\\underline{\\boldsymbol{\\kappa}}",
+            MPCmax:             "\\bar{\\boldsymbol{\\kappa}}",
+            modRte:             "\\boldsymbol{\\omega}",
+            modRteLoTightUpBd:  "\\grave{\\check{\\boldsymbol{\\omega}}}",
+            logitModRte:        "\\boldsymbol{\\chi}",
+            logmNrmEx:          "\\boldsymbol{\\mu}",
+            DiscFac:            "\\beta",
+            CRRA:               "\\rho",
+            Rfree:              "\\text{R}",
+            rfree:              "\\text{r}",
+            Rnorm:              "\\mathcal{R}",
+            PermGroFac:         "G",
+            PermGroShk:         "\\mathcal{G}",
+            permShk:            "\\psi",
+            tranShk:            "\\xi",
+            tranShkEmp:         "\\theta",
+            tranShkMin:         "\\underline{\\xi}",
+            tranShkEmpMin:      "\\underline{\\theta}",
+            uFunc:              "\\mathbf{u}",
+            uPrime:             "\\mathbf{u}^{\\prime}",
+            vFunc:              "\\mathbf{v}",
+            vFuncOpt:           "\\bar{\\mathbf{v}}",
+            vFuncPes:           "\\underline{\\mathbf{v}}",
+            vFuncReal:          "\\hat{\\mathbf{v}}",
+            vEnd:               "\\mathfrak{v}",
+            vLevBF:             "\\mathbf{v}",
+            vInv:               "\\boldsymbol{\\Lambda}",
+            vInvOpt:            "\\bar{\\boldsymbol{\\Lambda}}",
+            Risky:              "\\mathbf{R}",
+            risky:              "\\mathbf{r}",
+            equityPrem:         "\\pi",
+            Ex:                 "\\mathbb{E}",
+            Hi:                 ["\\hat{#1}", 1],
+            Lo:                 ["\\check{#1}", 1],
+            Alt:                ["\\grave{#1}", 1],
+            chiFunc:            "\\boldsymbol{\\chi}",
+            koppa:              "\\boldsymbol{\\omega}",
+            cLvl:               "\\mathbf{c}",
+            mLvl:               "\\mathbf{m}",
+            pLvl:               "\\mathbf{p}",
+            yLvl:               "\\mathbf{y}",
+            aLvl:               "\\mathbf{a}"
+          }
+        }
+      };
+      </script>
+---
+
+# The Problem
+
+## The Basic Problem at Date $t$ {#MaxProb}
+
+$$
+\max_{\cNrm_t,\aNrm_t} \; \Ex_{t}\left[\sum_{n=0}^{T-t}\DiscFac^{n} \uFunc(\cNrm_{t+n})\right]
+$$
+
+Labor income: $\yNrm_{t} = \pNrm_{t}\tranShkEmp_{t}$
+
+$$
+\begin{aligned}
+\Rfree_{t}   &= \Rfree \quad \text{constant interest factor} = 1+\rfree \\
+\pNrm_{t+1}  &= \PermGroShk_{t+1}\pNrm_{t} \quad \text{permanent labor income dynamics} \\
+\log \tranShkEmp_{t+n} &\sim \mathcal{N}(-\sigma_{\tranShkEmp}^{2}/2,\,\sigma_{\tranShkEmp}^{2}) \quad \text{lognormal transitory shocks} \; \forall \; n>0
+\end{aligned}
+$$
+
+- "Bewley" problem if liquidity constraint, $\PermGroShk_{t+1}$ nonstochastic
+- "Friedman/Buffer Stock" problem if also permanent shocks
+
+## Bellman Equation {#vrecurse}
+
+$$
+\vLevBF_{t}(\mLvl_{t},\pLvl_{t}) = \max_{\cLvl_{t}} \; \uFunc(\cLvl_{t}) + \Ex_{t}[\DiscFac \; \vLevBF_{t+1}(\mLvl_{t+1},\pLvl_{t+1})]
+$$
+
+$$
+\begin{aligned}
+\mLvl &\;-\; \text{"market resources" (net worth plus current income)} \\
+\pLvl &\;-\; \text{permanent labor income}
+\end{aligned}
+$$
+
+where
+
+$$
+\uFunc(\cNrm) = \left(\frac{\cNrm^{1-\CRRA}}{1-\CRRA}\right)
+$$
+
+## Normalize the Problem {#Normalize}
+
+$$
+\begin{aligned}
+\vFunc_{t}(\mNrm_{t}) &= \max_{\cNrm_{t},\aNrm_t} \;\; \uFunc(\cNrm_{t})+
+        \DiscFac \Ex_{t}[\PermGroShk_{t+1}^{1-\CRRA}\vFunc_{t+1}(\mNrm_{t+1})] \\
+&\text{s.t.} \\
+\aNrm_{t}   &= \mNrm_{t}-\cNrm_{t} \\
+\mNrm_{t+1} &= \underbrace{\left(\Rfree/\PermGroShk_{t+1}\right)}_{\equiv \Rnorm_{t+1}}\aNrm_{t}+\tranShkEmp_{t+1}
+\end{aligned}
+$$
+
+where nonbold variables are bold ones normalized by $\pLvl$:
+
+$$
+\mNrm_{t} = \mLvl_{t}/\pLvl_{t}
+$$
+
+$\Rightarrow$ $\cFunc_{t}(\mNrm)$ from which we can obtain
+
+$$
+\cLvl_{t}(\mLvl_{t},\pLvl_{t}) = \cFunc_{t}(\mLvl_{t}/\pLvl_{t})\pLvl_{t}
+$$
+
+## My First Notational Atrocity
+
+. . .
+
+...in this paper.
+
+. . .
+
+$$
+\vEnd_{t}(\aNrm_{t}) = \Ex_{t}[\DiscFac \PermGroShk_{t+1}^{1-\CRRA}\vFunc_{t+1}(\Rnorm_{t+1} \aNrm_{t}+\tranShkEmp_{t+1})]
+$$
+
+so FOC is
+
+$$
+\uPrime(\cNrm_{t}) = \vEnd_{t}^{\prime}(\mNrm_{t}-\cNrm_{t})
+$$
+
+or
+
+$$
+\cNrm_{t}^{-\CRRA} = \vEnd_{t}^{\prime}(\aNrm_{t})
+$$
+
+## The Method of Endogenous Gridpoints
+
+. . .
+
+- Define vector of *end-of-period* asset values $\vec{\aNrm}$
+- For each $\aNrm[j]$ compute $\vEnd_{t}^{\prime}(\aNrm[j])$
+
+. . .
+
+Each of these $\vEnd_{t}^{\prime}[j]$ corresponds to a unique $\cNrm[j]$ via FOC:
+
+$$
+\begin{aligned}
+\cNrm[j]^{-\CRRA} &= \vEnd_{t}^{\prime}(\aNrm[j]) \\
+\cNrm[j] &= \left(\vEnd_{t}^{\prime}(\aNrm[j])\right)^{-1/\CRRA}
+\end{aligned}
+$$
+
+## The Method of Endogenous Gridpoints (cont.)
+
+But the DBC says
+
+$$
+\begin{aligned}
+\aNrm_{t} &= \mNrm_{t} - \cNrm_{t} \\
+\mNrm[j]  &= \aNrm[j] + \cNrm[j]
+\end{aligned}
+$$
+
+. . .
+
+So computing $\vEnd_{t}^{\prime}$ at a vector of $\vec{\aNrm}$ values (easy) has produced for us the corresponding $\vec{\cNrm}$ and $\vec{\mNrm}$ values at virtually no cost!
+
+. . .
+
+From these we can interpolate to construct $\grave{\cFunc}_{t}(\mNrm)$.
+
+# The Method of Moderation
+
+## The Optimist, the Pessimist, and the Realist
+
+Call the "true" problem that of a "realist"
+
+. . .
+
+Contrasts with:
+
+. . .
+
+$$
+\begin{aligned}
+\text{Optimist} &: \text{Believes } \tranShkEmp_{t+n} = \overbrace{1}^{=\Ex_{t}[\tranShkEmp_{t+n}]} \; \forall \; n>0, \text{ consumes } \cFuncOpt_{t} \\
+\text{Pessimist} &: \text{Believes } \tranShkEmp_{t+n} = \tranShkEmpMin \; \forall \; n>0, \text{ consumes } \cFuncPes_{t}
+\end{aligned}
+$$
+
+. . .
+
+Useful because:
+
+1. Both of these are perfect foresight problems
+   - Linear analytical solution (easy!)
+2. $\cFuncPes_{t} < \cFunc_{t} < \cFuncOpt_{t}$
+
+## Illustration (6 Gridpoints)
+
+![](images/IntExpFOCInvPesReaOptNeedHiPlot.png){fig-align="center" width="80%"}
+
+## Problem: Extrapolating Outside the Grid (6 Gridpoints) {#ExtrapProblemPlot}
+
+![](images/ExtrapProblemPlot.png){fig-align="center" width="80%"}
+
+## Solution (Same 6 Gridpoints!)
+
+![](images/ExtrapProblemSolvedPlot.png){fig-align="center" width="80%"}
+
+## Definitions and Solutions for Perfect Foresight Problem
+
+$$
+\begin{aligned}
+\MPCmin_{t} &: \text{MPC for perfect foresight problem in period } t \\
+\hNrmOpt_{t}   &: \text{end-of-period-}t\text{ human wealth for "optimist"} \\
+\hNrmPes_{t} &: \text{end-of-period-}t\text{ human wealth for "pessimist"}
+\end{aligned}
+$$
+
+- Pessimist's solution:
+$$
+\cFuncPes_{t}(\mNrm) = \underbrace{(\mNrm + \hNrmPes_{t})}_{\equiv \mNrmEx} \MPCmin_{t}
+$$
+
+- Optimist's solution:
+$$
+\begin{aligned}
+\cFuncOpt_{t}(\mNrm) &= (\mNrm + \hNrmOpt_{t}) \MPCmin_{t} \\
+&= \cFuncPes_{t}(\mNrm) + \underbrace{(\hNrmOpt_{t}-\hNrmPes_{t})}_{\equiv \hNrmEx_{t}} \MPCmin_{t}
+\end{aligned}
+$$
+
+## Key Inequalities
+
+$$
+\begin{array}{rcl}
+\mNrmEx_{t} \MPCmin_{t} < & \cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & < (\mNrmEx_{t}+\hNrmEx_{t})\MPCmin_{t} \\[4pt]
+-\mNrmEx_{t} \MPCmin_{t} > & -\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & > -(\mNrmEx_{t}+\hNrmEx_{t})\MPCmin_{t} \\[4pt]
+\hNrmEx_{t} \MPCmin_{t} > & \cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t})-\cFuncPes_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & > 0 \\[4pt]
+1 > & \underbrace{\left(\dfrac{\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t})-\cFuncPes_{t}(\mNrmMin_{t}+\mNrmEx_{t})}{\hNrmEx_{t} \MPCmin_{t}}\right)}_{\equiv \modRte_{t}} & > 0
+\end{array}
+$$
+
+Defining $\logmNrmEx_{t} = \log \mNrmEx_{t}$ (which can range from $-\infty$ to $\infty$), the moderation ratio is
+
+$$
+\modRte_{t}(\logmNrmEx_{t}) \equiv \left(\frac{\cFuncReal_{t}(\mNrmMin_{t}+e^{\logmNrmEx_{t}})-\cFuncPes_{t}(\mNrmMin_{t}+e^{\logmNrmEx_{t}})}{\hNrmEx_{t} \MPCmin_{t}}\right)
+$$
+
+and we now define (positive-logit convention)
+
+$$
+\logitModRte_{t}(\logmNrmEx_{t}) = \log \left(\frac{\modRte_{t}(\logmNrmEx_{t})}{1-\modRte_{t}(\logmNrmEx_{t})}\right)
+$$
+
+## Approximating Precautionary Saving
+
+$$
+\cFuncReal_{t} = \cFuncPes_{t}+\overbrace{\frac{1}{1+\exp(-\logitModRte_{t})}}^{=\modRte_{t}} \hNrmEx_{t} \MPCmin_{t}
+$$
+
+In the limit as $\logmNrmEx$ approaches either $\infty$ or $-\infty$ this gives the "right" answer.
+
+## Solving for the Value Function
+
+Given analytical object
+
+$$
+\mathbb{C}_{t}^{T} \equiv \mathrm{PDV}_{t}^{T}(\cNrm)/\cNrm_{t}
+$$
+
+The perfect foresight value function is:
+
+$$
+\vFunc_{t}(\mNrm_{t}) = \uFunc(\cNrm_{t})\mathbb{C}_{t}^{T}
+$$
+
+which can be transformed as
+
+$$
+\begin{aligned}
+\vInv_{t} &\equiv \left((1-\CRRA)\vFunc_{t}\right)^{1/(1-\CRRA)} \\
+&= \cNrm_{t}(\mathbb{C}_{t}^{T})^{1/(1-\CRRA)}
+\end{aligned}
+$$
+
+In the limit as $\logmNrmEx$ approaches either $\infty$ or $-\infty$ this gives the "right" answer.
+
+## Approximate Inverted Value Function
+
+Same steps as for consumption function, because
+
+$$
+\vFuncPes_{t} < \vFunc_{t} < \vFuncOpt_{t}
+$$
+
+Produce
+
+$$
+\Alt{\vFunc}_{t}(\mNrm) = \uFunc(\Alt{\vInv}_{t}(\mNrm))
+$$
+
+# A Refinement
+
+## A Tighter Limit: $\cFuncReal_{t}(\mNrm) < \min[\MPCmax_{t} \mNrmEx_{t},\, \cFuncOpt_{t}(\mNrm_{t})]$
+
+![](images/IntExpFOCInvPesReaOptNeed45Plot.png){fig-align="center" width="80%"}
+
+## The Tighter Upper Bound
+
+We want to construct a consumption function for $\mNrm_{t} \in (\mNrmMin_{t}, \mNrm_{t}^{\#}]$ that respects the tighter upper bound:
+
+$$
+\begin{array}{rcl}
+\mNrmEx_{t} \MPCmin_{t} < & \cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & < \MPCmax_{t} \mNrmEx_{t} \\[4pt]
+\mNrmEx_{t}(\MPCmax_{t}-\MPCmin_{t}) > & \MPCmax_{t} \mNrmEx_{t}-\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & > 0 \\[4pt]
+1 > & \left(\dfrac{\MPCmax_{t} \mNrmEx_{t}-\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t})}{\mNrmEx_{t}(\MPCmax_{t}-\MPCmin_{t})}\right) & > 0
+\end{array}
+$$
+
+Again defining $\logmNrmEx_{t} = \log \mNrmEx_{t}$, the low-resource moderation ratio is
+
+$$
+\modRteLoTightUpBd_{t}(\logmNrmEx_{t}) \equiv \frac{\MPCmax_{t}-\cFuncReal_{t}(\mNrmMin_{t}+e^{\logmNrmEx_{t}})e^{-\logmNrmEx_{t}}}{\MPCmax_{t}-\MPCmin_{t}}
+$$
+
+## Combining Old and New Functions
+
+Defining indicator functions
+
+$$
+\begin{aligned}
+\mathbf{1}_{\text{Lo}}(\mNrm) &= 1 \text{ if } \mNrm \leq \bar{\check{\mNrm}}_{t}^{\#} \\
+\mathbf{1}_{\text{Mid}}(\mNrm) &= 1 \text{ if } \bar{\check{\mNrm}}_{t}^{\#} < \mNrm < \underline{\hat{\mNrm}}_{t}^{\#} \\
+\mathbf{1}_{\text{Hi}}(\mNrm)  &= 1 \text{ if } \underline{\hat{\mNrm}}_{t}^{\#} \leq \mNrm
+\end{aligned}
+$$
+
+we can define a well-behaved approximating consumption function
+
+$$
+\Alt{\cFunc}_{t} = \mathbf{1}_{\text{Lo}} \Alt{\Lo{\cFunc}}_{t} + \mathbf{1}_{\text{Mid}} \Alt{\tilde{\cFunc}}_{t}+\mathbf{1}_{\text{Hi}} \Alt{\Hi{\cFunc}}_{t}
+$$
+
+# An Extension
+
+## Extension To Case With Financial Risk Too
+
+$$
+\log \Risky_{t+n} \sim \mathcal{N}(\rfree + \equityPrem - \sigma^{2}_{\risky}/2,\,\sigma^{2}_{\risky}) \; \forall \; n>0
+$$
+
+[@Merton1969] and [@Samuelson1969]: Without labor income,
+
+$$
+\MPC = 1- \left(\DiscFac \; \Ex_{t}[\Risky_{t+1}^{1-\CRRA}]\right)^{1/\CRRA}
+$$
+
+and in this case the previous analysis applies once we substitute this MPC for the one that characterizes the perfect foresight problem without rate-of-return risk.
+
+# Conclusions
+
+## How Useful Is It?
+
+When it works:
+
+- Can approximate solution *globally* with very few gridpoints
+- Can speed solution substantially
+
+. . .
+
+When Might It Not Work?
+
+- Consumption With Nonconvexities
+- Problems With No Perfect Foresight Solution
+  - How Many Such Problems Have A Solution With Shocks?
+- *Should* Work For Value Functions Fairly Generally
+
+## References

@@ -37,8 +37,27 @@ jobs:
           node-version: 18.x
       - name: Install MyST Markdown
         run: npm install -g mystmd
-      - name: Build HTML Assets
+      - name: Build MyST HTML (paper, lands at site root)
         run: myst build --html
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - name: Render Quarto slides
+        run: quarto render slides/index.qmd
+
+      - name: Merge slide output under /slides without overwriting MyST tree
+        run: |
+          mkdir -p _build/html/slides
+          cp slides/index.html _build/html/slides/index.html
+          cp -r slides/index_files _build/html/slides/index_files
+          # Dereference the symlink so the bundle is self-contained
+          cp -rL slides/images _build/html/slides/images
+          echo "--- _build/html top-level ---"
+          ls -la _build/html
+          echo "--- _build/html/slides ---"
+          ls -la _build/html/slides
+
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v5
         with:
