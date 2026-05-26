@@ -1,0 +1,13 @@
+# Quarto render artifacts — regenerate with `quarto render index.qmd`
+# or `quarto preview index.qmd`. Tracked sources: *.qmd, *.scss, and the
+# `images` symlink to ../content/images.
+
+*.html
+*_files/
+.quarto/
+_freeze/
+_site/
+
+# OS / editor scratch
+.DS_Store
+*~

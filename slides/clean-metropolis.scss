@@ -1,0 +1,464 @@
+/*-- scss:defaults --*/
+
+// =============================================================================
+// Hybrid academic theme: Grant McDermott's "clean" palette and typographic
+// restraint, fused with Shafayet Shafee's Metropolis-inspired Fira Sans,
+// small-caps section dividers, and accented rules.
+// =============================================================================
+
+// --- Color palette (from clean) ---------------------------------------------
+$jet:     #131516;   // body text
+$accent:  #107895;   // teal — primary accent (links, h3, dividers)
+$accent2: #9a2515;   // brick — alerts, h4, emphasis
+$muted:   #6c757d;   // secondary text (affiliations, captions, slide numbers)
+$rule:    #d3d3d3;   // hairlines (tables, separators)
+$bg:      #fafafa;   // off-white slide background
+
+$right-arrow: "\2192";
+
+// --- Fonts (Fira from metropolis; loaded once from Google Fonts) ------------
+@import url('https://fonts.googleapis.com/css?family=Fira+Sans:300,300i,400,400i,500,500i,600,600i&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Fira+Mono:400,500,700&display=swap');
+
+$font-family-sans-serif:     "Fira Sans", "Helvetica Neue", Helvetica, Arial, sans-serif !default;
+$font-family-monospace:      "Fira Mono", "SF Mono", Menlo, Consolas, monospace !default;
+$presentation-heading-font:  "Fira Sans", sans-serif !default;
+$presentation-heading-color: $jet !default;
+$presentation-heading-font-weight: 300;
+$presentation-font-size-root: 32px;
+
+// --- Reveal variables --------------------------------------------------------
+$body-bg:      $bg !default;
+$body-color:   $jet !default;
+$link-color:   $accent !default;
+$selection-bg: rgba($accent, 0.25) !default;
+
+
+/*-- scss:rules --*/
+
+// =============================================================================
+// GLOBAL
+// =============================================================================
+
+.reveal a {
+  line-height: 1.4em;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-color 0.15s ease;
+}
+
+.reveal a:hover {
+  border-bottom-color: $accent;
+}
+
+.reveal p {
+  font-weight: 300;
+  margin-top: 1em;
+  line-height: 1.4;
+}
+
+.reveal strong,
+.reveal b {
+  font-weight: 500;
+}
+
+// =============================================================================
+// TITLE SLIDE  (clean's left-aligned structure + metropolis's small-caps rule)
+// =============================================================================
+
+#title-slide {
+  text-align: left;
+
+  .title {
+    color: $jet;
+    font-size: 1.5em;
+    font-weight: 300;
+    font-variant: small-caps;
+    letter-spacing: 0.02em;
+    border-bottom: 2px solid $accent;
+    padding-bottom: 0.2em;
+    margin-bottom: 0.3em;
+  }
+
+  .subtitle {
+    color: $accent;
+    font-style: italic;
+    font-weight: 300;
+    font-size: 0.9em;
+    margin-top: 0;
+    margin-bottom: 1em;
+  }
+
+  .quarto-title-authors {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: auto auto;
+    gap: 0.6em 1.5em;
+    margin-top: 0.8em;
+
+    .quarto-title-author {
+      padding: 0;
+      width: auto;
+    }
+
+    // Row 1: Carroll (col 1), Lujan (col 2), col 3 left empty
+    .quarto-title-author:nth-child(1) { grid-column: 1; grid-row: 1; }
+    .quarto-title-author:nth-child(2) { grid-column: 2; grid-row: 1; }
+    // Row 2: Chipeniuk, Tokuoka, Wu fill the three columns
+    .quarto-title-author:nth-child(3) { grid-column: 1; grid-row: 2; }
+    .quarto-title-author:nth-child(4) { grid-column: 2; grid-row: 2; }
+    .quarto-title-author:nth-child(5) { grid-column: 3; grid-row: 2; }
+  }
+
+  .author,
+  .quarto-title-author-name {
+    color: $jet;
+    font-weight: 400;
+    font-size: 0.7em;
+    margin-bottom: 0.1em;
+  }
+
+  .institute,
+  .quarto-title-affiliation,
+  .quarto-title-author-email {
+    font-style: italic;
+    color: $muted;
+    font-size: 0.55em;
+    line-height: 1.2;
+  }
+
+  .date {
+    color: $muted;
+    font-size: 0.6em;
+    margin-top: 1em;
+  }
+}
+
+// =============================================================================
+// SECTION DIVIDER SLIDES  (level-1, "# Heading" in markdown)
+// Metropolis-style: small-caps lowercase, teal underline, generous padding
+// =============================================================================
+
+.reveal .slides > section.title-slide,
+.reveal section.level1 > h1,
+.reveal section.slide.level1 > h1 {
+  font-size: 1.8em;
+  font-weight: 300;
+  font-variant: small-caps;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: $jet;
+  border-bottom: 2px solid $accent;
+  padding-bottom: 0.25em;
+  margin-bottom: 0.7em;
+}
+
+// Slides that ARE a section divider (no h2 content) should center vertically
+.reveal section.level1:not(:has(h2)) {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+// =============================================================================
+// CONTENT HEADINGS  (level-2 = "## Frame title", h3, h4)
+// =============================================================================
+
+.reveal h2 {
+  font-weight: 300;
+  font-size: 1.35em;
+  color: $jet;
+  border-bottom: 1px solid mix($accent, white, 70%);
+  padding-bottom: 0.12em;
+  margin-bottom: 0.6em;
+  letter-spacing: 0.005em;
+}
+
+.reveal h3 {
+  color: $accent;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 1em;
+  margin-top: 0.8em;
+}
+
+.reveal h4 {
+  color: $accent2;
+  font-weight: 400;
+  font-size: 0.9em;
+  margin-top: 1em;
+}
+
+// =============================================================================
+// LISTS  (clean's right-arrow style for nested bullets)
+// =============================================================================
+
+.reveal ul {
+  font-weight: 300;
+  padding-left: 1em;
+  line-height: 1.45;
+
+  li {
+    margin-bottom: 0.25em;
+  }
+
+  li::marker {
+    color: mix($accent, white, 65%);
+  }
+}
+
+.reveal ul ul {
+  list-style: none;
+  margin-top: 0.2em;
+
+  li:before {
+    content: $right-arrow;
+    color: mix($accent, white, 50%);
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+    margin-right: 0.4em;
+  }
+}
+
+.reveal ol {
+  font-weight: 300;
+  padding-left: 1.2em;
+  line-height: 1.45;
+
+  li {
+    margin-bottom: 0.25em;
+  }
+
+  li::marker {
+    color: $accent;
+    font-weight: 400;
+  }
+}
+
+// =============================================================================
+// TABLES  (clean's booktabs-style rendering)
+// =============================================================================
+
+.reveal table {
+  margin: 0.8em auto;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 0.85em;
+  width: auto;
+}
+
+.reveal table th,
+.reveal table td {
+  border: none;
+  padding: 0.25em 0.7em;
+  text-align: left;
+  font-weight: 300;
+}
+
+.reveal table thead {
+  border-top: 2px solid $jet;
+}
+
+.reveal table thead th {
+  font-weight: 500;
+  border-bottom: 1px solid $jet;
+}
+
+.reveal table tbody tr:last-child td {
+  border-bottom: 2px solid $jet;
+}
+
+.reveal table caption {
+  color: $muted;
+  font-variant: small-caps;
+  font-size: 0.9em;
+  padding: 0.4em 0;
+}
+
+// =============================================================================
+// CODE  (Fira Mono, subtle accent for inline)
+// =============================================================================
+
+.reveal code {
+  font-family: $font-family-monospace;
+  color: $accent2;
+  font-size: 0.95em;
+}
+
+.reveal pre {
+  font-family: $font-family-monospace;
+  font-size: 0.65em;
+  background: #f5f5f5;
+  border-left: 3px solid $accent;
+  border-radius: 0 4px 4px 0;
+  padding: 0.6em 0.9em;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  width: auto;
+  margin: 0.8em 0;
+}
+
+.reveal pre code {
+  color: $jet;
+  background: transparent;
+}
+
+// =============================================================================
+// BLOCKQUOTES  (toned down from metropolis)
+// =============================================================================
+
+.reveal blockquote {
+  border-left: 4px solid $accent;
+  background: rgba($accent, 0.04);
+  padding: 0.6em 1em;
+  margin: 1em auto;
+  width: 80%;
+  font-style: italic;
+  font-weight: 300;
+  box-shadow: none;
+}
+
+// =============================================================================
+// IMAGES  (plain by default — no metropolis border)
+// =============================================================================
+
+.reveal section img {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  margin: 0.8em 0;
+  max-width: 90%;
+  max-height: 85vh;
+}
+
+// =============================================================================
+// UTILITY CLASSES  (carried over from clean)
+// =============================================================================
+
+.alert { color: $accent2; font-weight: 500; }
+.emph  { color: $accent;  font-weight: 500; }
+
+.fg { color: var(--col, $jet); }
+.bg {
+  background-color: var(--col, transparent);
+  padding: 0.1em 0.25em;
+  border-radius: 3px;
+  display: inline-block;
+}
+
+// =============================================================================
+// LINKS BUTTONS  (clean's Beamer-style)
+// =============================================================================
+
+.button {
+  display: inline-block;
+  padding: 0.3em 0.9em;
+  margin: 0.2em 0;
+  font-size: 0.75em;
+  font-weight: 400;
+  font-variant: small-caps;
+  letter-spacing: 0.04em;
+  background-color: $accent;
+  border: 1px solid $accent;
+  color: #fff !important;
+  text-decoration: none;
+  border-radius: 3px;
+  transition: all 0.2s ease-in-out;
+}
+
+.button:hover {
+  background-color: $accent2;
+  border-color: $accent2;
+  border-bottom-color: $accent2;
+}
+
+.button::before {
+  content: "▸";
+  margin-right: 0.4em;
+}
+
+// =============================================================================
+// COLUMN LAYOUT HELPERS  (from clean)
+// =============================================================================
+
+.reveal .columns3070 > div.column:first-child { width: 30%; }
+.reveal .columns3070 div.column:not(:first-child) { width: 70%; }
+.reveal .columns7030 > div.column:first-child { width: 70%; }
+.reveal .columns7030 div.column:not(:first-child) { width: 30%; }
+.reveal .columns4060 > div.column:first-child { width: 40%; }
+.reveal .columns4060 div.column:not(:first-child) { width: 60%; }
+.reveal .columns6040 > div.column:first-child { width: 60%; }
+.reveal .columns6040 div.column:not(:first-child) { width: 40%; }
+
+// =============================================================================
+// PROGRESS BAR  (Metropolis-style at bottom, teal)
+// =============================================================================
+
+.reveal .progress {
+  color: $accent;
+  background: rgba($accent, 0.15);
+  height: 4px;
+}
+
+.reveal .progress span {
+  background: $accent;
+  transition: width 600ms cubic-bezier(0.26, 0.86, 0.44, 0.985);
+}
+
+// =============================================================================
+// SLIDE NUMBER  (muted, bottom-right)
+// =============================================================================
+
+.slide-number,
+.reveal.has-logo .slide-number {
+  color: $muted !important;
+  font-size: 0.65em !important;
+  font-family: $font-family-monospace !important;
+  bottom: 8px !important;
+  right: 12px !important;
+  top: unset !important;
+}
+
+// =============================================================================
+// MENU BUTTON (top-right, from clean)
+// =============================================================================
+
+.reveal .slide-menu-button {
+  position: fixed;
+  top: 6px;
+  right: 6px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-start;
+  pointer-events: none;
+  opacity: 0.5;
+}
+
+.reveal .slide-menu-button > * {
+  pointer-events: auto;
+}
+
+// =============================================================================
+// CONTROLS  (subtle teal, smaller)
+// =============================================================================
+
+.reveal .controls {
+  color: $accent;
+}
+
+// =============================================================================
+// MATHJAX TWEAKS
+// =============================================================================
+
+.reveal .math {
+  font-size: 1em;
+}
+
+.reveal .MathJax {
+  outline: none;
+}
+
+// Center display equations
+.reveal mjx-container[display="true"] {
+  margin: 0.6em auto !important;
+}
