@@ -447,6 +447,36 @@ $selection-bg: rgba($accent, 0.25) !default;
 }
 
 // =============================================================================
+// MEMORIAL SLIDES  (text-dense Kendrick tribute slides; scale to fit 700px)
+// =============================================================================
+
+.reveal section.memorial {
+  font-size: 0.88em;
+
+  p { margin-top: 0.55em; }
+
+  blockquote {
+    margin: 0.6em auto;
+    padding: 0.45em 1em;
+  }
+
+  ul li,
+  ol li { margin-bottom: 0.15em; }
+}
+
+// =============================================================================
+// DENSE SLIDES  (equation-heavy slides; scale + tighten to fit 700px)
+// =============================================================================
+
+.reveal section.dense {
+  font-size: 0.85em;
+
+  p { margin-top: 0.5em; }
+
+  mjx-container[display="true"] { margin: 0.45em auto !important; }
+}
+
+// =============================================================================
 // MATHJAX TWEAKS
 // =============================================================================
 

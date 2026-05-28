@@ -97,7 +97,7 @@ include-in-header:
       </script>
 ---
 
-## For David Kendrick (1937 - 2024)
+## For David Kendrick (1937 - 2024) {.memorial}
 
 MIT dissertation, 1966 (supervised by Richard Eckaus): Brazilian steel industry, twenty-three integer variables. The computation could not be completed in feasible time. Kendrick halted it by hand and accepted a "good" rather than optimal solution.
 
@@ -110,7 +110,7 @@ He spent the next six decades closing that gap:
 
 This talk is one application of that program. Its lead author came up at MIT one generation later (PhD 1990).
 
-## Kendrick's Last Question, and This Paper
+## Kendrick's Last Question, and This Paper {.memorial}
 
 *Approximating the Value Function for Optimal Experimentation* (Amman, Kendrick, Tucci, *Macroeconomic Dynamics* 2020):
 
@@ -120,7 +120,7 @@ Their decomposition: $J = J_D + J_C + J_P$ (deterministic + cautionary + probing
 
 Ours: same problem, learning off. The Method of Moderation is an approximation method; the moderation ratio $\modRte$ is doing the work of their $J_C$.
 
-## Kendrick the Scholar
+## Kendrick the Scholar {.memorial}
 
 Two principles he repeated:
 
@@ -296,7 +296,7 @@ Useful because:
 
 ![](images/ExtrapProblemSolvedPlot.png){fig-align="center" width="80%"}
 
-## Definitions and Solutions for Perfect Foresight Problem
+## Definitions and Solutions for Perfect Foresight Problem {.dense}
 
 $$
 \begin{aligned}
@@ -319,24 +319,17 @@ $$
 \end{aligned}
 $$
 
-## Key Inequalities
+## Key Inequalities {.dense}
 
 $$
 \begin{array}{rcl}
 \mNrmEx_{t} \MPCmin_{t} < & \cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & < (\mNrmEx_{t}+\hNrmEx_{t})\MPCmin_{t} \\[4pt]
--\mNrmEx_{t} \MPCmin_{t} > & -\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & > -(\mNrmEx_{t}+\hNrmEx_{t})\MPCmin_{t} \\[4pt]
 \hNrmEx_{t} \MPCmin_{t} > & \cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t})-\cFuncPes_{t}(\mNrmMin_{t}+\mNrmEx_{t}) & > 0 \\[4pt]
 1 > & \underbrace{\left(\dfrac{\cFuncReal_{t}(\mNrmMin_{t}+\mNrmEx_{t})-\cFuncPes_{t}(\mNrmMin_{t}+\mNrmEx_{t})}{\hNrmEx_{t} \MPCmin_{t}}\right)}_{\equiv \modRte_{t}} & > 0
 \end{array}
 $$
 
-Defining $\logmNrmEx_{t} = \log \mNrmEx_{t}$ (which can range from $-\infty$ to $\infty$), the moderation ratio is
-
-$$
-\modRte_{t}(\logmNrmEx_{t}) \equiv \left(\frac{\cFuncReal_{t}(\mNrmMin_{t}+e^{\logmNrmEx_{t}})-\cFuncPes_{t}(\mNrmMin_{t}+e^{\logmNrmEx_{t}})}{\hNrmEx_{t} \MPCmin_{t}}\right)
-$$
-
-and we now define (positive-logit convention)
+The last line bounds the moderation ratio: $0 < \modRte_{t} < 1$. Writing $\logmNrmEx_{t} = \log \mNrmEx_{t}$, which ranges over $(-\infty, \infty)$, its positive-logit transform is
 
 $$
 \logitModRte_{t}(\logmNrmEx_{t}) = \log \left(\frac{\modRte_{t}(\logmNrmEx_{t})}{1-\modRte_{t}(\logmNrmEx_{t})}\right)
@@ -350,7 +343,7 @@ $$
 
 In the limit as $\logmNrmEx$ approaches either $\infty$ or $-\infty$ this gives the "right" answer.
 
-## Solving for the Value Function
+## Solving for the Value Function {.dense}
 
 Given analytical object
 
@@ -465,7 +458,7 @@ When Might It Not Work?
   - How Many Such Problems Have A Solution With Shocks?
 - *Should* Work For Value Functions Fairly Generally
 
-## What David Kendrick Built
+## What David Kendrick Built {.memorial}
 
 The discipline this paper lives in:
 
@@ -478,7 +471,7 @@ This paper's bibliography cites *JEDC* three times. All three are extensions of 
 
 He received the inaugural David A. Kendrick Distinguished Service Award at the Royal Society in London, July 2010.
 
-## Postscript: Cautionary Saving, Renamed
+## Postscript: Cautionary Saving, Renamed {.memorial}
 
 Amman, Kendrick, and Tucci (2020): cost-to-go $= J_D + J_C + J_P$.
 
