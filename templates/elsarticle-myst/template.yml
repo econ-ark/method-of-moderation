@@ -50,6 +50,13 @@ options:
     type: string
     description:
       Journal name printed on the manuscript. Defaults to Economics Letters.
+  - id: no_auto_bibliography
+    type: boolean
+    description: >-
+      Suppress the bibliography that the template emits at the end of the
+      document. Use this for economics papers that place References before an
+      Appendix: set it true and emit \bibliography manually (via raw LaTeX)
+      immediately before \appendix.
 files:
   - template.tex
 packages:

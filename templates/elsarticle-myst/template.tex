@@ -58,7 +58,7 @@
 [-parts.acknowledgments-]
 [# endif #]
 
-[# if doc.bibliography #]
+[# if doc.bibliography and not options.no_auto_bibliography #]
 \bibliography{[# for bib in doc.bibliography #][-bib-][# if not loop.last #],[# endif #][# endfor #]}
 [# endif #]
 
