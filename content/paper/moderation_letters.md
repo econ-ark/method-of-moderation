@@ -7,7 +7,7 @@ parts:
 exports:
   - cff
   - format: tex+pdf
-    template: arxiv_two_column
+    template: ../../templates/elsarticle-myst
     output: ../exports/moderation_letters.pdf
 ---
 
@@ -178,7 +178,7 @@ Given $\logitModRte$, the consumption function can be recovered from
 \cFuncReal = \cFuncPes+\overbrace{\frac{1}{1+\exp(-\logitModRte)}}^{=\modRte} \hNrmEx \MPCmin.
 ```
 
-Thus, the method of moderation (MoM) is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation {eq}`eq:cFuncHi`.
+Thus, the method of moderation is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation {eq}`eq:cFuncHi`.
 
 Because this method relies upon the fact that the problem is easy to solve if the decision maker has unreasonable views (either in the optimistic or the pessimistic direction), and because the correct solution is always between these immoderate extremes, we call our solution procedure the 'method of moderation.'
 
@@ -226,7 +226,7 @@ Since $e^{-\logmNrmEx} = 1/\mNrmEx$, the right-hand side equals $(\cFuncReal/\mN
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation {cite:p}`Fritsch1980` (see Section 4.3) matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-The MoM also contributes to literature which aims to improve the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. {ref}`tbl:approx-errors` demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the maximum absolute difference between the true consumption function and each approximation, evaluated on a dense subgrid of each interval.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+The method of moderation also contributes to literature on improving the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. {ref}`tbl:approx-errors` demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the maximum absolute difference between the true consumption function and each approximation, evaluated on a dense subgrid of each interval.  In each region the method of moderation produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
 
 :::{table} Maximum absolute approximation errors by interval. Orders of magnitude in parentheses.
 :label: tbl:approx-errors
@@ -300,4 +300,4 @@ Effect of Return Uncertainty on Consumption Bounds
 
 # Conclusion
 
-The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the 'true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.  As the accuracy results in {ref}`tbl:approx-errors` confirm, these gains compound: the MoM approximation produces errors more than an order of magnitude smaller than the basic EGM across all grid intervals, including the extrapolation region where standard methods fail most severely.
+The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the 'true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.  As the accuracy results in {ref}`tbl:approx-errors` confirm, these gains compound: the method of moderation produces errors more than an order of magnitude smaller than the basic EGM across all grid intervals, including the extrapolation region where standard methods fail most severely.

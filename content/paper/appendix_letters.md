@@ -12,7 +12,7 @@ parts:
   jel_codes: C63; D81; E21
 exports:
   - format: tex+pdf
-    template: arxiv_two_column
+    template: ../../templates/elsarticle-myst
     output: ../exports/appendix_letters.pdf
 ---
 
@@ -22,7 +22,7 @@ exports:
 
 ## Patience Conditions Details
 
-The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ ensures that autarky (saving nothing, consuming all income each period) yields finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
+Each patience condition from the main text controls a distinct way the problem could misbehave. The FVAC $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$ guarantees that even autarky, saving nothing and consuming income as it arrives, delivers finite expected discounted utility, so the consumer has a reason to value resources at all. The AIC $\AbsPatFac<1$ rules out indefinite deferral of consumption: under certainty the marginal utility of consuming now exceeds the discounted marginal utility of consuming later. Two further conditions bound wealth from opposite directions. The RIC $\AbsPatFac/\Rfree<1$ holds asset growth below the patience-adjusted discount rate, so wealth cannot explode; the GIC $\AbsPatFac/\PermGroFac<1$ holds consumption growth below permanent-income growth, which is what pins down a finite target wealth ratio. Finally, the FHWC $\PermGroFac/\Rfree<1$ keeps the present value of future labor income finite. Where these conditions fail, behavior changes qualitatively: when all hold, the consumer runs a buffer stock around a target wealth ratio; when the AIC fails, she borrows without limit; when the GIC fails but the RIC still holds, wealth grows without bound {cite:p}`Carroll1997,SolvingMicroDSOPs,CarrollShanker2024`.
 
 ## Human Wealth Formulas
 
