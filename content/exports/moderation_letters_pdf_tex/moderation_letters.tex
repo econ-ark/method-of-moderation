@@ -1,14 +1,16 @@
 % Created with jtex v.1.0.21
-\documentclass[twocolumn, switch]{article}
-\usepackage{preprint}
-\usepackage{hyperref}
-\usepackage[numbers,square]{natbib}
+% Created with the elsarticle-myst jtex template
+% elsarticle layout selected by the `model` option (default: preprint)
+\documentclass[preprint,authoryear]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%  imports  %%%%%%%%%%%%%%%%%%%
-\usepackage{amsmath}
-\usepackage{booktabs}
-\usepackage{graphicx}
+\usepackage{natbib}
 %%%%%%%%%%%%%%%%%  math commands  %%%%%%%%%%%%%%%%
 \newcommand{\mNrm}{m}
 \newcommand{\cNrm}{c}
@@ -72,88 +74,37 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% colors for hyperlinks
-\hypersetup{colorlinks=true, linkcolor=purple, urlcolor=blue, citecolor=cyan, anchorcolor=black}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=purple, urlcolor=blue, citecolor=cyan}
 
-\usepackage[utf8]{inputenc}	% allow utf-8 input
-\usepackage[T1]{fontenc}
-\usepackage{xcolor}
-\usepackage{lineno}					% Line numbers
-\usepackage{tikz} 					% ORCiD insertion
+% Economics Letters uses author-year citations via elsarticle-harv
+\bibliographystyle{elsarticle-harv}
 
-%% Bibliography options
-\bibliographystyle{unsrtnat}
+\journal{Economics Letters}
 
- %% Special figure caption options
-\usepackage{newfloat}
-\DeclareFloatingEnvironment[name={Supplementary Figure}]{suppfigure}
-\usepackage{sidecap}
-\sidecaptionvpos{figure}{c}
-
-% Section title spacing  options
-\usepackage{titlesec}
-\titlespacing\section{0pt}{12pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-\titlespacing\subsection{0pt}{10pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-\titlespacing\subsubsection{0pt}{8pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-
-\definecolor{lime}{HTML}{A6CE39}
-\DeclareRobustCommand{\orcidicon}{
-	\begin{tikzpicture}
-	\draw[lime, fill=lime] (0,0)
-	circle [radius=0.16]
-	node[white] {{\fontfamily{qag}\selectfont \tiny ID}};
-	\draw[white, fill=white] (-0.0625,0.095)
-	circle [radius=0.007];
-	\end{tikzpicture}
-	\hspace{-2mm}
-}
-
-%%%%%%%%%%%%%%%%   Title   %%%%%%%%%%%%%%%%
-\title{The Method of Moderation}
-
-% Add watermark with submission status
-% Awaiting watermark support
-% \usepackage{xwatermark}
-% % Left watermark
-% \newwatermark[firstpage,color=gray!60,angle=90,scale=0.32, xpos=-4.05in,ypos=0]{\href{https://doi.org/}{\color{gray}{Publication doi}}}
-% % Right watermark
-% \newwatermark[firstpage,color=gray!60,angle=90,scale=0.32, xpos=3.9in,ypos=0]{\href{https://doi.org/}{\color{gray}{Preprint doi}}}
-% % Bottom watermark
-% \newwatermark[firstpage,color=gray!90,angle=0,scale=0.28, xpos=0in,ypos=-5in]{*correspondence: \texttt{}}
-
-%%%%%%%%%%%%%%%  Author list  %%%%%%%%%%%%%%%
-\usepackage{authblk}
-\renewcommand*{\Authfont}{\bfseries}
-
-\author[1, 2\thanks{\texttt{ccarroll@jhu.edu}}]{Christopher D. Carroll\href{https://orcid.org/0000-0003-3732-9312}{\orcidicon}}
-\author[1, 2\thanks{\texttt{alujan@jhu.edu}}]{Alan Lujan\href{https://orcid.org/0000-0002-5289-7054}{\orcidicon}}
-\author[3]{Karsten Chipeniuk}
-\author[4]{Kiichi Tokuoka}
-\author[5]{Weifeng Wu}
-\affil[1]{Johns Hopkins University}
-\affil[2]{Econ-ARK}
-\affil[3]{Reserve Bank of New Zealand}
-\affil[4]{Japanese Ministry of Finance}
-\affil[5]{Fannie Mae}
-
-%%%%%%%%%%%%%%    Front matter    %%%%%%%%%%%%%%
 \begin{document}
 
-\twocolumn[\begin{@twocolumnfalse}
+\begin{frontmatter}
 
-\maketitle
+\title{The Method of Moderation}
+
+\author[1,2]{Christopher D. Carroll}\ead{ccarroll@jhu.edu}\author[1,2]{Alan Lujan\corref{cor1}}\ead{alujan@jhu.edu}\author[3]{Karsten Chipeniuk}\author[4]{Kiichi Tokuoka}\author[5]{Weifeng Wu}
+\cortext[cor1]{Corresponding author}
+
+\affiliation[1]{organization={Johns Hopkins University}, department={Krieger School of Arts and Sciences}, addressline={Baltimore, MD}}
+\affiliation[2]{organization={Econ-ARK}}
+\affiliation[3]{organization={Reserve Bank of New Zealand}}
+\affiliation[4]{organization={Japanese Ministry of Finance}}
+\affiliation[5]{organization={Fannie Mae}, addressline={Washington, DC}}
 
 \begin{abstract}
-In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A consumer who is a realist (that is, who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between that of the pessimist and the optimist. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.\\
+In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A consumer who is a realist (that is, who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between that of the pessimist and the optimist. We use this fact to redefine the space in which the realist searches for optimal consumption rules. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations.
 \end{abstract}
 
-\keywords{Dynamic Stochastic Optimization, Consumption-Saving Models, Numerical Methods}
+\begin{keyword}
+Dynamic Stochastic Optimization \sep Consumption-Saving Models \sep Numerical Methods \\ \textit{JEL classification:} D14; C61; G11\end{keyword}
 
-\vspace{0.5cm}
-
-\end{@twocolumnfalse}]
-
-%%%%%%%%%%%%%%%  Main text   %%%%%%%%%%%%%%%
+\end{frontmatter}
 
 \section{Introduction}
 
@@ -310,7 +261,7 @@ Given $\logitModRte$, the consumption function can be recovered from
 \cFuncReal = \cFuncPes+\overbrace{\frac{1}{1+\exp(-\logitModRte)}}^{=\modRte} \hNrmEx \MPCmin.
 \end{equation}
 
-Thus, the method of moderation (MoM) is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation (\ref{eq:cFuncHi}).
+Thus, the method of moderation is to calculate $\logitModRte$ at the points $\logmNrmEx$ corresponding to the log of the $\mNrmEx$ points defined above, and then using these to construct an interpolating approximation $\logitModRteApprox$ from which we indirectly obtain our approximated consumption rule $\cFuncApprox$ (an approximation to the true $\cFuncReal$) by substituting $\logitModRteApprox$ for $\logitModRte$ in equation (\ref{eq:cFuncHi}).
 
 Because this method relies upon the fact that the problem is easy to solve if the decision maker has unreasonable views (either in the optimistic or the pessimistic direction), and because the correct solution is always between these immoderate extremes, we call our solution procedure the `method of moderation.'
 
@@ -358,7 +309,7 @@ Since $e^{ -\logmNrmEx} = 1/\mNrmEx$, the right-hand side equals $(\cFuncReal/\m
 
 For computational robustness, construct a three-piece approximation: below the cusp using the tight bound, near the cusp using Hermite interpolation \citep{Fritsch1980} (see Section 4.3) matching levels and slopes at adjacent gridpoints, above the cusp using the original optimist bound. This ensures continuous, differentiable consumption functions respecting all theoretical constraints.
 
-The MoM also contributes to literature which aims to improve the precision of dynamic stochastic optimization solutions, such as \citet{Chipeniuk2020}. Table~\ref{tbl:approx-errors} demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the maximum absolute difference between the true consumption function and each approximation, evaluated on a dense subgrid of each interval.  In each region the MoM produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+The method of moderation also contributes to literature on improving the precision of dynamic stochastic optimization solutions, such as \citet{Chipeniuk2020}. Table~\ref{tbl:approx-errors} demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the maximum absolute difference between the true consumption function and each approximation, evaluated on a dense subgrid of each interval.  In each region the method of moderation produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
 
 \begin{table}
 \centering
@@ -432,11 +383,9 @@ For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\ris
 
 \section{Conclusion}
 
-The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the `true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.  As the accuracy results in Table~\ref{tbl:approx-errors} confirm, these gains compound: the MoM approximation produces errors more than an order of magnitude smaller than the basic EGM across all grid intervals, including the extrapolation region where standard methods fail most severely.
+The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the `true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.  As the accuracy results in Table~\ref{tbl:approx-errors} confirm, these gains compound: the method of moderation produces errors more than an order of magnitude smaller than the basic EGM across all grid intervals, including the extrapolation region where standard methods fail most severely.
 
 
-
-%%%%%%%%%%%%%%   Bibliography   %%%%%%%%%%%%%%
 \bibliography{main.bib}
 
 \end{document}

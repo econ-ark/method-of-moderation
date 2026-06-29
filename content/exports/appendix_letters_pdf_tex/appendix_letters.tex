@@ -1,12 +1,16 @@
 % Created with jtex v.1.0.21
-\documentclass[twocolumn, switch]{article}
-\usepackage{preprint}
-\usepackage{hyperref}
-\usepackage[numbers,square]{natbib}
+% Created with the elsarticle-myst jtex template
+% elsarticle layout selected by the `model` option (default: preprint)
+\documentclass[preprint,authoryear]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%  imports  %%%%%%%%%%%%%%%%%%%
-\usepackage{amsmath}
+\usepackage{natbib}
 %%%%%%%%%%%%%%%%%  math commands  %%%%%%%%%%%%%%%%
 \newcommand{\Ex}{\mathbf{\mathbb{E}}}
 \newcommand{\DiscFac}{\beta}
@@ -57,94 +61,43 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
-% colors for hyperlinks
-\hypersetup{colorlinks=true, linkcolor=purple, urlcolor=blue, citecolor=cyan, anchorcolor=black}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=purple, urlcolor=blue, citecolor=cyan}
 
-\usepackage[utf8]{inputenc}	% allow utf-8 input
-\usepackage[T1]{fontenc}
-\usepackage{xcolor}
-\usepackage{lineno}					% Line numbers
-\usepackage{tikz} 					% ORCiD insertion
+% Economics Letters uses author-year citations via elsarticle-harv
+\bibliographystyle{elsarticle-harv}
 
-%% Bibliography options
-\bibliographystyle{unsrtnat}
+\journal{Economics Letters}
 
- %% Special figure caption options
-\usepackage{newfloat}
-\DeclareFloatingEnvironment[name={Supplementary Figure}]{suppfigure}
-\usepackage{sidecap}
-\sidecaptionvpos{figure}{c}
-
-% Section title spacing  options
-\usepackage{titlesec}
-\titlespacing\section{0pt}{12pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-\titlespacing\subsection{0pt}{10pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-\titlespacing\subsubsection{0pt}{8pt plus 3pt minus 3pt}{1pt plus 1pt minus 1pt}
-
-\definecolor{lime}{HTML}{A6CE39}
-\DeclareRobustCommand{\orcidicon}{
-	\begin{tikzpicture}
-	\draw[lime, fill=lime] (0,0)
-	circle [radius=0.16]
-	node[white] {{\fontfamily{qag}\selectfont \tiny ID}};
-	\draw[white, fill=white] (-0.0625,0.095)
-	circle [radius=0.007];
-	\end{tikzpicture}
-	\hspace{-2mm}
-}
-
-%%%%%%%%%%%%%%%%   Title   %%%%%%%%%%%%%%%%
-\title{Appendix to "The Method of Moderation"}
-
-% Add watermark with submission status
-% Awaiting watermark support
-% \usepackage{xwatermark}
-% % Left watermark
-% \newwatermark[firstpage,color=gray!60,angle=90,scale=0.32, xpos=-4.05in,ypos=0]{\href{https://doi.org/}{\color{gray}{Publication doi}}}
-% % Right watermark
-% \newwatermark[firstpage,color=gray!60,angle=90,scale=0.32, xpos=3.9in,ypos=0]{\href{https://doi.org/}{\color{gray}{Preprint doi}}}
-% % Bottom watermark
-% \newwatermark[firstpage,color=gray!90,angle=0,scale=0.28, xpos=0in,ypos=-5in]{*correspondence: \texttt{}}
-
-%%%%%%%%%%%%%%%  Author list  %%%%%%%%%%%%%%%
-\usepackage{authblk}
-\renewcommand*{\Authfont}{\bfseries}
-
-\author[1, 2\thanks{\texttt{ccarroll@jhu.edu}}]{Christopher D. Carroll\href{https://orcid.org/0000-0003-3732-9312}{\orcidicon}}
-\author[1, 2\thanks{\texttt{alujan@jhu.edu}}]{Alan Lujan\href{https://orcid.org/0000-0002-5289-7054}{\orcidicon}}
-\author[3]{Karsten Chipeniuk}
-\author[4]{Kiichi Tokuoka}
-\author[5]{Weifeng Wu}
-\affil[1]{Johns Hopkins University}
-\affil[2]{Econ-ARK}
-\affil[3]{Reserve Bank of New Zealand}
-\affil[4]{Japanese Ministry of Finance}
-\affil[5]{Fannie Mae}
-
-%%%%%%%%%%%%%%    Front matter    %%%%%%%%%%%%%%
 \begin{document}
 
-\twocolumn[\begin{@twocolumnfalse}
+\begin{frontmatter}
 
-\maketitle
+\title{Appendix to "The Method of Moderation"}
+
+\author[1,2]{Christopher D. Carroll}\ead{ccarroll@jhu.edu}\author[1,2]{Alan Lujan\corref{cor1}}\ead{alujan@jhu.edu}\author[3]{Karsten Chipeniuk}\author[4]{Kiichi Tokuoka}\author[5]{Weifeng Wu}
+\cortext[cor1]{Corresponding author}
+
+\affiliation[1]{organization={Johns Hopkins University}, department={Krieger School of Arts and Sciences}, addressline={Baltimore, MD}}
+\affiliation[2]{organization={Econ-ARK}}
+\affiliation[3]{organization={Reserve Bank of New Zealand}}
+\affiliation[4]{organization={Japanese Ministry of Finance}}
+\affiliation[5]{organization={Fannie Mae}, addressline={Washington, DC}}
 
 \begin{abstract}
-This appendix provides detailed mathematical derivations and technical results supporting the Method of Moderation. Topics include: value function transformations and their relationship to the inverse value function; explicit formulas for minimal and maximal marginal propensities to consume; cusp point calculations for tighter upper bounds; Hermite interpolation slope formulas and MPC derivations; patience conditions ensuring well-defined solutions; and extensions to stochastic returns with explicit formulas for portfolio problems.\\
+This appendix provides detailed mathematical derivations and technical results supporting the Method of Moderation. Topics include: value function transformations and their relationship to the inverse value function; explicit formulas for minimal and maximal marginal propensities to consume; cusp point calculations for tighter upper bounds; Hermite interpolation slope formulas and MPC derivations; patience conditions ensuring well-defined solutions; and extensions to stochastic returns with explicit formulas for portfolio problems.
 \end{abstract}
 
-\keywords{Dynamic Stochastic Optimization, Consumption-Saving Models, Numerical Methods}
+\begin{keyword}
+Dynamic Stochastic Optimization \sep Consumption-Saving Models \sep Numerical Methods \\ \textit{JEL classification:} C63; D81; E21\end{keyword}
 
-\vspace{0.5cm}
-
-\end{@twocolumnfalse}]
-
-%%%%%%%%%%%%%%%  Main text   %%%%%%%%%%%%%%%
+\end{frontmatter}
 
 \section{Appendix: Mathematical Details}
 
 \subsection{Patience Conditions Details}
 
-The patience conditions listed in the main text have clear economic interpretations. The FVAC $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$ ensures that autarky (saving nothing, consuming all income each period) yields finite expected discounted utility, guaranteeing the consumer values resources. The AIC $\AbsPatFac<1$ prevents indefinite consumption deferral by ensuring the marginal utility of current consumption exceeds the discounted marginal utility of future consumption under certainty. The RIC $\AbsPatFac/\Rfree<1$ ensures asset growth is slower than the patience-adjusted discount rate, preventing unbounded wealth accumulation. The GIC $\AbsPatFac/\PermGroFac<1$ ensures consumption grows slower than permanent income, establishing a target wealth ratio. The FHWC $\PermGroFac/\Rfree<1$ ensures the present value of future labor income is finite. Together, these conditions partition parameter space into regions with qualitatively different behavior: buffer-stock saving with a target wealth ratio (all conditions hold), perpetual borrowing (AIC fails), or unbounded wealth growth (GIC fails but RIC holds) \citep{Carroll1997, SolvingMicroDSOPs, CarrollShanker2024}.
+Each patience condition from the main text controls a distinct way the problem could misbehave. The FVAC $0<\DiscFac\PermGroFac^{1 -\CRRA}\Ex[\permShk^{1 -\CRRA}]<1$ guarantees that even autarky, saving nothing and consuming income as it arrives, delivers finite expected discounted utility, so the consumer has a reason to value resources at all. The AIC $\AbsPatFac<1$ rules out indefinite deferral of consumption: under certainty the marginal utility of consuming now exceeds the discounted marginal utility of consuming later. Two further conditions bound wealth from opposite directions. The RIC $\AbsPatFac/\Rfree<1$ holds asset growth below the patience-adjusted discount rate, so wealth cannot explode; the GIC $\AbsPatFac/\PermGroFac<1$ holds consumption growth below permanent-income growth, which is what pins down a finite target wealth ratio. Finally, the FHWC $\PermGroFac/\Rfree<1$ keeps the present value of future labor income finite. Where these conditions fail, behavior changes qualitatively: when all hold, the consumer runs a buffer stock around a target wealth ratio; when the AIC fails, she borrows without limit; when the GIC fails but the RIC still holds, wealth grows without bound \citep{Carroll1997, SolvingMicroDSOPs, CarrollShanker2024}.
 
 \subsection{Human Wealth Formulas}
 
@@ -279,8 +232,6 @@ Simplifying the variance terms: $(1 -\CRRA)^2\std_{\risky}^2/2 - (1 -\CRRA)\std_
 \end{equation}
 
 
-
-%%%%%%%%%%%%%%   Bibliography   %%%%%%%%%%%%%%
 \bibliography{main.bib}
 
 \end{document}
