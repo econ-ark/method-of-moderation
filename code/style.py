@@ -260,16 +260,16 @@ MATPLOTLIB_STYLE = {
     # --- Font & text ---
     "font.family": ["sans-serif"],
     "font.size": 10,
-    "axes.titlesize": 11,
+    "axes.titlesize": 12,
     "axes.titleweight": "600",  # Bolder titles
-    "axes.labelsize": 9,  # Smaller axis labels
+    "axes.labelsize": 11,  # Academic-modest axis labels
     "axes.labelweight": "500",  # Slightly bolder labels
     "xtick.labelsize": 8.5,  # Slightly smaller tick labels
     "ytick.labelsize": 8.5,
     # Text colors - using refined professional colors
     "text.color": ARK_TEXT,
     "axes.labelcolor": ARK_TEXT,
-    "axes.titlecolor": ARK_BLUE,  # Brand color for all titles including subplots
+    "axes.titlecolor": ARK_TEXT,  # Neutral academic text; ARK palette kept on the plotted lines
     "xtick.color": ARK_TEXT,
     "ytick.color": ARK_TEXT,
     # --- Colours & lines ---
@@ -397,10 +397,15 @@ def apply_notebook_css() -> None:
     display(HTML(NOTEBOOK_CSS))
 
 
-def setup_figure(figsize=(12, 8), title=None):
-    """Create a figure with Econ-ARK styling applied."""
+def setup_figure(figsize=(7, 4.5), title=None):
+    """Create a figure with Econ-ARK styling applied.
+
+    ``title`` is accepted for backward compatibility but intentionally not
+    rendered: in the manuscript the LaTeX caption is the figure title, so an
+    in-image figure title would only duplicate the caption (and the journal's
+    own figure numbering).
+    """
+    del title  # not rendered; the caption is the title
     apply_ark_style()
     fig, ax = plt.subplots(figsize=figsize)
-    if title:
-        fig.suptitle(title, fontsize=12, fontweight="600", color=ARK_BLUE)
     return fig, ax
