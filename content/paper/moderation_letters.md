@@ -30,7 +30,7 @@ This paper argues that, in the standard consumption problem, a better approach i
 
 We build on bounds for the consumption function and limiting MPCs established by {cite:t}`StachurskiToda2019JET`, {cite:t}`MST2020JET`, {cite:t}`Carroll2001MPCBound`, and {cite:t}`MaToda2021SavingRateRich` in buffer-stock theory. Using results from {cite:t}`CarrollShanker2024`, we show how to use these bounds to constrain the shape and characteristics of the solution to the 'realist' problem characterized by {cite:t}`Carroll1997`. Imposition of these constraints clarifies and speeds the solution of the realist's problem. For comparison, we use the endogenous gridpoints method {cite:p}`carrollEGM` as our benchmark, which computes consumption at gridpoints determined endogenously using the Euler equation.
 
-After showing how to use the method in the baseline case, we show how to refine it to encompass an even tighter theoretical bound, and how to extend it to solve a problem in which the consumer faces both labor income risk and rate-of-return risk.
+After presenting the method in the baseline case and documenting its accuracy, we collect its refinements and extensions, a tighter theoretical bound, the value function, and an extension to rate-of-return risk, in the appendix.
 
 # The Realist's Problem
 
@@ -131,7 +131,7 @@ The pessimist expects the worst possible income in every future period with cert
 :label: fig:IntExpFOCInvPesReaOptNeedHi
 :alt: Graph showing the realist's consumption function is bounded by the pessimist's (lower) and optimist's (upper) consumption functions.
 
-Moderation Illustrated: $\cFuncPes < \cFuncApprox < \cFuncOpt$
+Moderation Illustrated: $\cFuncPes < \cFuncReal < \cFuncOpt$
 :::
 
 The proof is more difficult than might be imagined, but the necessary work is done in {cite:t}`CarrollShanker2024` so we will take the proposition as a fact:
@@ -166,7 +166,7 @@ and we now define
 \end{aligned}
 ```
 
-which has the virtue that it is _asymptotically linear_ in the limit as $\logmNrmEx$ approaches $+\infty$.[^asymptotically-linear] Since $\modRte \in (0,1)$, the ratio $\modRte/(1-\modRte)$ is the odds ratio, and $\logitModRte$ is the log odds ratio, the same transformation that underpins logit regression in econometrics. The logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, \infty)$ with inverse sigmoid $\modRte = 1/(1+\exp(-\logitModRte))$; log maps $(\mNrm - \mNrmMin) \in (0, \infty)$ to $\logmNrmEx \in (-\infty, \infty)$.
+which has the virtue that it is _asymptotically linear_ in the limit as $\logmNrmEx$ approaches $+\infty$.[^asymptotically-linear] Since $\modRte \in (0,1)$, the ratio $\modRte/(1-\modRte)$ is the odds ratio, and $\logitModRte$ is the log odds ratio, the same transformation that underpins logit regression in econometrics. The logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, \infty)$ with inverse sigmoid $\modRte = 1/(1+\exp(-\logitModRte))$; log maps $(\mNrm - \mNrmMin) \in (0, \infty)$ to $\logmNrmEx \in (-\infty, \infty)$ with inverse $\mNrmEx = \exp(\logmNrmEx)$.
 
 [^asymptotically-linear]:
     Under the GIC, $\logitModRte(\logmNrmEx)$ is asymptotically linear with slope $\asympSlope \geq 0$ as $\logmNrmEx \to +\infty$. We extrapolate $\logitModRte$ linearly using the boundary slope, preserving $\modRte\in(0,1)$ and hence $\cFuncPes < \cFuncApprox < \cFuncOpt$ throughout the extrapolation domain.
@@ -191,24 +191,9 @@ Results are shown in {ref}`fig:ExtrapProblemSolved`; a reader with very good eye
 Extrapolated $\cFuncApprox$ Constructed Using the Method of Moderation
 :::
 
-# Extensions
+# Numerical Accuracy
 
-## A Tighter Upper Bound
-
-The method described above does not guarantee that the approximated consumption function respects the constraint $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$, where $\MPCmax$ is the MPC at the natural borrowing constraint. Near the constraint, the optimist's bound $\cFuncOpt$ becomes loose because it is calibrated to the low MPC that prevails at high wealth. A tighter upper bound for low-wealth consumers eliminates this slack.
-
-{cite:t}`CarrollShanker2024` derives an explicit formula for this maximal MPC: $\MPCmax = 1 - \WorstProb^{1/\CRRA} (\AbsPatFac/\Rfree)$ where $\WorstProb$ is the unemployment probability derived by {cite:t}`CarrollToche2009`, extending the explicit limiting MPC formulas established in buffer-stock theory by {cite:t}`MaToda2021SavingRateRich`. Strict concavity of the consumption function implies $\cFuncReal(\mNrm) < \MPCmax \mNrmEx$ for low wealth, while the optimist's bound $\cFuncReal(\mNrm) < \cFuncOpt(\mNrm) = (\mNrmEx+\hNrmEx)\MPCmin$ is tighter for high wealth.
-
-:::{figure} #fig:mom-consumption-function
-:label: fig:IntExpFOCInvPesReaOptNeed45
-:alt: A diagram showing the true consumption function bounded above by both the optimist's consumption rule and a tighter linear bound originating from the natural borrowing constraint.
-
-A Tighter Upper Bound
-:::
-
-As shown in {ref}`fig:IntExpFOCInvPesReaOptNeed45`, the two bounds intersect at a cusp point $\mNrmCusp$, derived in the Appendix ({eq}`eq:mNrmCuspFull`). Below the cusp we replace the optimist's bound with the tighter one and define a low-resource moderation ratio ({eq}`eq:modRteLoTightUpBd`), interpolating its logit transform exactly as before. For computational robustness we use a three-piece approximation: the tight bound below the cusp, Hermite interpolation near it (detailed in the Appendix), and the optimist bound above. This yields a continuous, differentiable consumption function respecting all theoretical constraints.
-
-The method of moderation also contributes to literature on improving the precision of dynamic stochastic optimization solutions, such as {cite:t}`Chipeniuk2020`. {ref}`tbl:approx-errors` demonstrates the accuracy gains obtained with the method between each pair of grid points $m_j,m_{j+1}$, as well as for the extrapolation of the consumption function to $\overline{m}=30$.  Displayed is the maximum absolute difference between the true consumption function and each approximation, evaluated on a dense subgrid of each interval.  In each region the method of moderation produces an approximation which is more than an order of magnitude more accurate than the basic EGM.
+{ref}`tbl:approx-errors` reports the method's accuracy between each pair of gridpoints $m_j,m_{j+1}$ and for extrapolation out to $\overline{m}=30$, as the maximum absolute error on a dense subgrid of each interval. Except in the first interval, where it is about three times more accurate, the method of moderation is more than an order of magnitude more accurate than the basic endogenous gridpoints method, complementing related work on solution precision {cite:p}`Chipeniuk2020`.
 
 :::{table} Maximum absolute approximation errors by interval. Orders of magnitude in parentheses.
 :label: tbl:approx-errors
@@ -221,24 +206,8 @@ The method of moderation also contributes to literature on improving the precisi
 
 :::
 
-## Value Function
-
-Often it is useful to know the value function as well as the consumption rule, and the same moderation construction applies. Using the inverse value transformation $\vInvOpt = \left((1-\CRRA)\vFuncOpt\right)^{1/(1-\CRRA)}$, which is linear in market resources under perfect foresight, we define a value moderation ratio $\valModRteReal$ analogous to the consumption moderation ratio, apply the logit transformation, interpolate at gridpoints, and invert to recover $\vFuncReal = \uFunc(\vInvReal)$. The Appendix gives the precise definitions ({eq}`eq:valModRteReal`) and derivation.
-
-## Stochastic Rate of Return
-
-For i.i.d. returns with $\log \Risky \sim \Nrml(r + \equityPrem - \std^{2}_{\risky}/2,\std^{2}_{\risky})$,[^lognormal-params] {cite:t}`Samuelson1969,Merton1969,Merton1971` showed that for a consumer without labor income (or with perfectly forecastable labor income) the consumption function is linear, with an MPC $= 1- (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. See {cite:t}`CRRA-RateRisk,BBZ2016SkewedWealth,CKW2021Aggregation` for extensions. The pessimist and the optimist face certain income but the same stochastic return, so the Merton-Samuelson result applies to both and their consumption functions remain linear. The realist faces both labor income and return risk, and the moderation ratio captures their combined precautionary response. Substitute this stochastic MPC for $\MPCmin$ throughout our formulas; the optimist's and pessimist's human-wealth definitions $\hNrmOpt$ and $\hNrmPes$ are adjusted in parallel by replacing $\Rfree$ with $\Ex[\Risky]$ in their PDV formulas. As {ref}`fig:StochasticBounds` shows, consumption remains bounded between the pessimist and the optimist, each of which consume slightly less in the face of return uncertainty.
-
-[^lognormal-params]:
-    Here $r$ is the log risk-free rate and $\equityPrem$ is the equity premium (the expected excess log return). This parametrization ensures $\Ex[\Risky] = \exp(r+\equityPrem)$, so that increasing $\std^{2}_{\risky}$ constitutes a mean-preserving spread of the level of the return.
-
-:::{figure} #fig:stochastic-bounds
-:label: fig:StochasticBounds
-:alt: Comparison of consumption bounds under deterministic and stochastic rates of return.
-
-Effect of Return Uncertainty on Consumption Bounds
-:::
+The construction extends further in the Appendix. A tighter upper bound holds near the natural borrowing constraint for low-wealth consumers ({eq}`eq:modRteLoTightUpBd`). The same idea approximates the value function: with the inverse value transformation $\vInvOpt = \left((1-\CRRA)\vFuncOpt\right)^{1/(1-\CRRA)}$, we form a value moderation ratio $\valModRteReal$, interpolate its logit, and invert to recover $\vFuncReal = \uFunc(\vInvReal)$ ({eq}`eq:valModRteReal`). It also accommodates rate-of-return risk: with i.i.d. returns and certain income the optimal rule is linear (Merton-Samuelson), so the optimist's and pessimist's bounds extend and bracket the realist ({ref}`stochastic-returns-mgf-derivation`).
 
 # Conclusion
 
-The method proposed here is not universally applicable. For example, the method cannot be used for problems for which upper and lower bounds to the 'true' solution are not known. But many problems do have obvious upper and lower bounds, and in those cases (as in the consumption example used in the paper), the method may result in substantial improvements in accuracy and stability of solutions.  The method of moderation is efficient because the transformed moderation ratio is better-behaved than consumption, requiring fewer gridpoints.  As the accuracy results in {ref}`tbl:approx-errors` confirm, these gains compound: the method of moderation produces errors more than an order of magnitude smaller than the basic EGM across all grid intervals, including the extrapolation region where standard methods fail most severely.
+The method is not universally applicable: it requires known upper and lower bounds on the 'true' solution. But many problems have obvious bounds, and there (as in our consumption example) it can substantially improve the accuracy and stability of solutions. The method is efficient because the transformed moderation ratio is better-behaved than consumption, so a given grid yields substantially more accurate approximations. The gains are largest in the extrapolation region, where standard methods fail most severely.
