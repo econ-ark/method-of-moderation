@@ -46,7 +46,6 @@ from style import (
     ALPHA_MEDIUM_LOW,
     ALPHA_OPAQUE,
     FONT_SIZE_LARGE,
-    FONT_SIZE_XLARGE,
     GRID_ALPHA,
     LINE_STYLE_DASHDOT,
     LINE_STYLE_DASHED,
@@ -252,9 +251,11 @@ def _configure_standard_axes(
         Legend location, by default "upper right"
 
     """
-    ax.set_xlabel(xlabel, fontsize=FONT_SIZE_LARGE)
-    ax.set_ylabel(ylabel, fontsize=FONT_SIZE_LARGE)
-    ax.set_title(subtitle, fontsize=FONT_SIZE_XLARGE, fontweight="bold")
+    # Let the academic rcParams govern sizes (title 12, labels 11, ticks 8.5);
+    # the single in-image label is the subtitle, since the caption is the title.
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    ax.set_title(subtitle)
     ax.legend(loc=legend_loc)
     ax.grid(True, alpha=GRID_ALPHA)
 

@@ -1,0 +1,67 @@
+jtex: v1
+title: Elsevier elsarticle (MyST)
+description: >-
+  Elsevier elsarticle template for MyST/jtex. Supports the journal preprint
+  layout and the double-spaced, line-numbered review layout via the `model`
+  option. Defaults target Economics Letters (author-year citations).
+version: 1.0.0
+license: CC-BY-4.0
+tags:
+  - paper
+  - elsevier
+  - elsarticle
+  - economics
+parts:
+  - id: abstract
+    required: true
+    description: >-
+      The article abstract. Economics Letters expects a short abstract stating
+      the problem, the contribution, and the result.
+  - id: jel_codes
+    description: >-
+      JEL classification codes, semicolon separated (e.g. "D14; C61; G11").
+      Printed after the keywords as is Economics Letters convention.
+  - id: acknowledgments
+    description: Free-form acknowledgments, printed before the bibliography.
+doc:
+  - id: title
+    required: true
+  - id: authors
+    required: true
+  - id: affiliations
+  - id: keywords
+  - id: bibliography
+options:
+  - id: model
+    type: choice
+    default: preprint
+    description: >-
+      elsarticle layout. "preprint" is the compact, journal-like single-column
+      look (default, doubles as a submittable PDF under Elsevier's Your Paper
+      Your Way). "review" is single-column, double-spaced, with line numbers for
+      refereeing. 1p/3p/5p reproduce specific Elsevier production layouts.
+    choices:
+      - preprint
+      - review
+      - 1p
+      - 3p
+      - 5p
+  - id: journal
+    type: string
+    description:
+      Journal name printed on the manuscript. Defaults to Economics Letters.
+  - id: no_auto_bibliography
+    type: boolean
+    description: >-
+      Suppress the bibliography that the template emits at the end of the
+      document. Use this for economics papers that place References before an
+      Appendix: set it true and emit \bibliography manually (via raw LaTeX)
+      immediately before \appendix.
+files:
+  - template.tex
+packages:
+  - amsmath
+  - amssymb
+  - graphicx
+  - booktabs
+  - hyperref

@@ -1,0 +1,65 @@
+% Created with the elsarticle-myst jtex template
+% elsarticle layout selected by the `model` option (default: preprint)
+\documentclass[[-options.model-],authoryear]{elsarticle}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+[-IMPORTS-]
+
+\usepackage{hyperref}
+\hypersetup{colorlinks=true, linkcolor=purple, urlcolor=blue, citecolor=cyan}
+
+% Economics Letters uses author-year citations via elsarticle-harv
+\bibliographystyle{elsarticle-harv}
+
+\journal{[# if options.journal #][-options.journal-][# else #]Economics Letters[# endif #]}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{[-doc.title-]}
+
+[# for author in doc.authors #]
+\author[[--author.affiliations | join(',', 'index')--]]{[-author.name-][# if author.corresponding #]\corref{cor1}[# endif #]}
+[#- if author.email #]
+\ead{[-author.email-]}
+[#- endif #]
+[# endfor #]
+
+\cortext[cor1]{Corresponding author}
+
+[# for affiliation in doc.affiliations #]
+\affiliation[[-affiliation.index-]]{organization={[-affiliation.value.name-]}[# if affiliation.value.department #], department={[-affiliation.value.department-]}[# endif #][# if affiliation.value.address #], addressline={[-affiliation.value.address-]}[# endif #]}
+[# endfor #]
+
+[# if parts.abstract #]
+\begin{abstract}
+[-parts.abstract-]
+\end{abstract}
+[# endif #]
+
+[# if doc.keywords #]
+\begin{keyword}
+[# for keyword in doc.keywords #][-keyword-][# if not loop.last #] \sep [# endif #][# endfor #]
+[#- if parts.jel_codes #] \\ \textit{JEL classification:} [-parts.jel_codes-][# endif #]
+\end{keyword}
+[# endif #]
+
+\end{frontmatter}
+
+[-CONTENT-]
+
+[# if parts.acknowledgments #]
+\section*{Acknowledgements}
+[-parts.acknowledgments-]
+[# endif #]
+
+[# if doc.bibliography and not options.no_auto_bibliography #]
+\bibliography{[# for bib in doc.bibliography #][-bib-][# if not loop.last #],[# endif #][# endfor #]}
+[# endif #]
+
+\end{document}

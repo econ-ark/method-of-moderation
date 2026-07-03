@@ -476,7 +476,7 @@ IndShockStochRSol = IndShockStochR.solution[0]
 plot_stochastic_bounds(
     solution=IndShockStochRSol,
     title="Figure 13: Deterministic vs Stochastic Return Bounds",
-    subtitle="Effect of Return Uncertainty on Consumption Bounds",
+    subtitle="Both Bounds Tighten as Return Risk Rises",
     m_max=10,
 )
 ```

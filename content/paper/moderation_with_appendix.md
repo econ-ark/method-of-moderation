@@ -6,8 +6,9 @@ parts:
   jel_codes: D14; C61; G11
 exports:
   - format: tex+pdf
-    template: arxiv_two_column
+    template: ../../templates/elsarticle-myst
     output: ../exports/moderation_with_appendix.pdf
+    no_auto_bibliography: true
 ---
 
 ```{include} moderation_letters.md
@@ -15,9 +16,10 @@ exports:
 ```
 
 ```{raw} latex
+\bibliography{main.bib}
 \appendix
 ```
 
 ```{include} appendix_letters.md
-:start-at: "# Appendix"
+:start-at: "# Patience Conditions Details"
 ```
