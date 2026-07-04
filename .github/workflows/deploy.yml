@@ -6,6 +6,9 @@ on:
   push:
     # Runs on pushes targeting the default branch
     branches: [main]
+  # Allow manual redeploys (e.g. to retry a transient GitHub Pages backend failure)
+  # without pushing an empty commit.
+  workflow_dispatch:
 env:
   # `BASE_URL` determines, relative to the root of the domain, the URL that your site is served from.
   # E.g., if your site lives at `https://mydomain.org/myproject`, set `BASE_URL=/myproject`.
@@ -62,6 +65,12 @@ jobs:
         uses: actions/upload-pages-artifact@v5
         with:
           path: "./_build/html"
+          # Attempt-scoped name so a re-run of a failed deploy does not collide with
+          # the previous attempt's artifact (deploy-pages counts artifacts per run,
+          # not per attempt, and aborts if it finds two named "github-pages").
+          name: github-pages-${{ github.run_attempt }}
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_attempt }}
