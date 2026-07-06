@@ -18,8 +18,8 @@ This project is structured as a [REMARK](https://github.com/econ-ark/REMARK) (Re
 ## Authors
 
 - **Christopher D. Carroll** - Johns Hopkins University ([ORCID: 0000-0003-3732-9312](https://orcid.org/0000-0003-3732-9312))
-- **Alan Lujan** - Johns Hopkins University ([ORCID: 0000-0002-5289-7054](https://orcid.org/0000-0002-5289-7054)) *Corresponding Author*
 - **Karsten Chipeniuk** - Reserve Bank of New Zealand
+- **Alan Lujan** - Johns Hopkins University ([ORCID: 0000-0002-5289-7054](https://orcid.org/0000-0002-5289-7054)) *Corresponding Author*
 - **Kiichi Tokuoka** - Japanese Ministry of Finance
 - **Weifeng Wu** - Fannie Mae
 
@@ -72,8 +72,8 @@ See [Reproducibility](#reproducibility) section above for full reproduction inst
 @software{carroll2026moderation,
   title={The Method of Moderation},
   author={Carroll, Christopher D. and
-          Lujan, Alan and
           Chipeniuk, Karsten and
+          Lujan, Alan and
           Tokuoka, Kiichi and
           Wu, Weifeng},
   year={2026},

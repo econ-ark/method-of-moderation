@@ -30,6 +30,9 @@ project:
       affiliations:
         - jhu
         - econ_ark
+    - name: Karsten Chipeniuk
+      affiliations:
+        - rbnz
     - name: Alan Lujan
       email: alujan@jhu.edu
       orcid: 0000-0002-5289-7054
@@ -37,9 +40,6 @@ project:
       affiliations:
         - jhu
         - econ_ark
-    - name: Karsten Chipeniuk
-      affiliations:
-        - rbnz
     - name: Kiichi Tokuoka
       affiliations:
         - mof

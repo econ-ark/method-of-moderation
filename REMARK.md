@@ -17,5 +17,5 @@ with guaranteed theoretical properties.
 
 ## References
 
-Carroll, Christopher D., Alan Lujan, Karsten Chipeniuk, Kiichi Tokuoka, and Weifeng Wu.
+Carroll, Christopher D., Karsten Chipeniuk, Alan Lujan, Kiichi Tokuoka, and Weifeng Wu.
 "The Method of Moderation."
