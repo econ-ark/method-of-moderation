@@ -12,20 +12,25 @@ project:
   title: The Method of Moderation
   short_title: Method of Moderation
   description:
-    A novel technique for solving consumption-saving models with superior
-    accuracy and stability by leveraging analytical bounds.
+    A solution method for consumption-saving models that interpolates the logit
+    of a moderation ratio between analytical upper and lower bounds, staying
+    accurate where extrapolation of the consumption function fails.
   abstract: content/paper/abstract.md
-  parts:
-    jel_codes: D14; C61; G11
   keywords:
     - Dynamic Stochastic Optimization
     - Consumption-Saving Models
     - Numerical Methods
+    - Endogenous Gridpoints Method
+    - Precautionary Saving
+    - Bounded Approximation
+    - Extrapolation
   bibliography:
     - content/references.bib
   authors:
+    # Authors are listed alphabetically by surname, the discipline's default.
+    # MyST supports a `roles` key per author taking CRediT contributor roles;
+    # it is deliberately unset until the co-authors agree on the assignments.
     - name: Christopher D. Carroll
-      email: ccarroll@jhu.edu
       orcid: 0000-0003-3732-9312
       affiliations:
         - jhu
@@ -68,7 +73,7 @@ project:
   funding: |
     This work was supported by the Alfred P. Sloan Foundation under grant G-2017-9832 (https://sloan.org/grant-detail/g-2017-9832).
   acknowledgments: |
-    The views presented in this paper are those of the authors, and should not be attributed to the International Monetary Fund, its Executive Board, or management, or to the European Central Bank.
+    We thank Matthew N. White for many thoughtful conversations about the ideas in this paper. The views presented here are those of the authors and should not be attributed to the Japanese Ministry of Finance, the Reserve Bank of New Zealand, or Fannie Mae.
   github: econ-ark/method-of-moderation
   venue: REMARK
   subject: Economics
@@ -76,12 +81,12 @@ project:
   banner: content/banner.png
   jupyter: true
   downloads:
-    - file: content/exports/moderation_with_appendix.pdf
+    - file: content/exports/moderation_extended.pdf
       title: Download PDF
   toc:
-    - file: content/paper/moderation_letters.md
-    - file: content/paper/appendix_letters.md
-    - file: code/method-of-moderation.ipynb
+    - file: content/paper/moderation_extended.md
+    - file: code/method-of-moderation.md
+    - file: code/method-of-moderation-symbolic.md
 
 extends:
   - content/macros.yml

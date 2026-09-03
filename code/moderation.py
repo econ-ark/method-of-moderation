@@ -55,7 +55,7 @@ IndShockMoMConsumerType : HARK consumer type using Method of Moderation
     Primary implementation with excellent extrapolation properties
 IndShockMoMCuspConsumerType : MoM with three-piece cusp approximation
     Extension that uses the tighter MPCmax bound below the cusp point
-IndShockMoMStochasticRConsumerType : MoM under stochastic returns
+RiskyAssetMoMConsumerType : MoM under stochastic returns
     Extension for problems with risky rate of return; uses the
     Merton-Samuelson linear consumption rule for the optimist and pessimist
 TransformedFunctionMoM : Generalized moderated-function wrapper (consumption or value)
@@ -128,6 +128,7 @@ upper bound consumption functions described in the paper.
 
 from __future__ import annotations
 
+import logging
 from typing import ClassVar
 
 import numpy as np
@@ -150,6 +151,8 @@ from HARK.ConsumptionSaving.ConsIndShockModel import (
     calc_worst_inc_prob,
 )
 from HARK.distributions import (
+    MeanOneLogNormal,
+    combine_indep_dstns,
     expected,
 )
 from HARK.interpolation import (
@@ -159,7 +162,11 @@ from HARK.interpolation import (
     MargValueFuncCRRA,
     ValueFuncCRRA,
 )
+from HARK.metric import MetricObject
 from HARK.rewards import UtilityFuncCRRA
+from scipy.special import expit
+
+logger = logging.getLogger(__name__)
 
 
 def _create_interpolation(
@@ -299,12 +306,7 @@ def _build_cfunc_egm(
 
 def _build_cfunc_mom(
     *,
-    DiscFacEff,
-    Rfree,
-    PermGroFac,
     CRRA,
-    IncShkDstn,
-    vPPfuncNext,
     uFunc,
     aNrm,
     cNrm,
@@ -316,8 +318,22 @@ def _build_cfunc_mom(
     CubicBool,
     optimist,
     pessimist,
+    DiscFacEff=None,
+    Rfree=None,
+    PermGroFac=None,
+    IncShkDstn=None,
+    vPPfuncNext=None,
+    EndOfPrdvPP=None,
+    mKink=None,
 ):
-    """Construct consumption function for MoM path (chi/omega over mu + TransformedFunctionMoM)."""
+    """Construct consumption function for MoM path (chi/omega over mu + TransformedFunctionMoM).
+
+    When `EndOfPrdvPP` is supplied (e.g. by a state-indexed solver that
+    aggregates it across next states; the Markov-return solver in the bst
+    repo's markov-return-mom exploration is the live consumer), the cubic
+    branch uses it directly and
+    `DiscFacEff`/`Rfree`/`PermGroFac`/`IncShkDstn`/`vPPfuncNext` are not needed.
+    """
     # mu grid and derivative inputs
     mNrmEx = mNrm - mNrmMin
     hNrmEx = hNrm + mNrmMin  # = hNrmOpt - hNrmPes (eq:ExcessDef); mNrmMin = -hNrmPes
@@ -332,19 +348,23 @@ def _build_cfunc_mom(
 
     # MPC vector and derivatives for Hermite slopes (only if cubic)
     if CubicBool:
-        vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
-        EndOfPrdvPP = vPPfacEff * expected(
-            calc_vpp_next,
-            IncShkDstn,
-            args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
-        )
+        if EndOfPrdvPP is None:
+            vPPfacEff = DiscFacEff * Rfree * Rfree * PermGroFac ** (-CRRA - 1.0)
+            EndOfPrdvPP = vPPfacEff * expected(
+                calc_vpp_next,
+                IncShkDstn,
+                args=(aNrm, Rfree, CRRA, PermGroFac, vPPfuncNext),
+            )
         MPC = _compute_mpc_vector(uFunc, EndOfPrdvPP, cNrm)
         if not np.isfinite(hNrmEx) or hNrmEx <= 1e-12:
-            raise ValueError(
+            msg = (
                 f"hNrmEx={hNrmEx!r}: the pessimist's excess human wealth must be "
                 "strictly positive for the MoM consumption derivative formula to "
                 "apply. Check the impatience and growth-impatience conditions for "
                 "the supplied parameters."
+            )
+            raise ValueError(
+                msg,
             )
         modRteMu = mNrmEx * (MPC - MPCmin) / (MPCmin * hNrmEx)
         logitModRteMu = modRteMu / (modRte * (1 - modRte))
@@ -370,7 +390,191 @@ def _build_cfunc_mom(
         pessimist.cFunc,
         MPCmin=MPCmin,
         MPCmax=MPCmax,
+        tight_upper_slope=MPCmax,
+        mKink=mKink,
     )
+
+
+def calc_constraint_kink(
+    mNrmMin,
+    BoroCnstNat,
+    DiscFacEff,
+    Rfree,
+    PermGroFac,
+    CRRA,
+    IncShkDstn,
+    vPfuncNext,
+    uFunc,
+):
+    """Market resources at which an imposed borrowing constraint stops binding.
+
+    One Euler inversion gives it exactly. Run the endogenous-grid step at the
+    imposed constraint itself: a consumer who optimally ends the period with
+    assets ``mNrmMin`` must have arrived with
+
+        mKink = mNrmMin + c_unconstrained(mNrmMin),
+
+    and below that m the same consumer would want to end with less, which the
+    constraint forbids. No grid scan and no search: the kink is an endogenous
+    gridpoint that the exogenous grid simply does not include, because it
+    starts one ``aXtraMin`` above the constraint.
+
+    Returns ``mNrmMin`` when ``BoroCnstNat >= mNrmMin``, the natural-constraint
+    case, where the constrained region is the single point ``mNrmMin``.
+    """
+    if BoroCnstNat >= mNrmMin:
+        return mNrmMin
+    vPfacEff = DiscFacEff * Rfree * PermGroFac ** (-CRRA)
+    EndOfPrdvP = vPfacEff * expected(
+        calc_vp_next,
+        IncShkDstn,
+        args=(np.array([mNrmMin]), Rfree, CRRA, PermGroFac, vPfuncNext),
+    )
+    cNrmAtCnst = float(np.asarray(uFunc.derinv(EndOfPrdvP, order=(1, 0))).item())
+    return mNrmMin + cNrmAtCnst
+
+
+def calc_constrained_branch_value(
+    mNrmMin,
+    BoroCnstNat,
+    DiscFacEff,
+    Rfree,
+    PermGroFac,
+    CRRA,
+    IncShkDstn,
+    vFuncNext,
+):
+    r"""End-of-period value at the constraint, or None when nothing binds.
+
+    Where an imposed constraint binds, the consumer spends everything above it
+    and ends the period pinned at ``mNrmMin``, so end-of-period assets do not
+    vary with ``m`` and value on that branch is
+
+        v(m) = u(m - mNrmMin) + wBar,     wBar = w(mNrmMin),
+
+    a single constant. This returns that constant. It is evaluated directly
+    from the income distribution rather than read off the end-of-period
+    interpolant, because on a sparse asset grid ``mNrmMin`` can fall in a wide
+    gap between nodes: the interpolated value there is a secant, which is the
+    very error this branch exists to remove.
+
+    Returns None when ``BoroCnstNat >= mNrmMin``, that is when the constraint
+    is the natural one. There the branch is empty (the constraint is never
+    strictly binding at any feasible ``m``), ``w(mNrmMin)`` is negative
+    infinity, and callers must leave the moderated value function alone.
+    """
+    if BoroCnstNat >= mNrmMin:
+        return None
+    wBar = float(
+        DiscFacEff
+        * expected(
+            calc_v_next,
+            IncShkDstn,
+            args=(np.array([mNrmMin]), Rfree, CRRA, PermGroFac, vFuncNext),
+        ).item()
+    )
+    if not np.isfinite(wBar):
+        logger.warning(
+            "End-of-period value at the imposed constraint mNrmMin=%r is not "
+            "finite (%r), so the constrained branch cannot be built and the "
+            "value function falls back to interpolation there.",
+            mNrmMin,
+            wBar,
+        )
+        return None
+    return wBar
+
+
+class ConstrainedBranchValue(MetricObject):
+    r"""Inverse value function that is exact where the constraint binds.
+
+    Wraps an approximate inverse value function (moderated or interpolated) and
+    overrides it on the branch where the borrowing constraint binds, where
+    ``v(m) = u(m - mNrmMin) + wBar`` holds outright.
+
+    The region runs from the constraint up to ``mKink``, taken from
+    :func:`calc_constraint_kink`, so the consumption and value paths use one
+    number and the kink is endogenous rather than the analytic cusp, which lies
+    far outside it.
+
+    This is not an envelope. On the constrained branch the closed form is the
+    answer, not a bound: an approximation there can err on either side, and
+    both EGM and moderation in fact overshoot it.
+
+    Parameters
+    ----------
+    approx_nvrs : callable
+        The inverse value function to use away from the constraint.
+    mNrmMin : float
+        The binding constraint.
+    mKink : float
+        Largest market resources at which the constraint still binds.
+    wBar : float
+        End-of-period value at the constraint, from
+        :func:`calc_constrained_branch_value`.
+    uFunc : UtilityFuncCRRA
+        Utility function, supplying ``inv`` and ``derinv``.
+
+    """
+
+    distance_criteria = ["approx_nvrs", "mNrmMin", "mKink", "wBar"]
+
+    def __init__(self, approx_nvrs, mNrmMin, mKink, wBar, uFunc) -> None:
+        self.approx_nvrs = approx_nvrs
+        self.mNrmMin = mNrmMin
+        self.mKink = mKink
+        self.wBar = wBar
+        self.uFunc = uFunc
+
+    @property
+    def x_list(self):
+        """Gridpoints of the wrapped approximation, for HARK callers."""
+        return self.approx_nvrs.x_list
+
+    def _binds(self, m):
+        """True on the branch where the constraint binds."""
+        return (m >= self.mNrmMin) & (m <= self.mKink)
+
+    def _branch_nvrs(self, m_ex):
+        """u^{-1}(u(m_ex) + wBar), the exact inverse value on the branch."""
+        with np.errstate(divide="ignore", invalid="ignore"):
+            return self.uFunc.inv(self.uFunc(m_ex) + self.wBar)
+
+    def __call__(self, m):
+        m = np.asarray(m, dtype=float)
+        m_ex = m - self.mNrmMin
+        binds = self._binds(m)
+        # Evaluate the branch only on strictly positive excess resources; at
+        # m == mNrmMin the exact inverse value is 0, which u.inv cannot deliver
+        # from u(0) = -inf without a spurious nan.
+        safe_ex = np.where(m_ex > 0, m_ex, 1.0)
+        out = np.where(
+            binds,
+            np.where(m_ex > 0, self._branch_nvrs(safe_ex), 0.0),
+            np.asarray(self.approx_nvrs(m), dtype=float),
+        )
+        return float(out) if m.ndim == 0 else out
+
+    def derivative(self, m):
+        m = np.asarray(m, dtype=float)
+        m_ex = m - self.mNrmMin
+        safe_ex = np.where(m_ex > 0, m_ex, 1.0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            v_branch = self.uFunc(safe_ex) + self.wBar
+            branch_slope = self.uFunc.der(safe_ex) * self.uFunc.derinv(
+                v_branch,
+                order=(0, 1),
+            )
+        out = np.where(
+            self._binds(m),
+            branch_slope,
+            np.asarray(_get_derivative(self.approx_nvrs, m), dtype=float),
+        )
+        return float(out) if m.ndim == 0 else out
+
+    def derivativeX(self, m):
+        """Alias for derivative(m) to satisfy HARK's derivativeX contract."""
+        return self.derivative(m)
 
 
 def _build_vfunc_egm(
@@ -392,6 +596,8 @@ def _build_vfunc_egm(
     MPCmax,
     MPCmin,
     hNrm,
+    wBar,
+    mKink,
 ):
     """Construct beginning-of-period value function for EGM path."""
     vNvrs, vNvrsP = construct_value_functions(
@@ -424,6 +630,17 @@ def _build_vfunc_egm(
         intercept,
         slope,
     )
+    # Neither this grid nor the moderated one carries a node strictly inside a
+    # binding imposed constraint, so both draw a secant from (mNrmMin, 0) to the
+    # kink. Applying the exact branch to each keeps their comparison fair.
+    if wBar is not None:
+        vNvrsFunc = ConstrainedBranchValue(
+            vNvrsFunc,
+            mNrmMin,
+            mKink,
+            wBar,
+            uFunc,
+        )
     return ValueFuncCRRA(vNvrsFunc, CRRA)
 
 
@@ -439,6 +656,9 @@ def _build_vfunc_mom(
     optimist,
     pessimist,
     CubicBool,
+    mKink=None,
+    wBar=None,
+    uFunc=None,
 ):
     """Construct beginning-of-period value function for MoM path via chi/omega over mu."""
     mNrmEx = mNrm - mNrmMin
@@ -455,11 +675,14 @@ def _build_vfunc_mom(
     modRte = np.clip(modRte, eps, 1.0 - eps)
     MPCminNvrs = MPCmin ** (-CRRA / (1.0 - CRRA))
     if not np.isfinite(hNrmEx) or hNrmEx <= 1e-12:
-        raise ValueError(
+        msg = (
             f"hNrmEx={hNrmEx!r}: the pessimist's excess human wealth must be "
             "strictly positive for the MoM value-function derivative formula "
             "to apply. Check the impatience and growth-impatience conditions "
             "for the supplied parameters."
+        )
+        raise ValueError(
+            msg,
         )
     modRteMu = mNrmEx * (vNvrsP - MPCminNvrs) / (hNrmEx * MPCminNvrs)
     logitModRte = logit_moderate(modRte)
@@ -480,6 +703,17 @@ def _build_vfunc_mom(
         vNvrsOptFunc,
         vNvrsPesFunc,
     )
+    # Moderation cannot reach the constrained branch: mu = log(m - mNrmMin)
+    # sends the constraint to -infinity, so omega is clipped away from 0 above
+    # and the branch is interpolated through rather than represented.
+    if wBar is not None:
+        moderated_vfunc = ConstrainedBranchValue(
+            moderated_vfunc,
+            mNrmMin,
+            mKink,
+            wBar,
+            uFunc,
+        )
     return ValueFuncCRRA(moderated_vfunc, CRRA)
 
 
@@ -499,6 +733,7 @@ def _build_marginal_value_funcs(cFunc, CRRA, CubicBool):
     -------
     tuple
         (vPfunc, vPPfunc) - marginal value functions
+
     """
     vPfunc = MargValueFuncCRRA(cFunc, CRRA)
     vPPfunc = MargMargValueFuncCRRA(cFunc, CRRA) if CubicBool else NullFunc()
@@ -526,6 +761,7 @@ def _build_complete_vfunc(
     optimist,
     pessimist,
     CubicBool,
+    mKink=None,
 ):
     """Construct complete value function using Method of Moderation if requested.
 
@@ -539,6 +775,7 @@ def _build_complete_vfunc(
     -------
     vFunc : ValueFuncCRRA or NullFunc
         Value function (or dummy if not requested)
+
     """
     if not vFuncBool:
         return NullFunc()
@@ -568,6 +805,18 @@ def _build_complete_vfunc(
         optimist=optimist,
         pessimist=pessimist,
         CubicBool=CubicBool,
+        mKink=mKink,
+        uFunc=uFunc,
+        wBar=calc_constrained_branch_value(
+            mNrmMin,
+            BoroCnstNat,
+            DiscFacEff,
+            Rfree,
+            PermGroFac,
+            CRRA,
+            IncShkDstn,
+            vFuncNext,
+        ),
     )
 
 
@@ -616,6 +865,7 @@ def _assemble_mom_solution(
     -------
     ConsumerSolution
         Complete solution with behavioral bounds attached
+
     """
     solution = ConsumerSolution(
         cFunc=cFunc,
@@ -898,8 +1148,15 @@ def construct_value_functions(
     uFunc,
     cNrm,
     CubicBool,
+    EndOfPrdv=None,
 ):
     """Construct complete value functions using HARK's inverse utility framework.
+
+    When `EndOfPrdv` is supplied (e.g. by a state-indexed solver that
+    aggregates it across next states; the Markov-return solver in the bst
+    repo's markov-return-mom exploration is the live consumer), step 1's
+    expectation is skipped and
+    `DiscFacEff`/`Rfree`/`PermGroFac`/`IncShkDstn`/`vFuncNext` may be None.
 
     This function performs the comprehensive value function construction process
     that is shared between both EGM and Method of Moderation solvers. It implements
@@ -978,11 +1235,12 @@ def construct_value_functions(
     # =========================================================================
 
     # Calculate end-of-period value at each asset gridpoint
-    EndOfPrdv = DiscFacEff * expected(
-        calc_v_next,
-        IncShkDstn,
-        args=(aNrm, Rfree, CRRA, PermGroFac, vFuncNext),
-    )
+    if EndOfPrdv is None:
+        EndOfPrdv = DiscFacEff * expected(
+            calc_v_next,
+            IncShkDstn,
+            args=(aNrm, Rfree, CRRA, PermGroFac, vFuncNext),
+        )
 
     # Transform through inverse utility for numerical stability
     EndOfPrdvNvrs = uFunc.inv(EndOfPrdv)
@@ -1210,6 +1468,18 @@ def endogenous_grid_method(
         uFunc,
     )
 
+    mKink = calc_constraint_kink(
+        mNrmMin,
+        BoroCnstNat,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vPfuncNext,
+        uFunc,
+    )
+
     # Note: Boundary augmentation (c=0 at m=mNrmMin) is handled in _build_cfunc_egm
 
     # =========================================================================
@@ -1263,6 +1533,17 @@ def endogenous_grid_method(
             MPCmin=MPCmin,
             hNrm=hNrm,
             aNrm=aNrm,
+            wBar=calc_constrained_branch_value(
+                mNrmMin,
+                BoroCnstNat,
+                DiscFacEff,
+                Rfree,
+                PermGroFac,
+                CRRA,
+                IncShkDstn,
+                vFuncNext,
+            ),
+            mKink=mKink,
         )
     else:
         vFunc = NullFunc()  # Dummy object
@@ -1540,7 +1821,9 @@ def expit_moderate(chi):
     Notes
     -----
     - This is the standard sigmoid/expit function from ML/statistics
-    - Uses 1/(1 + exp(-chi)) for numerical stability
+    - Delegates to scipy.special.expit, which evaluates both tails without
+      overflow (the naive 1/(1 + exp(-chi)) overflows in exp for chi below
+      about -709 before IEEE arithmetic rescues the value)
     - Central to reconstructing consumption from interpolated chi function
     - Ensures omega in (0,1) for all finite chi values
     - Matches PyTorch's torch.sigmoid, scipy.special.expit, etc.
@@ -1551,15 +1834,20 @@ def expit_moderate(chi):
     - Immediately recognizable to ML practitioners
 
     """
-    return 1.0 / (1.0 + np.exp(-chi))
+    return expit(chi)
 
 
-class TransformedFunctionMoM:
+class TransformedFunctionMoM(MetricObject):
     """Generalized Method of Moderation function transformer.
 
     This class provides the core moderation logic for functions bounded between
     two lines (optimist and pessimist bounds). It applies the MoM formula:
     f_real(m) = f_pes(m) + omega(mu) * (f_opt(m) - f_pes(m))
+
+    Subclassing MetricObject makes infinite-horizon (cycles=0) convergence
+    checks meaningful: without a distance metric, HARK's solver loop compares
+    successive solutions as incomparable objects (sentinel distance 1000) and
+    always runs to max_cycles regardless of tolerance.
 
     This class can be used for any function that needs to be moderated between
     upper and lower bounds, including consumption functions, value functions, etc.
@@ -1590,6 +1878,8 @@ class TransformedFunctionMoM:
 
     """
 
+    distance_criteria = ["logitModRteFunc", "mNrmMin"]
+
     def __init__(
         self,
         mNrmMin,
@@ -1599,8 +1889,12 @@ class TransformedFunctionMoM:
         pessimist_func,
         MPCmin=None,
         MPCmax=None,
+        tight_upper_slope=None,
+        mKink=None,
     ) -> None:
         self.mNrmMin = mNrmMin
+        self.mKink = mKink
+        self.tight_upper_slope = tight_upper_slope
         self.modRteFunc = modRteFunc
         self.logitModRteFunc = logitModRteFunc
         self.optimist_func = optimist_func
@@ -1645,7 +1939,60 @@ class TransformedFunctionMoM:
         omega = expit_moderate(chi)
 
         # Apply moderation: f_real = f_pes + omega * (f_opt - f_pes)
-        return f_pes + omega * (f_opt - f_pes)
+        moderated = f_pes + omega * (f_opt - f_pes)
+        # mu is -inf at the constraint itself, so chi and omega come back nan
+        # there. The limit is omega = 0: the realist attains the pessimist's
+        # value, c(mNrmMin) = 0 for consumption and vNvrs(mNrmMin) = 0 for value.
+        moderated = np.where(np.asarray(m) > self.mNrmMin, moderated, f_pes)
+        return self._apply_constrained_branch(
+            m,
+            self._apply_tight_upper_bound(m, moderated),
+        )
+
+    def _apply_constrained_branch(self, m, moderated):
+        """Substitute the exact rule where the borrowing constraint binds.
+
+        Below the kink the agent spends everything above the constraint, so
+        c = m - mNrmMin outright. Clipping alone does not deliver this: as m
+        approaches the constraint the moderation ratio goes to zero and the
+        rule goes to the PESSIMIST's, which lies strictly BELOW the budget
+        line, so the clip is slack exactly where the constraint binds hardest.
+        """
+        if self.mKink is None:
+            return moderated
+        m_arr = np.asarray(m, dtype=float)
+        binds = (m_arr >= self.mNrmMin) & (m_arr <= self.mKink)
+        return np.where(binds, m_arr - self.mNrmMin, moderated)
+
+    def _tight_upper_bound(self, m):
+        """The tighter upper bound MPCmax * (m - mNrmMin), or None if unset.
+
+        This is the borrowing constraint imposed: the line through the
+        constraint point ``(mNrmMin, 0)`` with the limiting MPC there, which
+        concavity makes a valid upper bound everywhere. It therefore carries
+        the boundary condition ``c(mNrmMin) = 0`` for free. Under an ARTIFICIAL
+        constraint MPCmax is 1, so the bound is the 45-degree budget line and
+        the solution attains it over an interval; under a NATURAL constraint
+        MPCmax < 1 and the bound is strictly tighter than the budget line,
+        touched only at the constraint itself. One expression covers both.
+
+        Only the consumption path supplies a slope, so value functions are
+        unaffected.
+        """
+        if self.tight_upper_slope is None:
+            return None
+        return self.tight_upper_slope * (m - self.mNrmMin)
+
+    def _apply_tight_upper_bound(self, m, moderated):
+        """Clip the moderated value to the tighter upper bound.
+
+        Never a regression: the truth obeys the bound, so wherever the
+        moderated value exceeds it the bound is strictly closer, and where the
+        constraint actually binds the bound IS the truth. The clip is a no-op
+        whenever the bound is slack, which is the whole natural-constraint case.
+        """
+        bound = self._tight_upper_bound(m)
+        return moderated if bound is None else np.minimum(moderated, bound)
 
     def derivative(self, m):
         """Compute the derivative of the moderated function.
@@ -1717,17 +2064,30 @@ class TransformedFunctionMoM:
             # Between gridpoints the cubic spline can produce omega'_mu outside
             # that range and the interpolated MPC may briefly fall outside
             # [MPCmin, MPCmax]; refine the grid if this matters.
-            return MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
+            deriv = MPCmin * (1 + (h_nrm_ex / m_ex) * omega_prime_mu)
+        else:
+            # 4. General case: full product rule when the bounds differ in slope
+            dmu_dm = 1.0 / m_ex
+            d_omega_dm = omega * (1 - omega) * chi_prime_mu * dmu_dm
 
-        # 4. General case: use full product rule for functions with different bound slopes
-        dmu_dm = 1.0 / m_ex
-        d_omega_dm = omega * (1 - omega) * chi_prime_mu * dmu_dm
+            base_slope = f_pes_prime
+            slope_adjustment = omega * (f_opt_prime - f_pes_prime)
+            moderation_adjustment = d_omega_dm * (f_opt - f_pes)
 
-        base_slope = f_pes_prime
-        slope_adjustment = omega * (f_opt_prime - f_pes_prime)
-        moderation_adjustment = d_omega_dm * (f_opt - f_pes)
+            deriv = base_slope + slope_adjustment + moderation_adjustment
 
-        return base_slope + slope_adjustment + moderation_adjustment
+        # Where __call__ clips to the tighter upper bound, the function IS that
+        # bound, so its slope is the bound's slope. Without this the MPC keeps
+        # the moderated value's slope across a segment it no longer describes.
+        bound = self._tight_upper_bound(m)
+        if bound is not None:
+            moderated = f_pes + omega * (f_opt - f_pes)
+            deriv = np.where(moderated > bound, self.tight_upper_slope, deriv)
+        if self.mKink is not None:
+            m_arr = np.asarray(m, dtype=float)
+            binds = (m_arr >= self.mNrmMin) & (m_arr <= self.mKink)
+            deriv = np.where(binds, 1.0, deriv)
+        return deriv
 
     # HARK compatibility: many interpolation utilities expect a 'derivativeX' method
     # that returns df/dx at x. Provide it as an alias to derivative.
@@ -1992,6 +2352,18 @@ def method_of_moderation(
         uFunc,
     )
 
+    mKink = calc_constraint_kink(
+        mNrmMin,
+        BoroCnstNat,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vPfuncNext,
+        uFunc,
+    )
+
     # =========================================================================
     # Step 4: Method of Moderation consumption build via unified helper
     # =========================================================================
@@ -2013,6 +2385,7 @@ def method_of_moderation(
         CubicBool=CubicBool,
         optimist=optimist,
         pessimist=pessimist,
+        mKink=mKink,
     )
 
     # Construct marginal value functions
@@ -2039,6 +2412,7 @@ def method_of_moderation(
         optimist=optimist,
         pessimist=pessimist,
         CubicBool=CubicBool,
+        mKink=mKink,
     )
 
     # Assemble and return complete solution
@@ -2198,7 +2572,7 @@ def moderate_tight(m, mNrmMin, cNrm, MPCmin, MPCmax):
     return (cNrm - c_pes) / (c_tight - c_pes)
 
 
-class TransformedFunctionMoMCusp:
+class TransformedFunctionMoMCusp(MetricObject):
     """Three-piece consumption function using cusp approximation.
 
     This class implements the three-piece approximation described in the paper:
@@ -2235,6 +2609,13 @@ class TransformedFunctionMoMCusp:
         Maximum MPC
 
     """
+
+    distance_criteria = [
+        "logitModRteFuncLow",
+        "logitModRteFuncHigh",
+        "mNrmCusp",
+        "mNrmMin",
+    ]
 
     def __init__(
         self,
@@ -2399,9 +2780,20 @@ def _build_cfunc_mom_cusp(
     low_mask = mNrm < mNrmCusp
     high_mask = ~low_mask
 
-    # Ensure we have points in both regions (add cusp if needed)
-    if not np.any(low_mask) or not np.any(high_mask):
-        # Fall back to standard MoM if cusp outside grid
+    # Each region needs >= 2 gridpoints in BOTH interpolation modes. Linear
+    # needs them for its finite-difference extrapolation slopes; cubic could
+    # mechanically split on one Hermite point, but measured accuracy settles
+    # it: a one-knot low region rides its tangent ~7.5 mu-units to the cusp
+    # (sup error 2.4e-1 vs 2.9e-3 for the fallback on the Table 1 sparse
+    # grid). Fall back to standard MoM, keeping the optimist/pessimist bounds.
+    if np.sum(low_mask) < 2 or np.sum(high_mask) < 2:
+        logger.info(
+            "Cusp construction fell back to standard MoM: a region has fewer "
+            "than 2 gridpoints (low=%d, high=%d); the tighter MPCmax bound is "
+            "not enforced for this solution.",
+            int(np.sum(low_mask)),
+            int(np.sum(high_mask)),
+        )
         return _build_cfunc_mom(
             DiscFacEff=DiscFacEff,
             Rfree=Rfree,
@@ -2448,11 +2840,15 @@ def _build_cfunc_mom_cusp(
 
     if CubicBool:
         MPC_low = MPC[low_mask]
-        # Derivative: d(modRte)/d(mu) for tight bound
-        # modRte = (c - MPCmin*mNrmEx) / ((MPCmax-MPCmin)*mNrmEx)
-        # d(modRte)/d(mu) = mNrmEx * (MPC - MPCmin) / ((MPCmax-MPCmin)*mNrmEx)
-        #                 = (MPC - MPCmin) / (MPCmax - MPCmin)
-        modRteMu_low = (MPC_low - MPCmin) / (MPCmax - MPCmin)
+        # Derivative: d(modRte)/d(mu) for the tight bound, carrying the
+        # quotient-rule term from the 1/mNrmEx factor:
+        #   modRte = (c/mNrmEx - MPCmin) / (MPCmax - MPCmin)
+        #   d(modRte)/d(mu) = (MPC - c/mNrmEx) / (MPCmax - MPCmin),
+        # which is negative in the low region: under concavity the average
+        # propensity c/mNrmEx exceeds the marginal MPC, so the ratio falls
+        # from 1 at the constraint toward 0.
+        mNrmEx_low = mNrm_low - mNrmMin
+        modRteMu_low = (MPC_low - cNrm_low / mNrmEx_low) / (MPCmax - MPCmin)
         logitModRteMu_low = modRteMu_low / (modRte_low * (1 - modRte_low))
     else:
         modRteMu_low = None
@@ -2570,13 +2966,29 @@ def method_of_moderation_cusp(
 
     # Create behavioral bounds
     optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
-        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+        hNrm,
+        mNrmMin,
+        MPCmin,
+        MPCmax,
+        CRRA,
     )
 
     # Solve EGM step
     aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step(
         aXtraGrid,
         mNrmMin,
+        DiscFacEff,
+        Rfree,
+        PermGroFac,
+        CRRA,
+        IncShkDstn,
+        vPfuncNext,
+        uFunc,
+    )
+
+    mKink = calc_constraint_kink(
+        mNrmMin,
+        BoroCnstNat,
         DiscFacEff,
         Rfree,
         PermGroFac,
@@ -2632,6 +3044,7 @@ def method_of_moderation_cusp(
         optimist=optimist,
         pessimist=pessimist,
         CubicBool=CubicBool,
+        mKink=mKink,
     )
 
     # Assemble solution and add cusp-specific attribute
@@ -2708,6 +3121,7 @@ def calc_vp_next_stochastic_r(atoms, a, crra, perm_gro_fac, vp_func_next):
     -------
     np.ndarray
         R * ψ^{-ρ} * v'(m_{t+1}) where m_{t+1} = R*a/ψ + θ
+
     """
     psi = atoms[0]  # Permanent shock
     theta = atoms[1]  # Transitory shock
@@ -2742,12 +3156,8 @@ def create_joint_distribution(IncShkDstn, RiskyAvg, RiskyStd, n_risky_points=7):
         - Row 0: PermShk
         - Row 1: TranShk
         - Row 2: Risky
-    """
-    from HARK.distributions import (
-        MeanOneLogNormal,
-        combine_indep_dstns,
-    )
 
+    """
     # Create lognormal return distribution centered on RiskyAvg
     # Log R ~ N(μ, σ²) where E[R] = exp(μ + σ²/2) = RiskyAvg
     # and Var[R] = exp(2μ + σ²)(exp(σ²) - 1) = RiskyStd²
@@ -2762,8 +3172,128 @@ def create_joint_distribution(IncShkDstn, RiskyAvg, RiskyStd, n_risky_points=7):
 
     # Combine with income shocks (Cartesian product)
     # Result: atoms shape (3, n_inc * n_risky) with rows [PermShk, TranShk, Risky]
-    joint = combine_indep_dstns(IncShkDstn, risky_dstn)
-    return joint
+    return combine_indep_dstns(IncShkDstn, risky_dstn)
+
+
+def calc_patience_factor_stochastic_r(JointShkDstn, DiscFacEff, CRRA):
+    r"""Patience factor under return risk, from the Euler equation's limit.
+
+    Taking ``m -> infinity`` in the Euler equation, consumption growth tends to
+    ``Risky * (1 - MPCmin)`` and the equation collapses to
+    ``(1 - MPCmin)**CRRA = DiscFac * E[Risky**(1-CRRA)]``, so the patience
+    factor generalizes from ``(Rfree * DiscFac)**(1/CRRA) / Rfree`` to
+
+        PatFac = (DiscFac * E[Risky**(1-CRRA)])**(1/CRRA).
+
+    A deterministic return reduces this exactly: ``E[R**(1-CRRA)]`` becomes
+    ``R**(1-CRRA)`` and the expression is ``(R*DiscFac)**(1/CRRA)/R``, which is
+    HARK's `calc_patience_factor`. Feeding the result through
+    `calc_mpc_min` then gives MPCmin by the same backward recursion used
+    without return risk, so the bound is the Euler-implied limit rather than a
+    slope measured off the solved grid.
+
+    Existence and convergence results are not established here; see the
+    buffer-stock-theory treatment cited in the text.
+
+    Parameters
+    ----------
+    JointShkDstn : DiscreteDistribution
+        Joint distribution whose third component (index 2) is the gross risky
+        return, as built by :func:`create_joint_distribution`.
+    DiscFacEff : float
+        Effective discount factor, already multiplied by the survival
+        probability.
+    CRRA : float
+        Coefficient of relative risk aversion.
+
+    Returns
+    -------
+    float
+        The patience factor to pass to `calc_mpc_min`.
+
+    """
+    risky = np.asarray(JointShkDstn.atoms[2], dtype=float)
+    probs = np.asarray(JointShkDstn.pmv, dtype=float)
+    m_zero = float(np.sum(probs * risky ** (1.0 - CRRA)))
+    pat_fac = (DiscFacEff * m_zero) ** (1.0 / CRRA)
+    if not np.isfinite(pat_fac) or pat_fac <= 0.0:
+        msg = (
+            f"Stochastic patience factor {pat_fac!r} is not usable "
+            f"(DiscFacEff={DiscFacEff!r}, E[R^(1-CRRA)]={m_zero!r})."
+        )
+        raise ValueError(msg)
+    return pat_fac
+
+
+def calc_return_factor_human_wealth(JointShkDstn, CRRA):
+    r"""Effective return factor for discounting human wealth under return risk.
+
+    With a risky return there is no traded riskless asset, so the rate at which
+    a labor income stream should be capitalized is not a modelling choice: it
+    is whatever the Euler equation implies in the ``m -> infinity`` limit. In
+    that limit the stochastic discount factor is
+    ``M = DiscFac * (Risky * (1 - MPCmin))**(-CRRA)``, and applying
+    ``(1 - MPCmin)**CRRA = DiscFac * E[Risky**(1-CRRA)]`` collapses its
+    expectation to a ratio of two moments of the return distribution alone:
+
+        E[M] = E[Risky**(-CRRA)] / E[Risky**(1-CRRA)]
+
+    so the effective discount factor is the reciprocal,
+
+        Reff = E[Risky**(1-CRRA)] / E[Risky**(-CRRA)].
+
+    Note the asymmetry this exposes: MPCmin is pinned by the SINGLE moment
+    ``E[Risky**(1-CRRA)]``, while human wealth is pinned by the RATIO of two.
+    A deterministic return collapses both onto the same factor, which is why a
+    single rate suffices there and stops sufficing once the return is random.
+
+    Existence of finite human wealth requires ``E[M] < 1``, the return-risk
+    analogue of the finite-human-wealth condition; a ValueError is raised
+    otherwise rather than returning a negative or infinite discount factor.
+
+    The derivation assumes permanent growth is separable from the return
+    process, which holds for the calibrations used here. Existence and
+    convergence results are not established in this paper; see the
+    buffer-stock-theory treatment cited in the text.
+
+    Parameters
+    ----------
+    JointShkDstn : DiscreteDistribution
+        Joint distribution whose third component (index 2) is the gross risky
+        return, as built by :func:`create_joint_distribution`.
+    CRRA : float
+        Coefficient of relative risk aversion.
+
+    Returns
+    -------
+    float
+        The effective gross return factor for capitalizing human wealth.
+
+    """
+    risky = np.asarray(JointShkDstn.atoms[2], dtype=float)
+    probs = np.asarray(JointShkDstn.pmv, dtype=float)
+    m_zero = float(np.sum(probs * risky ** (1.0 - CRRA)))
+    m_one = float(np.sum(probs * risky ** (-CRRA)))
+    if not np.isfinite(m_zero) or not np.isfinite(m_one) or m_one <= 0.0:
+        msg = (
+            f"Return moments are not usable: E[R^(1-CRRA)]={m_zero!r}, "
+            f"E[R^(-CRRA)]={m_one!r}. Check the discretized return process."
+        )
+        raise ValueError(msg)
+    if m_one >= m_zero:
+        # The one-period recursion below is still well defined; only the
+        # infinite sum is not, so this is reported rather than raised.
+        logger.warning(
+            "E[R^(-CRRA)]=%.6g >= E[R^(1-CRRA)]=%.6g, so the expected "
+            "stochastic discount factor is at least one and the implied "
+            "shadow riskless rate is below one. Human wealth is finite in "
+            "any finite horizon but does not converge as the horizon grows; "
+            "this is the return-risk analogue of the finite-human-wealth "
+            "condition.",
+            m_one,
+            m_zero,
+        )
+    return m_zero / m_one
 
 
 def calc_boro_const_nat_stochastic_r(mNrmMinNext, JointShkDstn, PermGroFac):
@@ -2795,6 +3325,7 @@ def calc_boro_const_nat_stochastic_r(mNrmMinNext, JointShkDstn, PermGroFac):
     -------
     float
         Natural borrowing constraint (minimum end-of-period assets)
+
     """
     # Get all shock combinations
     psi_vals = JointShkDstn.atoms[0]  # Permanent shocks
@@ -2847,6 +3378,7 @@ def solve_egm_step_stochastic_r(
     -------
     tuple
         (aNrm, cNrm, mNrm, EndOfPrdvP)
+
     """
     aNrm = np.asarray(aXtraGrid) + mNrmMin
 
@@ -2989,8 +3521,8 @@ def method_of_moderation_stochastic_r(
     (
         DiscFacEff,
         hNrm,
-        BoroCnstNat_det,
-        mNrmMin_det,
+        _BoroCnstNat_det,
+        _mNrmMin_det,
         MPCmin_deterministic,  # MPCmin with deterministic returns
         MPCmax,
     ) = prepare_to_solve(
@@ -3011,17 +3543,28 @@ def method_of_moderation_stochastic_r(
     # Create joint distribution over (income shocks, return shocks)
     JointShkDstn = create_joint_distribution(IncShkDstn, RiskyAvg, RiskyStd)
 
+    # Recapitalize human wealth at the Euler-implied return factor. prepare_to_solve
+    # discounted it at Rfree, which prices a riskless asset that this model does not
+    # offer; the limiting stochastic discount factor supplies the rate instead.
+    RfreeHuman = calc_return_factor_human_wealth(JointShkDstn, CRRA)
+    Ex_IncNext = expected(lambda x: x["PermShk"] * x["TranShk"], IncShkDstn)
+    hNrm = calc_human_wealth(
+        solution_next.hNrm,
+        PermGroFac,
+        RfreeHuman,
+        Ex_IncNext,
+    )
+
     # Calculate stochastic borrowing constraint (accounts for minimum return)
     # This follows HARK's approach: constraint for all combinations, take max
     BoroCnstNat = calc_boro_const_nat_stochastic_r(
-        solution_next.mNrmMin, JointShkDstn, PermGroFac
+        solution_next.mNrmMin,
+        JointShkDstn,
+        PermGroFac,
     )
 
     # Set mNrmMin to the stochastic constraint (or artificial if more binding)
-    if BoroCnstArt is None:
-        mNrmMin = BoroCnstNat
-    else:
-        mNrmMin = max(BoroCnstNat, BoroCnstArt)
+    mNrmMin = BoroCnstNat if BoroCnstArt is None else max(BoroCnstNat, BoroCnstArt)
 
     # Solve EGM with stochastic returns - R is inside the expectation
     aNrm, cNrm, mNrm, EndOfPrdvP = solve_egm_step_stochastic_r(
@@ -3035,35 +3578,86 @@ def method_of_moderation_stochastic_r(
         uFunc,
     )
 
+    mKink = mNrmMin
+    if BoroCnstNat < mNrmMin:
+        vPatCnst = (
+            DiscFacEff
+            * PermGroFac ** (-CRRA)
+            * expected(
+                calc_vp_next_stochastic_r,
+                JointShkDstn,
+                args=(np.array([mNrmMin]), CRRA, PermGroFac, vPfuncNext),
+            )
+        )
+        mKink = mNrmMin + float(
+            np.asarray(uFunc.derinv(vPatCnst, order=(1, 0))).item(),
+        )
+
     # Compute realized MPCmin from the stochastic solution: a 2-point finite
     # difference of the consumption function at the top of the grid.
     # Validate before using: if it falls outside (0, 1) the bound is structurally
     # corrupt and would silently poison every subsequent moderation interpolant.
     dm = mNrm[-1] - mNrm[-2]
     if dm <= 0 or not np.isfinite(dm):
-        raise ValueError(
+        msg = (
             "Stochastic-R MPCmin estimation failed: top two gridpoints are "
             f"not strictly increasing (mNrm[-1]={mNrm[-1]}, mNrm[-2]={mNrm[-2]}). "
-            "Refine the asset grid before retrying.",
+            "Refine the asset grid before retrying."
+        )
+        raise ValueError(
+            msg,
         )
     mpc_at_high_m = (cNrm[-1] - cNrm[-2]) / dm
     if not (0.0 < mpc_at_high_m < 1.0) or not np.isfinite(mpc_at_high_m):
-        raise ValueError(
+        msg = (
             f"Stochastic-R MPCmin estimate {mpc_at_high_m!r} is outside (0, 1); "
             "the finite-difference at the top of the grid is unreliable. Refine "
             "the asset grid, or supply MPCmin analytically via the Merton-"
-            "Samuelson formula 1 - (DiscFac * E[Risky^(1-CRRA)])^(1/CRRA).",
+            "Samuelson formula 1 - (DiscFac * E[Risky^(1-CRRA)])^(1/CRRA)."
         )
-    MPCmin = mpc_at_high_m  # Use the realized limiting MPC
+        raise ValueError(
+            msg,
+        )
+    # The bound is the Euler-implied limit, obtained by the same backward
+    # recursion used without return risk; the slope measured above is retained
+    # as a check on it, since the two must agree as the grid top rises.
+    PatFacStoch = calc_patience_factor_stochastic_r(JointShkDstn, DiscFacEff, CRRA)
+    MPCmin = calc_mpc_min(solution_next.MPCmin, PatFacStoch)
+    if not 0.0 < MPCmin < 1.0:
+        msg = (
+            f"Euler-implied MPCmin {MPCmin!r} is outside (0, 1) "
+            f"(PatFac={PatFacStoch!r}). Check the return process and the "
+            "patience conditions."
+        )
+        raise ValueError(msg)
+    rel_gap = abs(mpc_at_high_m - MPCmin) / MPCmin
+    if rel_gap > 1e-2:
+        logger.warning(
+            "Euler-implied MPCmin %.9f and the slope measured at the top of "
+            "the grid %.9f differ by %.2e in relative terms. The measured "
+            "slope overstates the limit at finite wealth, so a gap this large "
+            "usually means the grid top is too low to confirm the bound.",
+            MPCmin,
+            mpc_at_high_m,
+            rel_gap,
+        )
 
     # Create behavioral bounds for moderation
     optimist, pessimist, tighterUpperBound = make_behavioral_bounds(
-        hNrm, mNrmMin, MPCmin, MPCmax, CRRA
+        hNrm,
+        mNrmMin,
+        MPCmin,
+        MPCmax,
+        CRRA,
     )
 
     # Also create deterministic bounds (for comparison)
     optimist_det, pessimist_det, _ = make_behavioral_bounds(
-        hNrm, mNrmMin, MPCmin_deterministic, MPCmax, CRRA
+        hNrm,
+        mNrmMin,
+        MPCmin_deterministic,
+        MPCmax,
+        CRRA,
     )
 
     # Build consumption function using MoM
@@ -3085,6 +3679,7 @@ def method_of_moderation_stochastic_r(
         CubicBool=CubicBool,
         optimist=optimist,
         pessimist=pessimist,
+        mKink=mKink,
     )
 
     # Construct marginal value functions
@@ -3111,6 +3706,7 @@ def method_of_moderation_stochastic_r(
         optimist=optimist,
         pessimist=pessimist,
         CubicBool=CubicBool,
+        mKink=mKink,
     )
 
     # Assemble solution
@@ -3148,7 +3744,7 @@ IndShockMoMStochasticR_defaults["RiskyStd"] = (
 )
 
 
-class IndShockMoMStochasticRConsumerType(IndShockConsumerType):
+class RiskyAssetMoMConsumerType(IndShockConsumerType):
     """HARK consumer type using Method of Moderation with stochastic returns.
 
     This class extends the standard Method of Moderation to handle i.i.d.
@@ -3166,7 +3762,8 @@ class IndShockMoMStochasticRConsumerType(IndShockConsumerType):
     -----
     - Both optimist and pessimist face the same stochastic return
     - The MPC is computed using the Merton-Samuelson formula
-    - Extensions to serially correlated returns require additional state variables
+    - Returns here are idiosyncratic and i.i.d.; serially correlated
+      (state-dependent) returns are outside this module's scope
 
     References
     ----------
