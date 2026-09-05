@@ -99,8 +99,8 @@ and by construction the result can never violate the bounds.
 On a standard calibration the method is more accurate than the benchmark
 endogenous gridpoints method (EGM) in every interval between gridpoints, and
 by more than an order of magnitude in all but the first. Beyond the last
-gridpoint, where EGM's linear extrapolation fails outright, it is roughly
-forty-six times more accurate over the range we evaluate, and even when EGM
+gridpoint, where EGM's default linear extrapolation fails outright, it is
+roughly forty-six times more accurate over the range we evaluate, and even when EGM
 is lent the same bounds to hold its extrapolation inside them, it remains less
 accurate there, by a factor of seventeen.
 

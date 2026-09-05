@@ -87,7 +87,11 @@ def _configure_axes(ax) -> None:
     ax.set_xticklabels([f"{t:g}" for t in ticks])
     ax.minorticks_off()
     ax.set_xlabel(r"Grid top in units of human wealth, $\overline{a}/h$")
-    ax.set_ylabel(r"$\max\, |\tilde{c}(m) - c(m)|$ beyond grid")
+    # Plain words, matching SolutionErrorPlot's "Absolute Consumption Error".
+    # The tilde that used to mark the approximation here appears nowhere in the
+    # manuscript (which uses grave for the approximation and hat for the truth),
+    # so it read as an unexplained diacritic on an otherwise identical c(m).
+    ax.set_ylabel("Max absolute consumption error beyond grid")
     ax.legend()
 
 
