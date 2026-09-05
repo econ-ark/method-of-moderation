@@ -68,7 +68,8 @@ use low-order polynomial splines that exactly match the function (and maybe
 some derivatives) at a finite set of gridpoints, and then to assume that
 interpolated or extrapolated versions of that spline represent the function well
 at the continuous infinity of unmatched points. Outside the range of
-the gridpoints, however, this trust is often misplaced, and extending the
+the gridpoints, however, this trust is often misplaced
+{cite:p}`MaToda2022AsymptoticLinearity,White2015`, and extending the
 grid does not restore it, because beyond whatever gridpoint is last a
 linearly extrapolated consumption rule eventually predicts negative
 precautionary saving, which theory rules out for any prudent consumer.
@@ -78,8 +79,8 @@ is to rely upon the fact that without uncertainty, the optimal consumption
 function has a simple analytical solution. The key insight is that, under
 standard assumptions, the consumer who faces an uninsurable labor income risk
 will consume less than a consumer with the same path for expected income but
-who does not perceive any uncertainty as being attached to that future income.
-The 'realistic' consumer, who _does_ perceive the risks, will engage in
+who does not perceive any uncertainty. The 'realist' consumer, who _does_
+perceive the risks, will engage in
 'precautionary saving' {cite:p}`Leland1968,Sandmo1970,Kimball1990`, so the
 perfect foresight riskless solution provides an upper bound to the solution
 that will actually be optimal. A lower bound is provided by the behavior of a
@@ -92,8 +93,8 @@ fact to change the object being interpolated, so that rather than consumption it
 moderation ratio that measures where the realist falls between the pessimist and
 the optimist. Because that ratio is bounded and smooth and its logit is
 asymptotically linear, the logit interpolates and extrapolates far more
-accurately than consumption does, and by construction the result can never
-violate the bounds.
+accurately than when the level of the consumption ratio is approximated,
+and by construction the result can never violate the bounds.
 
 On a standard calibration the method is more accurate than the benchmark
 endogenous gridpoints method (EGM) in every interval between gridpoints, and
@@ -121,23 +122,29 @@ speed the solution of the realist's problem.[^provenance]
 After showing how to use the method in the baseline case, we show how to
 refine it to encompass an even tighter theoretical bound, and how to extend it
 to solve a problem in which the consumer faces both labor income risk and
-rate-of-return risk. The next section states the realist's problem and the
-patience conditions that guarantee a finite solution, and the section after it
-sets out the endogenous gridpoints benchmark. We then develop the method of moderation for the
-consumption function and the value function, quantify its accuracy against
-endogenous gridpoints, and take up four extensions: the tighter bound near the
-borrowing constraint, Hermite interpolation that matches the Euler equation at
-each gridpoint, an artificial borrowing constraint, and a problem stated in
-assets rather than market resources. A
-final section makes the return risky and then makes the risky share a choice,
-which is where the method first meets a bound that the solution actually
-reaches at a finite level of wealth instead of merely approaching.
+rate-of-return risk. {numref}`the-realists-problem` states the realist's
+problem and the patience conditions that guarantee a finite solution, and
+{numref}`benchmark-the-method-of-endogenous-gridpoints` sets out the endogenous
+gridpoints benchmark. {numref}`the-method-of-moderation` develops the method of
+moderation for the consumption function and, in {numref}`the-value-function`,
+for the value function; {numref}`numerical-accuracy` quantifies its accuracy
+against endogenous gridpoints; and {numref}`extensions` takes up four
+extensions: the tighter bound near the borrowing constraint
+({numref}`a-tighter-upper-bound`), Hermite interpolation that matches the Euler
+equation at each gridpoint ({numref}`hermite-interpolation`), an artificial
+borrowing constraint ({numref}`artificial-borrowing-constraints`), and a
+problem stated in assets rather than market resources
+({numref}`assets-as-the-state-variable`).
+{numref}`risky-returns-and-portfolio-choice` makes the return risky and then
+makes the risky share a choice, which is where the method first meets a bound
+that the solution actually reaches at a finite level of wealth instead of
+merely approaching.
 
 (the-realists-problem)=
 
 # The Realist's Problem
 
-We assume that truly optimal behavior in the problem facing the consumer who understands all their risks is captured by
+The truly optimal behavior in the problem facing the consumer who understands all their risks is captured by
 
 ```{math}
 \max~\Ex_{t}\left[\sum_{n=0}^{T-t}\DiscFac^{n} \uFunc(\cLvl_{t+n})\right]
@@ -190,7 +197,7 @@ The exogenous variables evolve according to the _Friedman-Muth Income Process_[^
 \end{aligned}
 ```
 
-where $\PermGroFac_{t+1}$ is the deterministic permanent income growth factor, and the permanent shocks to income $\permShk_{t+1}$ are independently and identically distributed with mean $\Ex[\permShk_{t+1}] = 1$ and support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$.[^bounded-support] The worst transitory draw $\tranShkMin \geq 0$ arrives with probability $\WorstProb$. The Friedman-Muth unemployment case sets $\tranShkMin = 0$, while a positive $\tranShkMin$ represents underemployment. Everything below requires only that the worst draw is bounded and that no other draw falls below it, $\tranShkMin \leq \left(\frac{1-\WorstProb\,\tranShkMin}{1-\WorstProb}\right)\tranShkEmpMin$, which holds automatically when $\tranShkMin = 0$. Transitory shocks other than the worst draw, $\tranShkEmp_{t+1}$, are independently distributed with mean $\Ex[\tranShkEmp_{t+1}] = 1$ and bounded support $\tranShkEmpMin \leq \tranShkEmp_{t+1} \leq \tranShkEmpMax$ where $0 \leq \tranShkEmpMin \leq 1 \leq \tranShkEmpMax < \infty$; the scaling factor in {eq}`eq:ExogVars` keeps $\Ex[\tranShk_{t+1}] = 1$.
+where $\PermGroFac_{t+1}$ is the deterministic permanent income growth factor, and the permanent shocks to income $\permShk_{t+1}$ are independently and identically distributed with mean $\Ex[\permShk_{t+1}] = 1$ and support $[\permShkMin, \permShkMax]$ where $0 < \permShkMin \leq 1 \leq \permShkMax < \infty$.[^bounded-support] The worst transitory draw $\tranShkMin \geq 0$ arrives with probability $\WorstProb$. The Friedman-Muth unemployment case sets $\tranShkMin = 0$; a positive $\tranShkMin$ is the same unemployment event paying a benefit, which leaves income at a positive floor rather than at zero. Everything below requires only that $\tranShkMin$ is indeed the worst draw, $\tranShkMin \leq \left(\frac{1-\WorstProb\,\tranShkMin}{1-\WorstProb}\right)\tranShkEmpMin$, which holds automatically when $\tranShkMin = 0$. Transitory shocks other than the worst draw, $\tranShkEmp_{t+1}$, are independently distributed with mean $\Ex[\tranShkEmp_{t+1}] = 1$ and bounded support $\tranShkEmpMin \leq \tranShkEmp_{t+1} \leq \tranShkEmpMax$ where $0 \leq \tranShkEmpMin \leq 1 \leq \tranShkEmpMax < \infty$; the scaling factor in {eq}`eq:ExogVars` keeps $\Ex[\tranShk_{t+1}] = 1$.
 
 [^bounded-support]:
     Bounded support ($\permShkMax < \infty$) gives the consumption function well-defined upper and lower bounds. Results for unbounded shocks with finite moments (lognormal, for example) exist, and we do not pursue that extension.
@@ -219,7 +226,40 @@ the Euler equation
 \uPrime(\cNrm_{t}) = \DiscFac \Rfree \Ex_{t}[ \PermGroShk_{t+1}^{-\CRRA} \uPrime(\cNrm_{t+1})].
 ```
 
-We define the absolute patience factor as $\AbsPatFac\equiv(\DiscFac\Rfree)^{1/\CRRA}$. A finite solution requires three conditions {cite:p}`CarrollShanker2024`: (i) the finite-value-of-autarky condition (FVAC) $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$; (ii) the absolute-impatience condition (AIC) $\AbsPatFac<1$; and (iii) the return-impatience condition (RIC) $\AbsPatFac/\Rfree<1$. Two further conditions discipline growth: (iv) the growth-impatience condition (GIC) $\AbsPatFac/\PermGroFac<1$; and (v) the finite-human-wealth condition (FHWC) $\PermGroFac/\Rfree<1$. These conditions ensure existence of upper and lower bounds on consumption {cite:p}`Carroll2001MPCBound,StachurskiToda2019JET` and pin down limiting MPCs {cite:p}`MaToda2021SavingRateRich`.
+We define the _absolute patience factor_
+$\AbsPatFac\equiv(\DiscFac\Rfree)^{1/\CRRA}$, the factor by which a perfect
+foresight consumer's consumption grows from one period to the next. Whether
+the problem has a well-behaved solution depends on a set of conditions
+established and named in {cite:t}`CarrollShanker2024`, whose names we adopt
+and whose content we state here, because we appeal to them repeatedly below.
+
+Three conditions are needed for a solution to exist. The _finite value of
+autarky condition_ (FVAC),
+$0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$, says that a
+consumer who simply consumed their income in every period ('autarky') would
+obtain finite lifetime value, so that the objective being maximized is finite
+to begin with. The _absolute impatience condition_ (AIC), $\AbsPatFac<1$, says
+that such a consumer plans a falling rather than a rising consumption path;
+it is what makes the consumer want to run a buffer stock down rather than
+accumulate without limit. The _return impatience condition_ (RIC),
+$\AbsPatFac/\Rfree<1$, says that planned consumption growth falls short of
+the rate at which resources accumulate, so the perfect foresight consumer
+spends a strictly positive fraction of their resources
+($\MPCmin = 1-\AbsPatFac/\Rfree>0$ in {eq}`eq:MPCmin` below) instead of
+deferring spending indefinitely.
+
+Two further conditions relate spending to the growth of income. The _growth
+impatience condition_ (GIC), $\AbsPatFac/\PermGroFac<1$, says that
+consumption grows more slowly than permanent income, which is what makes the
+ratio of wealth to permanent income revert to a target instead of drifting
+away. The _finite human wealth condition_ (FHWC), $\PermGroFac/\Rfree<1$,
+says that the present discounted value of future labor income is finite, so
+that the 'optimist' rule we construct below exists at all.
+
+Together these conditions ensure existence of the upper and lower bounds on
+consumption that the method of moderation is built from
+{cite:p}`Carroll2001MPCBound,StachurskiToda2019JET` and pin down the limiting
+MPCs {cite:p}`MaToda2021SavingRateRich`.
 
 
 We simplify the exposition by setting $\PermGroFac=1$ and assuming $\permShk_{t+n}=1$ with probability 1 for all $n>0$ (no permanent income growth or shocks), and drop time subscripts except where context requires, working with the infinite-horizon formulation.[^crra-not-one] Under these simplifications, FVAC becomes $0<\DiscFac<1$, the GIC coincides with the AIC, and the FHWC reduces to $\Rfree>1$. All results apply equally to finite-horizon models via backward recursion from terminal period $T$, and to models with permanent income growth by appropriately adjusting the patience conditions above. The generalization to the case with permanent shocks is straightforward.[^permshk-repro]
@@ -231,6 +271,7 @@ We simplify the exposition by setting $\PermGroFac=1$ and assuming $\permShk_{t+
     We assume $\CRRA \neq 1$ throughout, because the transformations of the value function below ($\vInvOpt$, $\vInvReal$) divide by $1-\CRRA$. Log utility needs parallel derivations, with the same economics.
 
 (benchmark-the-method-of-endogenous-gridpoints)=
+
 # Benchmark: The Method of Endogenous Gridpoints
 
 For comparison to our new solution method, we use the endogenous gridpoints
@@ -266,13 +307,15 @@ last-period rule furnishes exact boundary conditions (human wealth one
 period before the end is $\hNrmOpt_{T-1} = 1/\Rfree \approx 0.98$, in
 contrast to the infinite-horizon value of $50$), and both methods use
 linear interpolation, of consumption for endogenous gridpoints and of the
-logit for moderation. The Hermite refinement is treated separately in the
-extensions.
+logit for moderation. The Hermite refinement is treated separately in
+{numref}`hermite-interpolation`.
 
-Unfortunately, this endogenous gridpoints solution is not very well-behaved
-outside the original range of gridpoints targeted by the solution method.
-(Though other common solution methods are no better outside their own predefined
-ranges). {ref}`fig:ExtrapProblem` demonstrates the point by plotting the amount
+The endogenous gridpoints solution method says nothing about how the policy
+function should be extrapolated beyond the grid at which the problem has been
+solved, and that silence allows many interpretations. Here we assume the
+natural choice of linear extension, which leads to badly wrong outcomes.
+(Other common solution methods are no better outside their own predefined
+ranges.) {ref}`fig:ExtrapProblem` demonstrates the point by plotting the amount
 of precautionary saving implied by a linear extrapolation of our approximated
 consumption rule (the consumption of the perfect foresight consumer
 $\cFuncOpt_{T-1}$ minus our approximation to optimal consumption under
@@ -305,6 +348,8 @@ fixes are the ones a modeler tries first.[^toolkit-decay]
 
 [^toolkit-decay]:
     The `HARK` toolkit does not (yet) extend the last linear segment, and instead shrinks the gap above the top gridpoint to the perfect-foresight limit exponentially, which keeps precautionary saving positive. That is the easy and obvious choice, the one we made early in the toolkit's development, when the limiting bounds were known but the theory behind the approach to them was not yet worked out. It is also not how the true gap closes, and nothing in the calibration says how it should, so the accuracy it delivers at any wealth level is not knowable in advance. We therefore compare against linear extrapolation, which is the generic practice, whereas the method below takes its tail from the solved gridpoints.
+
+(the-method-of-moderation)=
 
 # The Method of Moderation
 
@@ -343,7 +388,8 @@ infinite-horizon case is
 strictly positive under the RIC.[^finite-horizon] We similarly define
 $\hNrmPes$ as 'minimal human wealth,' the present discounted value of labor
 income if the shocks were to take on their worst value
-$\tranShkMin \geq 0$ (zero for unemployment, positive for underemployment) in
+$\tranShkMin \geq 0$ (zero for uninsured unemployment, positive when
+unemployment pays a benefit) in
 every future period, $\tranShk_{t+n} = \tranShkMin$ for all $n>0$ (which we
 define as corresponding to the beliefs of a 'pessimist'). The same limit
 gives $\hNrmPes=\tranShkMin\PermGroFac/(\Rfree-\PermGroFac)$, which is zero
@@ -406,6 +452,7 @@ future income, and therefore consumes
 ```
 
 (the-consumption-function)=
+
 ## The Consumption Function
 
 It seems obvious that the spending of the realist will be strictly greater
@@ -503,8 +550,9 @@ $\logitModRte \to -\infty$ as the realist approaches the pessimist.
 
 The transformed function suits linear interpolation because it straightens at
 both ends of its domain. As $\logmNrmEx \to -\infty$ the realist's MPC
-approaches a finite limit above $\MPCmin$ (the bound $\MPCmax$ of the
-extensions section), hence $\modRte$ vanishes in proportion to $\mNrmEx$ and
+approaches a finite limit above $\MPCmin$ (the bound $\MPCmax$ of
+{numref}`a-tighter-upper-bound`), hence $\modRte$ vanishes in proportion to
+$\mNrmEx$ and
 $\logitModRte(\logmNrmEx)$ approaches a line with slope one. As
 $\logmNrmEx \to +\infty$, $\logitModRte$ is _asymptotically
 linear_,[^asymptotically-linear] so we extrapolate it linearly using the slope
@@ -580,6 +628,8 @@ of the figure, a stark contrast with the calamitous divergence evident in
 
 Extrapolated $\cFuncApprox_{T-1}$ Stays on the True Rule Where Linear EGM Extrapolation Diverged
 ```
+
+(the-value-function)=
 
 ## The Value Function
 
@@ -699,6 +749,8 @@ $$
 \end{aligned}
 $$
 
+(numerical-accuracy)=
+
 # Numerical Accuracy
 
 The figures show the failure and the repair but not the size
@@ -709,8 +761,8 @@ consumption error on a dense subgrid of each interval between adjacent
 gridpoints $m_{j},m_{j+1}$, and of the extrapolation region running out to
 $\overline{m}=30$, taking a high-precision endogenous gridpoints solution (500
 gridpoints) as the truth. The moderation column applies the near-constraint
-envelope of the extensions section, which is slack over the tabulated range
-under the natural constraint used here. Except in the first interval, where the advantage is about three and a half
+envelope of {numref}`a-tighter-upper-bound`, which is slack over the
+tabulated range under the natural constraint used here. Except in the first interval, where the advantage is about three and a half
 times, the method of moderation is more than an order of magnitude
 more accurate than EGM, and we obtain this
 on a fixed sparse grid without optimizing the grid itself {cite:p}`Chipeniuk2020`. The contrast is starkest in
@@ -810,7 +862,11 @@ approaches its bounds smoothly by construction.
 [^accuracy-repro]:
     Every number here is regenerated by the replication package. One script writes the absolute-error panel of {raw:latex}`Table~\ref{tbl:approx-errors}` (with switches for the Hermite and permanent-shock variants) and checks that moderation is at least as accurate as EGM in every interval. A second writes the Euler-residual panel after confirming that the residual rejects the optimist's rule and EGM's extrapolation. A third runs the denser-grid, bounded-EGM, and horizon comparisons, re-deriving the table's columns against its own finer reference so that the two are on a common footing. A fourth regenerates {raw:latex}`Table~\ref{tbl:boro-cnst-art}` with the envelope-free numbers beneath it, and a fifth recomputes every number cited in the text outside the tables.
 
+(extensions)=
+
 # Extensions
+
+(a-tighter-upper-bound)=
 
 ## A Tighter Upper Bound
 
@@ -959,6 +1015,8 @@ out of that region.
 The Tighter Bound $\MPCmax\,\mNrmEx$ Binds Below the Cusp, the Optimist's Bound Above It
 ```
 
+(hermite-interpolation)=
+
 ## Hermite Interpolation
 
 Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation {cite:p}`Fritsch1980,FritschButland1984,Hyman1983` matches both the level and the derivative of $\cFuncReal$ there. That derivative is supplied by the envelope condition {cite:p}`BenvenisteScheinkman1979,MilgromSegal2002` together with the EGM Euler equation, so the interpolated rule matches, at each solved gridpoint, the marginal propensity to consume that the solution implies as well as the level.[^accuracy-metrics]
@@ -1096,6 +1154,8 @@ If we also match the second derivative in {eq}`eq:vFuncRealDerivatives` with a h
 [^hermite-slopes]:
     Cubic Hermite interpolation of the transformed ratio takes node values from the transformation and node slopes $\logitModRteMu$. A monotone scheme {cite:p}`deBoor2001` (Fritsch-Carlson or Fritsch-Butland) treats those slopes as targets and adjusts them to enforce monotonicity.
 
+(artificial-borrowing-constraints)=
+
 ## Artificial Borrowing Constraints
 
 Nothing in {eq}`eq:cFuncLowerEnvelope` requires the borrowing constraint to be
@@ -1134,6 +1194,8 @@ constraint tightens, and in the two tightest rows it is large enough to
 reverse the ordering (at $\underline{\aNrm} = 0$ the breach reaches $0.045$,
 and the worst-case error of $4.5(-2)$ is now the larger of the two). Only
 the natural row, where the envelope has nothing to do, is unaffected.
+
+(assets-as-the-state-variable)=
 
 ## Assets as the State Variable
 
@@ -1175,6 +1237,8 @@ The household problem transfers, though the layers above it do not, and on
 those (the fixed point in prices, the stationary distribution, the
 forecasting rule that closes a model with aggregate shocks) we say nothing.
 
+(risky-returns-and-portfolio-choice)=
+
 # Risky Returns and Portfolio Choice
 
 The variations so far all concern how the consumption rule is
@@ -1185,9 +1249,10 @@ invested in a risky asset, and then letting the fraction so invested be a
 choice.
 
 The two problems without a portfolio choice are the corners of that choice,
-since holding the risky share at zero recovers the riskless model of the
-preceding sections and holding it at one recovers the model of the next
-subsection. Making the return risky changes the *bounds* of the
+since holding the risky share at zero recovers the riskless model of
+{numref}`the-method-of-moderation` through {numref}`extensions`, and holding
+it at one recovers the model of
+{numref}`idiosyncratic-rate-of-return-risk`. Making the return risky changes the *bounds* of the
 consumption rule, since the limiting marginal propensity to consume is no
 longer $\Rfree$-based, but it leaves the object being moderated where it was.
 Making the share a choice opens the interior between the corners and adds
@@ -1202,8 +1267,8 @@ linearize the share.
 Thus far we have assumed that the interest factor is constant at $\Rfree$.
 Extending the previous derivations to allow for a perfectly forecastable
 time-varying interest factor would be trivial. Allowing for a stochastic
-interest factor is less trivial: it changes the two constants the bracket is
-built from, $\MPCmin$ and $\hNrmOpt$, and nothing else. We treat return risk that is
+interest factor is not trivial: it changes the two constants the bracket is
+built from, $\MPCmin$ and $\hNrmOpt$, though nothing else. We treat return risk that is
 idiosyncratic, the return on a household-specific asset such as a private
 business or housing, drawn independently across households and over time
 {cite:p}`BBZ2016SkewedWealth`, so the household's problem acquires no

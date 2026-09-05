@@ -21,7 +21,12 @@ project:
     "\\Risky": "\\mathbf{R}" # gross risky return
     "\\equityPrem": "\\pi" # equity premium
     "\\RNrmByG": "\\mathcal{R}" # shorthand for R/𝒢 (note: in MPC_max context, use R/𝒢^ρ)
-    "\\AbsPatFac": "\\Phi" # absolute patience factor
+    # Thorn, the buffer-stock-theory symbol for the absolute patience factor.
+    # The Unicode glyph inside \text{} is what renders in BOTH engines: KaTeX
+    # (site) accepts it in text mode, and XeLaTeX/LuaLaTeX (the template's
+    # engines, via fontspec) set it directly. \th / \TH would break KaTeX, and
+    # a bare thorn in math mode would break both.
+    "\\AbsPatFac": "\\text{Þ}" # absolute patience factor (thorn)
 
     # ============================================================
     # INCOME PROCESS VARIABLES
