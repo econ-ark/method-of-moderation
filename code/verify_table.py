@@ -131,7 +131,9 @@ def _render_table1_cubic(grid_pts, egm_errors, mom_errors) -> str:
     """The Hermite-refinement table, `tbl:approx-errors-cubic`."""
     caption = (
         "Maximum absolute approximation errors by interval, as in "
-        r"{raw:latex}`Table~\ref{tbl:approx-errors}` but with cubic Hermite "
+        # This caption is emitted straight into the LaTeX table, so a MyST
+        # role here would pass through verbatim; use a plain \ref.
+        r"Table~\ref{tbl:approx-errors} but with cubic Hermite "
         "interpolation in place of linear for both methods. Orders of "
         "magnitude in parentheses."
     )

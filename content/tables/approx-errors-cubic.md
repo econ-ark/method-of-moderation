@@ -3,7 +3,7 @@
 :::{raw:latex}
 \begin{table}
 \centering
-\caption{Maximum absolute approximation errors by interval, as in {raw:latex}`Table~\ref{tbl:approx-errors}` but with cubic Hermite interpolation in place of linear for both methods. Orders of magnitude in parentheses.}
+\caption{Maximum absolute approximation errors by interval, as in Table~\ref{tbl:approx-errors} but with cubic Hermite interpolation in place of linear for both methods. Orders of magnitude in parentheses.}
 \label{tbl:approx-errors-cubic}
 \setlength{\tabcolsep}{8pt}
 \begin{tabular}{lccccc}
