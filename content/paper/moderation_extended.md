@@ -778,7 +778,7 @@ the same bounds, is seventeen, and we come to it below.[^accuracy-repro]
 ```
 
 {ref}`fig:SolutionError` shows that the table's intervals are error humps, with both
-approximations nearly exact at the sparse gridpoints and least accurate
+approximations nearly exact at the sparse gridpoints and less accurate
 between them, and the method of moderation's humps sit below
 EGM's throughout. The two methods part company beyond the top gridpoint
 (marked), where
@@ -811,23 +811,16 @@ because $\logitModRte$ is the smoother object, and beyond it because linear
 extrapolation of $\logitModRte$ cannot leave the bracket, while linear EGM
 extrapolation eventually does.
 
-Grid design, we should also say, governs the
-beyond-grid accuracy but never the bounds. {ref}`fig:GridExtent` reports the
-beyond-grid error of the converged infinite-horizon rule as the top of the
-asset grid extends from the five-point illustration toward the extents used
-in practice. The active margin is the extent rather than the density, since raising
-the point count from five to thirty at the
-five-point grid's own extent does not improve the beyond-grid error at all
-(it rises slightly), while raising the grid top to twice human wealth improves it by
-roughly an order of magnitude, with a further factor of two by four times
-human wealth. The two
-spacings coincide at small extents and separate modestly once the grid
-top passes human wealth, where double-exponential spacing is about a third
-more accurate beyond the grid than triple. In practice, therefore, we
-would pair the 30-80 gridpoints noted earlier with a grid top equal to a
-small multiple of human wealth. (The finite-horizon exhibits above already satisfy
-this guidance, because human wealth one period before the end is close to
-one.)
+Grid design governs beyond-grid accuracy but never the bounds, and what
+matters is how far the grid reaches rather than how many points it holds
+({ref}`fig:GridExtent`). Raising the count from five to thirty without moving
+the top gridpoint does not improve the beyond-grid error at all, while moving
+the top out to twice human wealth improves it by roughly an order of
+magnitude, and to four times human wealth by a further factor of two; the two
+spacings the figure plots differ little by comparison. In practice we would
+therefore pair the 30-80 gridpoints noted earlier with a top gridpoint at a
+small multiple of human wealth, which the exhibits above already satisfy,
+human wealth one period before the end being close to one.
 
 ```{figure} ../images/GridExtentPlot
 :label: fig:GridExtent
@@ -835,7 +828,7 @@ one.)
 :align: center
 :width: 80%
 
-Extending the Grid Top Improves Beyond-Grid Accuracy, While the Bounds Hold at Every Extent
+Extending the Grid Top Improves Beyond-Grid Accuracy, While the Bounds Hold Everywhere
 ```
 
 A skeptical reader will want to know how much of

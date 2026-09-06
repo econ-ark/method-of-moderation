@@ -489,8 +489,8 @@ def check_grid_extent() -> None:
     reductions = [1.0 - err(f"nest2-a{r}") / err(f"nest3-a{r}") for r in ("2h", "4h")]
     _claim(
         "grid design",
-        "past human wealth, double-exponential spacing is about a third more "
-        "accurate beyond the grid than triple",
+        "the two spacings the figure plots differ little by comparison "
+        "(a third or so, against an order of magnitude for the grid top)",
         "error reduction of nest2 against nest3 = "
         + ", ".join(
             f"a{r}: {100 * x:.0f}%"
@@ -503,7 +503,7 @@ def check_grid_extent() -> None:
     ]
     _claim(
         "grid design",
-        "the two spacings coincide at small extents",
+        "the two spacings coincide when the grid top is low",
         "relative gap at a=0.5h, 1h = "
         + ", ".join(f"{100 * x:.1f}%" for x in coincide),
         ok=all(x < 0.02 for x in coincide),
