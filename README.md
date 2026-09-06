@@ -31,7 +31,15 @@ This project is structured as a [REMARK](https://github.com/econ-ark/REMARK) (Re
 import pathlib
 cog.out(pathlib.Path("content/paper/abstract.md").read_text(encoding="utf-8"))
 ]]] -->
-In a risky world, a pessimist assumes the worst will happen. Someone who ignores risk altogether is an optimist. Consumption decisions are mathematically simple for both the pessimist and the optimist because both behave as if they live in a riskless world. A realist (someone who wants to respond optimally to risk) faces a much more difficult problem, but (under standard conditions) will choose a level of spending somewhere between the pessimist's and the optimist's. We use this fact to redefine the space in which the realist searches for optimal consumption rules. We interpolate the logit of a moderation ratio that records where between those two rules the realist lies. The resulting solution accurately represents the numerical consumption rule over the entire interval of feasible wealth values with remarkably few computations. On five gridpoints the approximation is accurate throughout, and beyond the last of them it is more than an order of magnitude more accurate than the endogenous gridpoints method, because it cannot leave the bounds. The construction carries over to the value function, to an artificial borrowing constraint, to risky returns, and to the standard incomplete-markets models written in assets, where the bracket is formed within each income state. Applied to the portfolio share it needs one change, because the share's upper bound is a constraint attained at finite wealth rather than approached asymptotically. The transform that straightens it is therefore the logarithm of the moderation ratio and not the logit, and the bracket is formed by a single limiting investor together with the leverage constraint.
+In a risky world, a pessimist assumes the worst; someone who ignores risk is
+an optimist. Both problems are easy, because both behave as if the world were
+riskless. A realist, responding optimally to risk, spends between them. We use
+that to change what is interpolated: not consumption, but the logit of a
+moderation ratio recording where between those bounds the realist lies. The
+result cannot escape the bounds, is accurate on five gridpoints, and beyond
+the last is more than an order of magnitude more accurate than the endogenous
+gridpoints method. It carries over to value, risky returns, and the portfolio
+share.
 <!-- [[[end]]] -->
 
 **Keywords**: Dynamic Stochastic Optimization, Consumption-Saving Models, Numerical Methods
