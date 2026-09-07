@@ -2,8 +2,9 @@
 # Inherits keywords, bibliography from myst.yml.
 title: The Method of Moderation
 abstract: abstract.md
-# Heading numbers on the MyST side so that {numref} to a section renders
-# "Section N" instead of the section's title. LaTeX numbers the headings itself.
+# Heading numbers so {numref} to a `##` section renders "Section N.M" in both outputs.
+# Never add `title: true` or `content_includes_title`: each fixes `#` targets in the PDF
+# but renumbers the site as 1.N (measured 2026-09-07 on 1.10.1); see the roadmap comment.
 numbering:
   headings: true
 # Research highlights (Elsevier: 3-5 bullets, at most 85 characters each),
@@ -119,23 +120,26 @@ speed the solution of the realist's problem.[^provenance]
     {cite:t}`SolvingMicroDSOPs` discusses the method in lecture-note form. This
     paper supersedes both accounts.
 
+% Top-level (`#`) targets carry their number as explicit link text: on mystmd 1.10.1 a
+% {numref} to a `#` heading renders the TITLE in the PDF export (`##` targets are fine;
+% upstream PR 3035). Switch these six back to {numref} once a release includes the fix.
 After showing how to use the method in the baseline case, we show how to
 refine it to encompass an even tighter theoretical bound, and how to extend it
 to solve a problem in which the consumer faces both labor income risk and
-rate-of-return risk. {numref}`the-realists-problem` states the realist's
+rate-of-return risk. {ref}`Section 2 <the-realists-problem>` states the realist's
 problem and the patience conditions that guarantee a finite solution, and
-{numref}`benchmark-the-method-of-endogenous-gridpoints` sets out the endogenous
-gridpoints benchmark. {numref}`the-method-of-moderation` develops the method of
+{ref}`Section 3 <benchmark-the-method-of-endogenous-gridpoints>` sets out the endogenous
+gridpoints benchmark. {ref}`Section 4 <the-method-of-moderation>` develops the method of
 moderation for the consumption function and, in {numref}`the-value-function`,
-for the value function; {numref}`numerical-accuracy` quantifies its accuracy
-against endogenous gridpoints; and {numref}`extensions` takes up four
+for the value function; {ref}`Section 5 <numerical-accuracy>` quantifies its accuracy
+against endogenous gridpoints; and {ref}`Section 6 <extensions>` takes up four
 extensions: the tighter bound near the borrowing constraint
 ({numref}`a-tighter-upper-bound`), Hermite interpolation that matches the Euler
 equation at each gridpoint ({numref}`hermite-interpolation`), an artificial
 borrowing constraint ({numref}`artificial-borrowing-constraints`), and a
 problem stated in assets rather than market resources
 ({numref}`assets-as-the-state-variable`).
-{numref}`risky-returns-and-portfolio-choice` makes the return risky and then
+{ref}`Section 7 <risky-returns-and-portfolio-choice>` makes the return risky and then
 makes the risky share a choice, which is where the method first meets a bound
 that the solution actually reaches at a finite level of wealth instead of
 merely approaching.
@@ -233,13 +237,13 @@ the problem has a well-behaved solution depends on a set of conditions
 established and named in {cite:t}`CarrollShanker2024`, whose names we adopt
 and whose content we state here, because we appeal to them repeatedly below.
 
-Three conditions are needed for a solution to exist. The _finite value of
+Three conditions govern the solution. The _finite value of
 autarky condition_ (FVAC),
 $0<\DiscFac\PermGroFac^{1-\CRRA}\Ex[\permShk^{1-\CRRA}]<1$, says that a
 consumer who simply consumed their income in every period ('autarky') would
 obtain finite lifetime value, so that the objective being maximized is finite
 to begin with. The _absolute impatience condition_ (AIC), $\AbsPatFac<1$, says
-that such a consumer plans a falling rather than a rising consumption path;
+that the perfect foresight consumer plans a falling rather than a rising consumption path;
 it is what makes the consumer want to run a buffer stock down rather than
 accumulate without limit. The _return impatience condition_ (RIC),
 $\AbsPatFac/\Rfree<1$, says that planned consumption growth falls short of
@@ -756,7 +760,7 @@ $$
 The figures show the failure and the repair but not the size
 of the gain, so we compare the method of moderation against the benchmark
 endogenous gridpoints method on the calibration above, solving both on the same
-sparse five-point grid. We report{raw:latex}` in Table~\ref{tbl:approx-errors}` the maximum absolute
+sparse five-point grid. We report in [](#tbl:approx-errors) the maximum absolute
 consumption error on a dense subgrid of each interval between adjacent
 gridpoints $m_{j},m_{j+1}$, and of the extrapolation region running out to
 $\overline{m}=30$, taking a high-precision endogenous gridpoints solution (500
@@ -824,7 +828,7 @@ human wealth one period before the end being close to one.
 
 ```{figure} ../images/GridExtentPlot
 :label: fig:GridExtent
-:alt: Maximum consumption error beyond the top gridpoint for the converged infinite-horizon rule, against the grid top measured in units of human wealth, under double and triple exponential spacing; the error falls steeply as the grid extends and the two spacings nearly coincide.
+:alt: Maximum consumption error beyond the top gridpoint for the converged infinite-horizon rule, against the grid top measured in units of human wealth, under double and triple exponential spacing; the error falls steeply as the grid extends, and the two spacings differ by about a third.
 :align: center
 :width: 80%
 
@@ -832,7 +836,7 @@ Extending the Grid Top Improves Beyond-Grid Accuracy, While the Bounds Hold Ever
 ```
 
 A skeptical reader will want to know how much of
-the comparison{raw:latex}` of Table~\ref{tbl:approx-errors}` is the design rather than
+the comparison of [](#tbl:approx-errors) is the design rather than
 the method, so we ran two further comparisons. First, on a grid of the size used
 in practice (twenty
 points, triple-exponential spacing, same top gridpoint) both methods gain
@@ -853,7 +857,7 @@ bounded rule is kinked wherever a bound binds, whereas moderation
 approaches its bounds smoothly by construction.
 
 [^accuracy-repro]:
-    Every number here is regenerated by the replication package. One script writes the absolute-error panel{raw:latex}` of Table~\ref{tbl:approx-errors}` (with switches for the Hermite and permanent-shock variants) and checks that moderation is at least as accurate as EGM in every interval. A second writes the Euler-residual panel after confirming that the residual rejects the optimist's rule and EGM's extrapolation. A third runs the denser-grid, bounded-EGM, and horizon comparisons, re-deriving the table's columns against its own finer reference so that the two are on a common footing. A fourth regenerates the artificial-constraint table{raw:latex}` (Table~\ref{tbl:boro-cnst-art})` with the envelope-free numbers beneath it, and a fifth recomputes every number cited in the text outside the tables.
+    The replication package regenerates the tables and the numbers quoted in this section and checks each accuracy claim against the code.
 
 (extensions)=
 
@@ -1015,7 +1019,7 @@ The Tighter Bound $\MPCmax\,\mNrmEx$ Binds Below the Cusp, the Optimist's Bound 
 Although linear interpolation that matches the level of $\cFuncReal$ at the gridpoints is simple, Hermite interpolation {cite:p}`Fritsch1980,FritschButland1984,Hyman1983` matches both the level and the derivative of $\cFuncReal$ there. That derivative is supplied by the envelope condition {cite:p}`BenvenisteScheinkman1979,MilgromSegal2002` together with the EGM Euler equation, so the interpolated rule matches, at each solved gridpoint, the marginal propensity to consume that the solution implies as well as the level.[^accuracy-metrics]
 
 [^accuracy-metrics]:
-    Approximation quality between gridpoints is what ultimately limits any such method. {cite:t}`Santos2000` gauges it through Euler-equation residuals, as the lower panel{raw:latex}` of Table~\ref{tbl:approx-errors}` does, and {cite:t}`JuddMaliarMaliar2017` derives lower bounds on the resulting approximation errors.
+    Approximation quality between gridpoints is what ultimately limits any such method. {cite:t}`Santos2000` gauges it through Euler-equation residuals, as the lower panel of [](#tbl:approx-errors) does, and {cite:t}`JuddMaliarMaliar2017` derives lower bounds on the resulting approximation errors.
 
 The slopes we need come from the moderation ratio $\modRte$ itself. Since its
 argument $\logmNrmEx$ is the log of excess market resources, the
@@ -1074,7 +1078,7 @@ The weight reflects precautionary intensity, increasing when market resources ar
 The Moderated MPC Is a Weighted Average of Its Two Limits at Every Solved Gridpoint
 ```
 
-We now repeat the experiment{raw:latex}` of Table~\ref{tbl:approx-errors} in Table~\ref{tbl:approx-errors-cubic}` with cubic Hermite in place of
+We now repeat the experiment of [](#tbl:approx-errors) in [](#tbl:approx-errors-cubic) with cubic Hermite in place of
 linear interpolation, for both methods on the same five-point grid.
 
 ```{include} ../tables/approx-errors-cubic.md
@@ -1174,7 +1178,7 @@ approximating and reproduces their rule.
 ```{include} ../tables/boro-cnst-art.md
 ```
 
-We report what happens as we tighten the constraint{raw:latex}` in Table~\ref{tbl:boro-cnst-art}`. The
+We report what happens as we tighten the constraint in [](#tbl:boro-cnst-art). The
 region over which the rule coincides with the bound grows, and moderation remains
 more accurate than endogenous gridpoints throughout. The advantage is largest
 where the constrained region is smallest, because that is where a method
@@ -1241,8 +1245,8 @@ invested in a risky asset, and then letting the fraction so invested be a
 choice.
 
 The two problems without a portfolio choice are the corners of that choice,
-since holding the risky share at zero recovers the riskless model of
-{numref}`the-method-of-moderation` through {numref}`extensions`, and holding
+since holding the risky share at zero recovers the riskless model of the
+preceding sections, and holding
 it at one recovers the model of
 {numref}`idiosyncratic-rate-of-return-risk`. Making the return risky changes the *bounds* of the
 consumption rule, since the limiting marginal propensity to consume is no

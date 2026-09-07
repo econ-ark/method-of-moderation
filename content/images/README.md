@@ -52,7 +52,7 @@ The following image files are currently in this directory:
 8. **GridExtentPlot.pdf**
    - Beyond-grid extrapolation error of the converged infinite-horizon rule
      against the grid top in units of human wealth, double vs triple
-     exponential spacing (indistinguishable), with the paper's five-point
+     exponential spacing (about a third apart), with the paper's five-point
      grid and the twice-human-wealth reference marked
    - Referenced as Figure {ref}`fig:GridExtent` in the paper
    - NOTE: unlike the other figures, this one regenerates from
