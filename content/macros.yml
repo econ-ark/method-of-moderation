@@ -21,7 +21,12 @@ project:
     "\\Risky": "\\mathbf{R}" # gross risky return
     "\\equityPrem": "\\pi" # equity premium
     "\\RNrmByG": "\\mathcal{R}" # shorthand for R/𝒢 (note: in MPC_max context, use R/𝒢^ρ)
-    "\\AbsPatFac": "\\Phi" # absolute patience factor
+    # Thorn, the buffer-stock-theory symbol for the absolute patience factor.
+    # The Unicode glyph inside \text{} is what renders in BOTH engines: KaTeX
+    # (site) accepts it in text mode, and XeLaTeX/LuaLaTeX (the template's
+    # engines, via fontspec) set it directly. \th / \TH would break KaTeX, and
+    # a bare thorn in math mode would break both.
+    "\\AbsPatFac": "\\text{Þ}" # absolute patience factor (thorn)
 
     # ============================================================
     # INCOME PROCESS VARIABLES
@@ -70,8 +75,8 @@ project:
     # ============================================================
     # STATE VARIABLES - EXCESS AND LOG TRANSFORMATIONS
     # ============================================================
-    "\\mNrmEx": "\\Delta \\mNrm" # excess market resources (m − mMin)
-    "\\hNrmEx": "\\Delta \\hNrm" # excess human wealth (h − hPes)
+    "\\mNrmEx": "\\Delta \\mNrm" # excess market resources (m - mMin)
+    "\\hNrmEx": "\\Delta \\hNrm" # excess human wealth (h - hPes)
     "\\logmNrmEx": "\\boldsymbol{\\mu}" # log-excess resources (μ ≡ log Δm)
 
     # ============================================================
@@ -97,6 +102,7 @@ project:
     "\\vFuncOpt": "\\bar{\\vFunc}" # optimist value function
     "\\vFuncPes": "\\underline{\\vFunc}" # pessimist value function
     "\\vFuncReal": "\\hat{\\vFunc}" # realist value function
+    "\\vFuncTightUpBd": "\\grave{\\check{\\vFunc}}" # constructed upper-bound value function (cusp refinement; grave+check matches the cFuncLoTightUpBd family)
     "\\vFuncDerivmNrm": "\\vFunc'" # first derivative of vFunc wrt mNrm
     "\\vFuncRealDeriv": "\\vFuncReal'" # first derivative of vFuncReal wrt m
     "\\vFuncRealDerivSecond": "\\vFuncReal''" # second derivative of vFuncReal wrt m
@@ -108,6 +114,7 @@ project:
     "\\vInvOpt": "\\bar{\\vInv}" # optimist inverse value function
     "\\vInvPes": "\\underline{\\vInv}" # pessimist inverse value function
     "\\vInvReal": "\\hat{\\vInv}" # realist inverse value function
+    "\\vInvTightUpBd": "\\grave{\\check{\\vInv}}" # inverse of constructed upper-bound value (cusp refinement; grave+check matches the family)
     "\\vInvOptDeriv": "\\vInvOpt'" # first derivative of vInvOpt wrt m
     "\\vInvRealDeriv": "\\vInvReal'" # first derivative of vInvReal wrt m
     "\\vInvRealDerivSecond": "\\vInvReal''" # second derivative of vInvReal wrt m
@@ -160,6 +167,11 @@ project:
     "\\logitValModRteApprox": "\\grave{\\boldsymbol{X}}" # approximated logit value moderation ratio
     "\\logitValModRteRealDerivmu": "\\partial \\logitValModRteReal / \\partial
       \\logmNrmEx" # first derivative of logitValModRteReal wrt mu
+
+    # ============================================================
+    # MODERATION FRAMEWORK - PORTFOLIO SHARE (omega_varsigma)
+    # ============================================================
+    "\\shareModRte": "\\boldsymbol{\\omega}_{\\varsigma}" # share moderation ratio (share - myopic)/(1 - myopic)
 
     # ============================================================
     # INDICATOR FUNCTIONS

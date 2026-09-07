@@ -46,5 +46,13 @@ jobs:
       - name: Install package
         run: uv sync
 
+      - name: Check README abstract is current (cog)
+        run: uv run cog --check --diff README.md
+
+      - name: Check paper tables are current
+        run: |
+          uv run python code/verify_table.py --check
+          uv run python code/verify_boro_cnst.py --check
+
       - name: Test package
-        run: uv run pytest code/test_moderation.py -v --cov --cov-report=term
+        run: uv run pytest code/ -v --cov --cov-report=term

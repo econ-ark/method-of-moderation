@@ -69,7 +69,7 @@ echo ""
 
 # Run tests
 echo "Step 2/3: Running test suite..."
-uv run pytest code/test_moderation.py -v --maxfail=3
+uv run pytest code/ -v --maxfail=3
 echo "✓ Tests passed"
 echo ""
 

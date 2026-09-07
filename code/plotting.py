@@ -33,12 +33,13 @@ Key Figures
 from __future__ import annotations
 
 import logging
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
-from moderation import calc_cusp_point, expit_moderate
+from HARK.interpolation import LinearInterp
+from moderation import calc_cusp_point, exp_mu, expit_moderate, log_mnrm_ex
 from style import (
     ALPHA_HIGH,
     ALPHA_LOW,
@@ -50,6 +51,7 @@ from style import (
     LINE_STYLE_DASHDOT,
     LINE_STYLE_DASHED,
     LINE_STYLE_DOTTED,
+    LINE_STYLE_SOLID,
     LINE_WIDTH_EXTRA_THICK,
     LINE_WIDTH_MEDIUM,
     LINE_WIDTH_THICK,
@@ -86,6 +88,11 @@ __all__ = [
     "plot_moderation_ratio",
     "plot_mom_mpc",
     "plot_precautionary_gaps",
+    "plot_share_bounds",
+    "plot_share_error",
+    "plot_share_extrapolation",
+    "plot_share_logit",
+    "plot_share_sparse_accuracy",
     "plot_stochastic_bounds",
     "plot_value_functions",
 ]
@@ -95,7 +102,7 @@ __all__ = [
 # =========================================================================
 
 
-class GridType(str, Enum):
+class GridType(StrEnum):
     """Grid types for data extraction from solutions.
 
     Attributes
@@ -116,7 +123,10 @@ class GridType(str, Enum):
 
 # Y-axis limits for different plot types
 YLIM_MODERATION_RATIO = (-0.1, 1.1)
-YLIM_PRECAUTIONARY_GAPS = (-0.15, 0.35)
+# Top clears the near-constraint peak (measured 0.43003 at the lowest EGM
+# gridpoint). At 0.35 matplotlib clipped the marker for a real gridpoint, so the
+# figure showed 4 of the 5 the abstract promises.
+YLIM_PRECAUTIONARY_GAPS = (-0.15, 0.46)
 YLIM_VALUE_FUNCTION = (-6, 0)
 
 # =========================================================================
@@ -227,6 +237,71 @@ def _plot_grid_points_scatter(
     )
 
 
+def _normalize_series_labels(
+    approx_solutions,
+    legend: str | list[str] | None,
+) -> tuple[list, list[str]]:
+    """Coerce approximations and their labels into matched lists.
+
+    A missing legend is inferred from each solution's own type, which is how
+    both gap figures distinguish MoM from EGM without the caller restating it.
+    """
+    if not isinstance(approx_solutions, list):
+        approx_solutions = [approx_solutions]
+    if legend is None:
+        legend = [
+            "MoM Approximation" if _is_mom_solution(sol) else "EGM Approximation"
+            for sol in approx_solutions
+        ]
+    elif not isinstance(legend, list):
+        legend = [legend]
+    return approx_solutions, legend
+
+
+def _evaluate_value_series(truth_solution, m_grid, inverse, egm_solution, mom_solution):
+    """Evaluate every value-function series on one grid, in draw order.
+
+    The inverse transform has no tighter-upper-bound counterpart, so that series
+    is None there. Optional solutions keep their original truthiness guard rather
+    than an identity check, since a falsy solution should be skipped either way.
+    """
+
+    def evaluate(solution, *, optional=False):
+        if optional and not solution:
+            return None
+        vfunc = solution.vFunc
+        return vfunc.vFuncNvrs(m_grid) if inverse else vfunc(m_grid)
+
+    return (
+        evaluate(truth_solution),
+        evaluate(truth_solution.Optimist),
+        evaluate(truth_solution.Pessimist),
+        None if inverse else evaluate(truth_solution.TighterUpperBound),
+        evaluate(egm_solution, optional=True),
+        evaluate(mom_solution, optional=True),
+    )
+
+
+def _plot_value_grid_points(ax: Axes, inverse: bool, mom_solution) -> None:
+    """Overlay MoM value-function gridpoints, when there are any to show.
+
+    Skipped for inverse value functions. Only MoM points are drawn, since EGM
+    shares the same grid and a second identical scatter adds nothing.
+    """
+    if inverse or mom_solution is None:
+        return
+    points_m, points_v = extract_grid_points(mom_solution, GridType.VALUE)
+    if points_m is None or points_v is None:
+        return
+    _plot_grid_points_scatter(
+        ax,
+        points_m,
+        points_v,
+        get_concept_color("MoM"),
+        label="Grid Points",
+    )
+
+
 def _configure_standard_axes(
     ax: Axes,
     xlabel: str,
@@ -246,16 +321,17 @@ def _configure_standard_axes(
     ylabel : str
         Y-axis label
     subtitle : str
-        Subplot title
+        Accepted for backward compatibility but intentionally not rendered:
+        the manuscript caption is the figure title, so an in-image title only
+        duplicates the caption (and the journal's own figure numbering). This
+        matches ``setup_figure``'s convention.
     legend_loc : str, optional
         Legend location, by default "upper right"
 
     """
-    # Let the academic rcParams govern sizes (title 12, labels 11, ticks 8.5);
-    # the single in-image label is the subtitle, since the caption is the title.
+    del subtitle  # not rendered; the LaTeX caption is the title
     ax.set_xlabel(xlabel)
     ax.set_ylabel(ylabel)
-    ax.set_title(subtitle)
     ax.legend(loc=legend_loc)
     ax.grid(True, alpha=GRID_ALPHA)
 
@@ -285,12 +361,12 @@ def extract_mom_grid_points(
         Returns (None, None) if extraction fails.
 
     """
-    from moderation import exp_mu
-
     try:
         if grid_type == GridType.CONSUMPTION:
-            # MoM cFunc is directly a TransformedFunctionMoM
-            mu_grid = solution.cFunc.logitModRteFunc.x_list
+            # MoM cFunc is directly a TransformedFunctionMoM; drop the synthetic
+            # extrapolation knot appended at each end of the mu grid so markers
+            # show only true solution gridpoints.
+            mu_grid = solution.cFunc.logitModRteFunc.x_list[1:-1]
             m_min = solution.cFunc.mNrmMin
             grid_points_m = exp_mu(mu_grid, m_min)
             grid_points_c = solution.cFunc(grid_points_m)
@@ -298,7 +374,7 @@ def extract_mom_grid_points(
 
         if grid_type == GridType.VALUE:
             # MoM vFunc is ValueFuncCRRA containing TransformedFunctionMoM
-            mu_grid = solution.vFunc.vFuncNvrs.logitModRteFunc.x_list
+            mu_grid = solution.vFunc.vFuncNvrs.logitModRteFunc.x_list[1:-1]
             m_min = solution.vFunc.vFuncNvrs.mNrmMin
             grid_points_m = exp_mu(mu_grid, m_min)
             grid_points_v = solution.vFunc(grid_points_m)
@@ -306,7 +382,7 @@ def extract_mom_grid_points(
 
         if grid_type == GridType.MPC:
             # For MPC, use consumption function grid points and evaluate derivative
-            mu_grid = solution.cFunc.logitModRteFunc.x_list
+            mu_grid = solution.cFunc.logitModRteFunc.x_list[1:-1]
             m_min = solution.cFunc.mNrmMin
             grid_points_m = exp_mu(mu_grid, m_min)
             grid_points_mpc = solution.cFunc.derivative(grid_points_m)
@@ -314,9 +390,9 @@ def extract_mom_grid_points(
 
     except (AttributeError, KeyError, IndexError) as exc:
         # Grid extraction can fail for various solution types or incomplete
-        # solutions. Log at debug level so HARK API drift is at least traceable;
-        # return None so plotting can continue without grid markers.
-        logger.debug(
+        # solutions. WARNING, not debug: these markers carry the argument of a
+        # published figure, and WARNING reaches stderr with no logging config.
+        logger.warning(
             "MoM grid extraction failed for %s solution: %s",
             grid_type.value,
             exc,
@@ -364,8 +440,8 @@ def extract_egm_grid_points(
 
     except (AttributeError, KeyError, IndexError) as exc:
         # See extract_mom_grid_points for the rationale. HARK is pinned to a
-        # moving git rev; surface API drift through the debug log.
-        logger.debug(
+        # moving git rev; surface API drift loudly.
+        logger.warning(
             "EGM grid extraction failed for %s solution: %s",
             grid_type.value,
             exc,
@@ -434,8 +510,6 @@ def plot_moderation_ratio(
         Type of grid to extract, by default GridType.CONSUMPTION
 
     """
-    from moderation import log_mnrm_ex
-
     # Extract moderation functions based on grid type
     if grid_type == GridType.VALUE:
         # Value function moderation
@@ -471,28 +545,17 @@ def plot_moderation_ratio(
     if solution is not None:
         grid_points_m, _grid_points_y = extract_mom_grid_points(solution, grid_type)
         if grid_points_m is not None:
-            # For moderation ratio plots, we need to calculate omega from the grid points
-            if grid_type == GridType.CONSUMPTION:
-                # MoM cFunc is TransformedFunctionMoM - get chi values directly
-                chi_values = solution.cFunc.logitModRteFunc.y_list
-                # Convert chi to omega using expit_moderate
-                grid_points_omega = expit_moderate(chi_values)
-                _plot_grid_points_scatter(
-                    ax,
-                    grid_points_m,
-                    grid_points_omega,
-                    mom_color,
-                )
-            elif grid_type == GridType.VALUE:
-                # MoM vFunc contains TransformedFunctionMoM
-                chi_values = solution.vFunc.vFuncNvrs.logitModRteFunc.y_list
-                grid_points_omega = expit_moderate(chi_values)
-                _plot_grid_points_scatter(
-                    ax,
-                    grid_points_m,
-                    grid_points_omega,
-                    mom_color,
-                )
+            # Evaluate the logit at the extracted points. Reading
+            # `logitModRteFunc.y_list` instead crashed the scatter: extraction
+            # drops synthetic knots, so the raw list is longer.
+            mu_points = log_mnrm_ex(np.asarray(grid_points_m, dtype=float), m_min)
+            grid_points_omega = expit_moderate(logitModRteFunc(mu_points))
+            _plot_grid_points_scatter(
+                ax,
+                grid_points_m,
+                grid_points_omega,
+                mom_color,
+            )
 
     # Add reference lines with concept colors
     ax.axhline(
@@ -555,8 +618,6 @@ def plot_logit_function(
         Type of grid to extract, by default GridType.CONSUMPTION
 
     """
-    from moderation import log_mnrm_ex
-
     # Extract moderation functions from solution
     transformed_func = solution.cFunc
     m_min = transformed_func.mNrmMin
@@ -585,12 +646,14 @@ def plot_logit_function(
     # Extract grid points directly from the logitModRteFunc (always in $\\mu$ space)
     if grid_type == GridType.CONSUMPTION:
         # MoM cFunc is TransformedFunctionMoM
-        grid_points_x = solution.cFunc.logitModRteFunc.x_list  # $\\mu$ values
-        grid_points_chi = solution.cFunc.logitModRteFunc.y_list  # $\\chi$ values
+        # Trim the synthetic extrapolation knots, matching extract_mom_grid_points:
+        # untrimmed this draws 7 markers for a grid the paper calls five points.
+        grid_points_x = solution.cFunc.logitModRteFunc.x_list[1:-1]
+        grid_points_chi = solution.cFunc.logitModRteFunc.y_list[1:-1]
     elif grid_type == GridType.VALUE:
         # MoM vFunc contains TransformedFunctionMoM
-        grid_points_x = solution.vFunc.vFuncNvrs.logitModRteFunc.x_list
-        grid_points_chi = solution.vFunc.vFuncNvrs.logitModRteFunc.y_list
+        grid_points_x = solution.vFunc.vFuncNvrs.logitModRteFunc.x_list[1:-1]
+        grid_points_chi = solution.vFunc.vFuncNvrs.logitModRteFunc.y_list[1:-1]
     else:
         grid_points_x = None
         grid_points_chi = None
@@ -598,15 +661,9 @@ def plot_logit_function(
     if grid_points_x is not None and grid_points_chi is not None:
         _plot_grid_points_scatter(ax, grid_points_x, grid_points_chi, mom_color)
 
-    _configure_standard_axes(
-        ax,
-        xlabel="Log Excess Market Resources ($\\mu$)",
-        ylabel="Logit Transformation $\\chi(\\mu)$",
-        subtitle=subtitle,
-        legend_loc="lower right",
-    )
-
-    # Add reference lines at x=0 and y=0
+    # Reference lines go in BEFORE the axes are configured: that helper calls
+    # ax.legend(), which snapshots labelled artists, so a line added afterwards
+    # never reaches the legend and reads as an unexplained crosshair.
     ax.axhline(
         y=0,
         color=REFERENCE_LINE_COLOR,
@@ -619,6 +676,14 @@ def plot_logit_function(
         color=REFERENCE_LINE_COLOR,
         linewidth=REFERENCE_LINE_WIDTH,
         alpha=REFERENCE_LINE_ALPHA,
+    )
+
+    _configure_standard_axes(
+        ax,
+        xlabel="Log Excess Market Resources ($\\mu$)",
+        ylabel="Logit Transformation $\\chi(\\mu)$",
+        subtitle=subtitle,
+        legend_loc="lower right",
     )
 
     plt.tight_layout()
@@ -654,20 +719,7 @@ def plot_precautionary_gaps(
         Legend labels for approximation(s). If None, auto-generates from solution type.
 
     """
-    # Ensure approx_solutions is a list
-    if not isinstance(approx_solutions, list):
-        approx_solutions = [approx_solutions]
-
-    # Auto-generate legend labels if not provided
-    if legend is None:
-        legend = []
-        for sol in approx_solutions:
-            if _is_mom_solution(sol):
-                legend.append("MoM Approximation")
-            else:
-                legend.append("EGM Approximation")
-    elif not isinstance(legend, list):
-        legend = [legend]
+    approx_solutions, legend = _normalize_series_labels(approx_solutions, legend)
 
     # Create evaluation grid
     m_min = truth_solution.mNrmMin
@@ -699,7 +751,7 @@ def plot_precautionary_gaps(
         approx_gaps,
         legend,
         approx_solutions,
-        strict=False,
+        strict=True,
     ):
         color = get_concept_color(method_label)
         linestyle = get_concept_linestyle(method_label)
@@ -720,14 +772,9 @@ def plot_precautionary_gaps(
                 sol,
                 GridType.CONSUMPTION,
             )
-            # Determine grid boundary based on solution type
-            if grid_points_m is not None:
-                if _is_mom_solution(sol) and len(grid_points_m) > 1:
-                    grid_boundary = grid_points_m[-2]  # MoM: second-to-last point
-                else:
-                    grid_boundary = grid_points_m[-1]  # EGM: last point
-            else:
-                grid_boundary = None
+            # extract_grid_points already trims MoM's synthetic extrapolation
+            # knots, so the last point is the true top gridpoint for both.
+            grid_boundary = grid_points_m[-1] if grid_points_m is not None else None
 
             # Plot grid points if successfully extracted
             if grid_points_m is not None and grid_points_c is not None:
@@ -748,11 +795,9 @@ def plot_precautionary_gaps(
                     )
 
         except (AttributeError, KeyError, IndexError, TypeError) as exc:
-            # Inline grid extraction for the precautionary-gaps figure can fail
-            # if the solution does not carry the expected sub-objects. Log at
-            # debug level so HARK API drift is traceable; continue plotting
-            # without grid markers.
-            logger.debug("Inline grid extraction failed: %s", exc)
+            # Warning, not debug: the figure still plots without markers, but
+            # a gap figure with no gridpoints marked argues nothing.
+            logger.warning("Inline grid extraction failed: %s", exc)
 
     _configure_standard_axes(
         ax,
@@ -762,6 +807,109 @@ def plot_precautionary_gaps(
     )
     _add_reference_lines(ax)
     ax.set_ylim(*YLIM_PRECAUTIONARY_GAPS)
+    _set_xlim_with_padding(ax, m_grid)
+
+    plt.tight_layout()
+
+
+def plot_solution_gaps(
+    truth_solution,
+    approx_solutions,
+    title: str,
+    subtitle: str,
+    *,
+    m_max: float = 30.0,
+    n_points: int = 400,
+    legend: str | list[str] | None = None,
+) -> None:
+    r"""Plot the absolute consumption error against a high-precision truth.
+
+    This is the visual companion to the accuracy table: it plots
+    :math:`|c_{\\text{truth}}(m) - c_{\\text{approx}}(m)|` on a logarithmic
+    axis across the whole domain for each approximation. The error dips toward
+    zero at the sparse gridpoints and peaks between them (the interval maxima
+    the table reports), and beyond the top gridpoint (marked) the endogenous
+    gridpoints error explodes while the method of moderation stays controlled.
+
+    Parameters
+    ----------
+    truth_solution : ConsumerSolution
+        High-precision "truth" solution for comparison.
+    approx_solutions : ConsumerSolution or list[ConsumerSolution]
+        Approximation solution(s) to compare, typically the sparse EGM and MoM
+        solutions on a shared grid.
+    title : str
+        Figure title (kept for signature parity; not rendered in-image).
+    subtitle : str
+        Figure subtitle (kept for signature parity; not rendered in-image).
+    m_max : float, optional
+        Maximum market resources for the plot range, by default 30.0.
+    n_points : int, optional
+        Number of evaluation points, by default 400.
+    legend : str or list[str], optional
+        Legend labels for the approximation(s). If None, auto-generated from
+        the solution type.
+
+    """
+    approx_solutions, legend = _normalize_series_labels(approx_solutions, legend)
+
+    m_min = truth_solution.mNrmMin
+    m_grid = np.linspace(m_min + 0.001, m_max, n_points)
+
+    _fig, ax = setup_figure(title=title)
+
+    # Distinct dash patterns per series. EGM and MoM both resolve to dashed via
+    # get_concept_linestyle, and their green/pink separation falls 238 -> 95
+    # under deuteranopia, so colour alone cannot carry this comparison.
+    dash_cycle = (LINE_STYLE_DASHED, LINE_STYLE_DASHDOT, LINE_STYLE_DOTTED)
+
+    boundary_labeled = False
+    for series_i, (sol, method_label) in enumerate(
+        zip(approx_solutions, legend, strict=True),
+    ):
+        abs_error = np.abs(truth_solution.cFunc(m_grid) - sol.cFunc(m_grid))
+        color = get_concept_color(method_label)
+        linestyle = dash_cycle[series_i % len(dash_cycle)]
+
+        ax.plot(
+            m_grid,
+            abs_error,
+            label=method_label,
+            color=color,
+            linewidth=LINE_WIDTH_THICK,
+            linestyle=linestyle,
+        )
+
+        # Mark the top gridpoint: to its right the approximation extrapolates.
+        try:
+            grid_points_m, _ = extract_grid_points(sol, GridType.CONSUMPTION)
+            if grid_points_m is not None and len(grid_points_m) > 1:
+                # extract_grid_points already trims MoM's synthetic knots, so
+                # the last point is the true top gridpoint for both methods.
+                grid_boundary = grid_points_m[-1]
+                ax.axvline(
+                    x=grid_boundary,
+                    color="gray",
+                    linestyle=LINE_STYLE_DASHED,
+                    alpha=ALPHA_MEDIUM,
+                    label=None if boundary_labeled else "Top gridpoint",
+                )
+                boundary_labeled = True
+        except (AttributeError, KeyError, IndexError, TypeError) as exc:
+            logger.warning("Inline grid extraction failed: %s", exc)
+
+    ax.set_yscale("log")
+    # Floor the axis just below the smallest interval maximum the table reports
+    # (~1e-7); this trims the distracting near-machine-zero spikes at the nodes
+    # without hiding any interval- or extrapolation-region error.
+    ax.set_ylim(bottom=1e-9)
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m)",
+        ylabel="Absolute Consumption Error",
+        subtitle=subtitle,
+        legend_loc="lower right",
+    )
     _set_xlim_with_padding(ax, m_grid)
 
     plt.tight_layout()
@@ -804,10 +952,7 @@ def plot_consumption_bounds(
     """
     # Auto-generate legend if not provided
     if legend is None:
-        if _is_mom_solution(solution):
-            legend = "MoM Approximation"
-        else:
-            legend = "Truth"
+        legend = "MoM Approximation" if _is_mom_solution(solution) else "Truth"
 
     # Create evaluation grid
     m_min = solution.mNrmMin
@@ -951,10 +1096,7 @@ def plot_mom_mpc(
     """
     # Auto-generate label if not provided
     if mpc_label is None:
-        if _is_mom_solution(solution):
-            mpc_label = "MoM MPC"
-        else:
-            mpc_label = "Truth MPC"
+        mpc_label = "MoM MPC" if _is_mom_solution(solution) else "Truth MPC"
 
     # Create evaluation grid
     m_min = solution.mNrmMin
@@ -1075,112 +1217,44 @@ def plot_value_functions(
     m_min = truth_solution.mNrmMin
     m_grid = np.linspace(m_min + 0.001, m_max, n_points)
 
-    # Evaluate value functions based on mode
-    if inverse:
-        # Inverse value functions
-        v_truth = truth_solution.vFunc.vFuncNvrs(m_grid)
-        v_opt = truth_solution.Optimist.vFunc.vFuncNvrs(m_grid)
-        v_pes = truth_solution.Pessimist.vFunc.vFuncNvrs(m_grid)
-        v_tight = None
-        v_egm_sparse = egm_solution.vFunc.vFuncNvrs(m_grid) if egm_solution else None
-        v_mom_sparse = mom_solution.vFunc.vFuncNvrs(m_grid) if mom_solution else None
-    else:
-        # Regular value functions
-        v_truth = truth_solution.vFunc(m_grid)
-        v_opt = truth_solution.Optimist.vFunc(m_grid)
-        v_pes = truth_solution.Pessimist.vFunc(m_grid)
-        v_tight = truth_solution.TighterUpperBound.vFunc(m_grid)
-        v_egm_sparse = egm_solution.vFunc(m_grid) if egm_solution else None
-        v_mom_sparse = mom_solution.vFunc(m_grid) if mom_solution else None
+    v_truth, v_opt, v_pes, v_tight, v_egm_sparse, v_mom_sparse = _evaluate_value_series(
+        truth_solution,
+        m_grid,
+        inverse,
+        egm_solution,
+        mom_solution,
+    )
 
     _fig, ax = setup_figure(title=title)
 
-    # Plot bounds first with consistent colors
-    if v_opt is not None:
-        ax.plot(
-            m_grid,
-            v_opt,
-            label="Optimist",
-            color=get_concept_color("Optimist"),
-            linewidth=LINE_WIDTH_THICK,
-            linestyle=LINE_STYLE_DASHED,
-            alpha=ALPHA_HIGH,
-        )
-
-    if v_pes is not None:
-        ax.plot(
-            m_grid,
-            v_pes,
-            label="Pessimist",
-            color=get_concept_color("Pessimist"),
-            linewidth=LINE_WIDTH_THICK,
-            linestyle=LINE_STYLE_DOTTED,
-            alpha=ALPHA_HIGH,
-        )
-
-    # Plot tight bound if provided
-    if v_tight is not None:
-        ax.plot(
-            m_grid,
+    # Series in draw order: bounds beneath, truth above, approximations last.
+    for values, label, lw, ls, alpha in (
+        (v_opt, "Optimist", LINE_WIDTH_THICK, LINE_STYLE_DASHED, ALPHA_HIGH),
+        (v_pes, "Pessimist", LINE_WIDTH_THICK, LINE_STYLE_DOTTED, ALPHA_HIGH),
+        (
             v_tight,
-            label="Tighter Upper Bound",
-            color=get_concept_color("Tight"),
-            linewidth=LINE_WIDTH_THIN,
-            linestyle=LINE_STYLE_DASHDOT,
-            alpha=ALPHA_HIGH,
-        )
-
-    # Plot truth value function if provided
-    if v_truth is not None:
+            "Tighter Upper Bound",
+            LINE_WIDTH_THIN,
+            LINE_STYLE_DASHDOT,
+            ALPHA_HIGH,
+        ),
+        (v_truth, "Truth", LINE_WIDTH_EXTRA_THICK, LINE_STYLE_SOLID, ALPHA_OPAQUE),
+        (v_egm_sparse, "EGM Approximation", LINE_WIDTH_THICK, None, ALPHA_HIGH),
+        (v_mom_sparse, "MoM Approximation", LINE_WIDTH_THICK, None, ALPHA_HIGH),
+    ):
+        if values is None:
+            continue
         ax.plot(
             m_grid,
-            v_truth,
-            label="Truth",
-            color=get_concept_color("Truth"),
-            linewidth=LINE_WIDTH_EXTRA_THICK,
+            values,
+            label=label,
+            color=get_concept_color(label),
+            linewidth=lw,
+            linestyle=ls if ls is not None else get_concept_linestyle(label),
+            alpha=alpha,
         )
 
-    # Plot sparse EGM approximation if provided
-    if v_egm_sparse is not None:
-        egm_linestyle = get_concept_linestyle("EGM Approximation")
-        ax.plot(
-            m_grid,
-            v_egm_sparse,
-            label="EGM Approximation",
-            color=get_concept_color("EGM"),
-            linewidth=LINE_WIDTH_THICK,
-            linestyle=egm_linestyle,
-            alpha=ALPHA_HIGH,
-        )
-
-    # Plot sparse MoM approximation if provided
-    if v_mom_sparse is not None:
-        mom_linestyle = get_concept_linestyle("MoM Approximation")
-        ax.plot(
-            m_grid,
-            v_mom_sparse,
-            label="MoM Approximation",
-            color=get_concept_color("MoM"),
-            linewidth=LINE_WIDTH_THICK,
-            linestyle=mom_linestyle,
-            alpha=ALPHA_HIGH,
-        )
-
-    # Extract and plot grid points (only for regular value functions, not inverse)
-    # Only show MoM grid points as they are the same as EGM grid points
-    if not inverse and mom_solution is not None:
-        mom_grid_points_m, mom_grid_points_v = extract_grid_points(
-            mom_solution,
-            GridType.VALUE,
-        )
-        if mom_grid_points_m is not None and mom_grid_points_v is not None:
-            _plot_grid_points_scatter(
-                ax,
-                mom_grid_points_m,
-                mom_grid_points_v,
-                get_concept_color("MoM"),
-                label="Grid Points",
-            )
+    _plot_value_grid_points(ax, inverse, mom_solution)
 
     # Fill region to show bounds if both optimist and pessimist are provided
     if v_pes is not None and v_opt is not None:
@@ -1401,7 +1475,7 @@ def plot_stochastic_bounds(
 
     Notes
     -----
-    This function expects a solution from IndShockMoMStochasticRConsumerType
+    This function expects a solution from RiskyAssetMoMConsumerType
     which includes OptimistStochastic and PessimistStochastic attributes.
 
     """
@@ -1414,13 +1488,12 @@ def plot_stochastic_bounds(
     c_opt_det = solution.Optimist.cFunc(m_grid)
     c_pes_det = solution.Pessimist.cFunc(m_grid)
 
-    # Evaluate stochastic bounds (if available)
+    # Evaluate stochastic bounds (if available). The values themselves carry
+    # the availability flag, so the two cannot fall out of step.
+    c_opt_stoch = c_pes_stoch = None
     if hasattr(solution, "OptimistStochastic"):
         c_opt_stoch = solution.OptimistStochastic.cFunc(m_grid)
         c_pes_stoch = solution.PessimistStochastic.cFunc(m_grid)
-        has_stochastic = True
-    else:
-        has_stochastic = False
 
     # Main consumption function
     c_main = solution.cFunc(m_grid)
@@ -1449,7 +1522,7 @@ def plot_stochastic_bounds(
         alpha=ALPHA_HIGH,
     )
 
-    if has_stochastic:
+    if c_pes_stoch is not None:
         # Plot stochastic pessimist
         ax.plot(
             m_grid,
@@ -1505,10 +1578,421 @@ def plot_stochastic_bounds(
 
     # Set y-limits based on visible data
     all_c = [c_pes_det, c_opt_det, c_main]
-    if has_stochastic:
+    if c_pes_stoch is not None:
         all_c.extend([c_opt_stoch, c_pes_stoch])
     y_min = min(c.min() for c in all_c)
     y_max = max(c.max() for c in all_c) * 1.05
     ax.set_ylim(y_min - 0.1, y_max)
 
+    plt.tight_layout()
+
+
+# =========================================================================
+# Portfolio-Choice Risky Share
+# =========================================================================
+
+
+def plot_share_bounds(
+    solution,
+    title: str,
+    subtitle: str,
+    *,
+    m_min: float = 1.0,
+    m_max: float = 20000.0,
+    n_points: int = 800,
+) -> None:
+    """Plot the risky share inside its bracket, with the cap release marked.
+
+    The axis is log ``m`` from ``m_min``; starting at 1 rather than 0.1 keeps
+    the flat constrained segment to a fifth of the width instead of a third.
+    A symlog axis centered on the kink was tried and rejected (2026-08-25): the
+    share is steepest just past the kink, so the edge of the linear zone
+    renders as a second bend wherever it is placed.
+
+    The bracket is the 'myopic' agent's share below and the leverage cap above.
+    Quoted everywhere, in prose and in legends, on Alan's instruction: it is
+    Campbell and Viceira's word for the mean-variance component rather than
+    ours, unlike optimist and pessimist, and it implies a disability the fully
+    rational investor it names does not have.
+    Unlike the consumption bracket, whose bounds are functions of ``m``, both
+    bounds here are constants, and the share approaches the LOWER one.
+
+    Parameters
+    ----------
+    solution : PortfolioSolution
+        A solved portfolio solution carrying ``ShareFuncAdj`` and ``ShareLimit``.
+    title, subtitle : str
+        Passed through; the title is discarded, since the caption is the title.
+    m_max : float
+        Right edge of the plotted range. Never exceed the solved range.
+    n_points : int
+        Evaluation points.
+
+    """
+    _fig, ax = setup_figure(title=title)
+    m = np.geomspace(m_min, m_max, n_points)
+    share = solution.ShareFuncAdj(m)
+    sigma = solution.ShareLimit
+
+    ax.plot(
+        m,
+        share,
+        color=get_concept_color("Realist"),
+        lw=LINE_WIDTH_THICK,
+        label="Realist share",
+    )
+    ax.axhline(
+        sigma,
+        color=get_concept_color("Pessimist"),
+        ls=LINE_STYLE_DASHED,
+        lw=LINE_WIDTH_THIN,
+        label=r"'Myopic' limit $\varsigma^{*}$",
+    )
+    ax.axhline(
+        1.0,
+        color=get_concept_color("Tight"),
+        ls=LINE_STYLE_DASHED,
+        lw=LINE_WIDTH_THIN,
+        label="Leverage constraint",
+    )
+    ax.fill_between(
+        m,
+        sigma,
+        1.0,
+        color=get_concept_color("MoM"),
+        alpha=ALPHA_LOW,
+        label="Feasible share range",
+    )
+
+    release = solution.ShareFuncAdj.mRelease
+    if np.isfinite(release):
+        ax.axvline(
+            release,
+            color=get_concept_color("Tight"),
+            ls=LINE_STYLE_DOTTED,
+            lw=LINE_WIDTH_THIN,
+        )
+        ax.annotate(
+            f"kink point at $m$ = {release:.2f}",
+            xy=(release, 1.0),
+            xytext=(release * 4.0, 0.88),
+            fontsize=FONT_SIZE_LARGE,
+            ha="left",
+            arrowprops={"arrowstyle": "->", "color": get_concept_color("Tight")},
+        )
+
+    ax.set_xscale("log")
+    ax.set_xlim(m_min, m_max)
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m), log scale",
+        ylabel=r"Risky Share $\varsigma$",
+        subtitle=subtitle,
+        legend_loc="lower left",
+    )
+    plt.tight_layout()
+
+
+def plot_share_logit(
+    solution,
+    title: str,
+    subtitle: str,
+    *,
+    m_min: float = 10.0,
+    m_max: float = 100.0,
+    n_points: int = 300,
+) -> None:
+    """Which transform straightens the share, and therefore which one to interpolate.
+
+    Overlaying a fitted line on its own data shows nothing: the fit tracks the
+    curve by construction. What decides the link is a COMPARISON. Each candidate
+    is rescaled to a common vertical range and drawn against the straight chord
+    through its own endpoints; whichever hugs its chord is the one linear
+    interpolation can represent with few nodes.
+
+    The share approaches its LOWER bound, so the linearizing transform is
+    ``log(omega)``, not the logit that serves the consumption problem where the
+    realist approaches the optimist from below.
+    """
+    _fig, ax = setup_figure(title=title)
+
+    # Read the DIRECT solve, never the moderated representation. ShareFuncAdj is
+    # piecewise linear in (log m, log omega) by construction, so using it here
+    # would let the log link win because it drew the data.
+    share_func = getattr(solution, "ShareFuncAdjDirect", solution.ShareFuncAdj)
+
+    # Below the release omega is exactly 1 and log1p(-omega) is -inf, so the
+    # logit's bow would become an artifact of the clip rather than a property
+    # of the link. Refuse the window instead of quietly reporting that number.
+    release = getattr(getattr(solution, "ShareFuncAdj", None), "mRelease", -np.inf)
+    if np.isfinite(release) and m_min <= release:
+        msg = (
+            f"m_min={m_min} is at or below the kink point {release:.4g}; the "
+            f"logit bow would be set by the omega clip, not by the link"
+        )
+        raise ValueError(msg)
+
+    m = np.geomspace(m_min, m_max, n_points)
+    share = share_func(m)
+    omega = np.clip(
+        (share - solution.ShareLimit) / (1.0 - solution.ShareLimit),
+        1e-12,
+        1 - 1e-12,
+    )
+
+    candidates = (
+        ("Untransformed share", share, LINE_STYLE_DASHED, "Tight"),
+        (
+            r"logit $\omega_{\varsigma}$ (consumption link)",
+            np.log(omega) - np.log1p(-omega),
+            LINE_STYLE_DOTTED,
+            "Linear",
+        ),
+        (
+            r"$\log \omega_{\varsigma}$ (link used here)",
+            np.log(omega),
+            LINE_STYLE_SOLID,
+            "MoM",
+        ),
+    )
+    for i, (label, values, dash, concept) in enumerate(candidates):
+        spread = values.max() - values.min()
+        if spread <= 0.0:
+            msg = f"candidate {label!r} is constant over [{m_min}, {m_max}]"
+            raise ValueError(msg)
+        scaled = (values - values.min()) / spread
+        chord = np.linspace(scaled[0], scaled[-1], len(scaled))
+        bow = 100.0 * np.abs(scaled - chord).max()
+        ax.plot(
+            m,
+            scaled,
+            color=get_concept_color(concept),
+            ls=dash,
+            lw=LINE_WIDTH_THICK if i == 2 else LINE_WIDTH_THIN,
+            # Width and dash style already mark the focal series, so all three
+            # run opaque: at ALPHA_MEDIUM the dotted comparator sits at 2.5:1
+            # against the panel, against 3.9:1 opaque.
+            alpha=ALPHA_OPAQUE,
+            label=f"{label}: bows {bow:.1f}%",
+        )
+    ax.plot(
+        m,
+        np.linspace(1.0, 0.0, len(m)),  # all three descend; chord must too
+        color=REFERENCE_LINE_COLOR,
+        lw=REFERENCE_LINE_WIDTH,
+        alpha=REFERENCE_LINE_ALPHA,
+    )
+
+    ax.set_xscale("log")
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m), log scale",
+        ylabel="Rescaled to a common range",
+        subtitle=subtitle,
+        legend_loc="upper right",
+    )
+    plt.tight_layout()
+
+
+def plot_share_sparse_accuracy(
+    reference,
+    moderated_factory,
+    title: str,
+    subtitle: str,
+    *,
+    n_nodes: int = 5,
+    m_lo: float = 25.0,
+    m_hi: float = 100.0,
+    n_points: int = 400,
+) -> None:
+    """Compare moderated against linear interpolation on the same sparse nodes.
+
+    Both schemes receive identical nodes and identical solved values, so the
+    difference is attributable to the representation alone. The baseline is
+    plain linear interpolation, matching the consumption sections.
+
+    Parameters
+    ----------
+    reference : PortfolioSolution
+        A converged dense solve supplying both the nodes' values and the truth.
+    moderated_factory : callable
+        ``(m_nodes, s_nodes) -> callable`` building the moderated share.
+
+    """
+    _fig, ax = setup_figure(title=title)
+    probe = np.geomspace(m_lo, m_hi, n_points)
+    truth = reference.ShareFuncAdj(probe)
+    nodes = np.geomspace(m_lo, m_hi, n_nodes)
+    s_nodes = reference.ShareFuncAdj(nodes)
+
+    linear = LinearInterp(nodes, s_nodes, lower_extrap=True)(probe)
+    moderated = moderated_factory(nodes, s_nodes)(probe)
+
+    ax.plot(
+        probe,
+        truth,
+        color=get_concept_color("Truth"),
+        lw=LINE_WIDTH_THICK,
+        label="Truth",
+    )
+    ax.plot(
+        probe,
+        linear,
+        color=get_concept_color("Linear"),
+        ls=LINE_STYLE_DASHED,
+        lw=LINE_WIDTH_MEDIUM,
+        label=f"Linear ({np.abs(linear - truth).max():.1e})",
+    )
+    ax.plot(
+        probe,
+        moderated,
+        color=get_concept_color("MoM"),
+        ls=LINE_STYLE_DASHDOT,
+        lw=LINE_WIDTH_MEDIUM,
+        label=f"MoM ({np.abs(moderated - truth).max():.1e})",
+    )
+    _plot_grid_points_scatter(ax, nodes, s_nodes, get_concept_color("MoM"))
+
+    ax.set_xscale("log")
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m), log scale",
+        ylabel=r"Risky Share $\varsigma$",
+        subtitle=subtitle,
+        legend_loc="upper right",
+    )
+    plt.tight_layout()
+
+
+def plot_share_error(
+    reference,
+    moderated_factory,
+    title: str,
+    subtitle: str,
+    *,
+    n_nodes: int = 5,
+    m_lo: float = 25.0,
+    m_hi: float = 100.0,
+    n_points: int = 400,
+) -> None:
+    """Absolute share error for moderation against plain linear interpolation.
+
+    The portfolio analogue of :func:`plot_solution_gaps`. Both schemes receive
+    the same sparse nodes and the same solved values, so the separation is
+    attributable to the representation alone. Plotted on a log axis because the
+    gap spans two decades and is otherwise legible only from the legend.
+    """
+    _fig, ax = setup_figure(title=title)
+    probe = np.geomspace(m_lo, m_hi, n_points)
+    truth = reference.ShareFuncAdj(probe)
+    nodes = np.geomspace(m_lo, m_hi, n_nodes)
+    s_nodes = reference.ShareFuncAdj(nodes)
+
+    series = (
+        (
+            "Linear",
+            LinearInterp(nodes, s_nodes, lower_extrap=True)(probe),
+            LINE_STYLE_DASHED,
+        ),
+        ("MoM", moderated_factory(nodes, s_nodes)(probe), LINE_STYLE_DASHDOT),
+    )
+    for label, values, dash in series:
+        ax.plot(
+            probe,
+            np.abs(values - truth),
+            label=label,
+            color=get_concept_color(label),
+            linewidth=LINE_WIDTH_THICK,
+            linestyle=dash,
+        )
+    # No gridpoint scatter: their y-value here is an error, not a level, so any
+    # marker would sit at a fabricated height. The dips locate them exactly, as
+    # in the consumption error figure.
+
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m), log scale",
+        ylabel=r"$|\varsigma_{\rm approx} - \varsigma|$",
+        subtitle=subtitle,
+        legend_loc="lower left",
+    )
+    plt.tight_layout()
+
+
+def plot_share_extrapolation(
+    reference,
+    sigma_star: float,
+    moderated_factory,
+    title: str,
+    subtitle: str,
+    *,
+    m_lo: float = 25.0,
+    m_top: float = 100.0,
+    m_max: float = 400.0,
+    n_points: int = 300,
+) -> None:
+    """Beyond the solved grid: what each scheme predicts for the risky share.
+
+    The portfolio analogue of the consumption extrapolation pair. The plot starts
+    inside the node range, where linear interpolation and moderation agree, so the
+    divergence past the last node reads as a departure rather than as two
+    unrelated curves. Linear extrapolation of a convex decreasing share overshoots
+    downward and breaches the myopic limit; moderating in the log of the
+    moderation ratio inherits the tail's measured slope instead of assuming one.
+    """
+    _fig, ax = setup_figure(title=title)
+    probe = np.geomspace(m_lo, m_max, n_points)
+    truth = reference.ShareFuncAdj(probe)
+
+    nodes = np.geomspace(m_lo, m_top, 5)
+    s_nodes = reference.ShareFuncAdj(nodes)
+    series = (
+        ("Truth", truth, LINE_STYLE_SOLID, LINE_WIDTH_EXTRA_THICK),
+        (
+            "Linear",
+            LinearInterp(nodes, s_nodes, lower_extrap=True)(probe),
+            LINE_STYLE_DASHED,
+            LINE_WIDTH_THICK,
+        ),
+        (
+            "MoM",
+            moderated_factory(nodes, s_nodes)(probe),
+            LINE_STYLE_DASHDOT,
+            LINE_WIDTH_THICK,
+        ),
+    )
+    for label, values, dash, width in series:
+        ax.plot(
+            probe,
+            values,
+            label=label,
+            color=get_concept_color(label),
+            linewidth=width,
+            linestyle=dash,
+        )
+    ax.axhline(
+        sigma_star,
+        color=get_concept_color("Pessimist"),
+        ls=LINE_STYLE_DASHED,
+        lw=LINE_WIDTH_THIN,
+        label=r"'Myopic' limit $\varsigma^{*}$",
+    )
+    ax.axvline(
+        m_top,
+        color=REFERENCE_LINE_COLOR,
+        ls=LINE_STYLE_DOTTED,
+        lw=REFERENCE_LINE_WIDTH,
+        alpha=REFERENCE_LINE_ALPHA,
+    )
+
+    ax.set_xscale("log")
+    _configure_standard_axes(
+        ax,
+        xlabel="Normalized Market Resources (m), log scale; grid ends at 100",
+        ylabel=r"Risky Share $\varsigma$",
+        subtitle=subtitle,
+        legend_loc="lower left",
+    )
     plt.tight_layout()

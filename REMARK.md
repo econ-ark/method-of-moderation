@@ -6,7 +6,7 @@ tags:
   - REMARK
   - Notebook
 notebooks:
-  - code/method-of-moderation.ipynb
+  - code/method-of-moderation.md
 ---
 
 # The Method of Moderation

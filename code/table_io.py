@@ -1,0 +1,185 @@
+"""Write and check the paper's generated LaTeX table fragments.
+
+The manuscript no longer holds the tables it prints. Each one is stored in
+`content/tables/<label>.md` as a ```` ```{raw} latex ```` block that
+`content/paper/moderation_extended.md` pulls in with an `{include}`
+directive, and this module is what the verification scripts use to put it
+there. A fragment must be Markdown rather than bare LaTeX: mystmd resolves
+`{include}` by file extension. The argument form of the fence matters:
+mystmd writes its body verbatim into the tex export AND parses it into a
+real table on the site, so `[](#tbl:label)` resolves in both outputs. The
+colon form `:::{raw:latex}` is tex-only and leaves the site with no table
+and headless sentences wherever the prose refers to one.
+
+Every script that owns generated tables takes the same four flags, whose
+wording `add_table_args` supplies so that it cannot drift between scripts:
+
+* ``--list`` prints the table names the script generates;
+* ``--only NAME [NAME ...]`` restricts the two flags below to those tables;
+* ``--write`` recomputes the numbers and writes the fragments;
+* ``--check`` recomputes, renders, and compares against the committed
+  fragments, exiting non-zero with a unified diff if they disagree.
+
+The comparison ignores indentation and blank lines but nothing else, so
+reflowing a fragment is free while a changed digit is not. `--check` is the
+gate CI runs: a table number can then only drift from the code by way of a
+failing build.
+"""
+
+from __future__ import annotations
+
+import argparse
+import difflib
+import logging
+import re
+from collections.abc import Sequence
+from pathlib import Path
+
+import numpy as np
+
+logger = logging.getLogger("table_io")
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+TABLES_DIR = REPO_ROOT / "content" / "tables"
+
+# mystmd's tex-to-myst parser has no handler for \setlength and reports it as an
+# "Unhandled TEX conversion" on every build, so such lines are hoisted out of the
+# parsed table body into a tex-only block (see `fragment`).
+_SETLENGTH = re.compile(r"^\s*\\setlength\{[^}]*\}\{[^}]*\}\s*$")
+
+
+def add_table_args(parser: argparse.ArgumentParser, names: Sequence[str]) -> None:
+    """Attach the shared table flags, so their wording is the same everywhere."""
+    parser.add_argument(
+        "--list",
+        dest="list_names",
+        action="store_true",
+        help="Print the table names this script generates, one per line.",
+    )
+    parser.add_argument(
+        "--write",
+        action="store_true",
+        help="Recompute the tables and write their fragments to content/tables/.",
+    )
+    parser.add_argument(
+        "--check",
+        action="store_true",
+        help=(
+            "Recompute the tables and exit non-zero, with a unified diff, if "
+            "the committed fragments are stale."
+        ),
+    )
+    parser.add_argument(
+        "--only",
+        nargs="+",
+        metavar="NAME",
+        help=(
+            "Restrict --write and --check to these tables; the default is all "
+            f"of them ({', '.join(names)})."
+        ),
+    )
+
+
+def resolve_names(only, owned: Sequence[str]) -> list[str]:
+    """The tables to act on, in the script's own order.
+
+    Raises `ValueError` naming the valid tables when `only` asks for one this
+    script does not generate.
+    """
+    if not only:
+        return list(owned)
+    unknown = [name for name in only if name not in owned]
+    if unknown:
+        msg = (
+            f"unknown table name(s): {', '.join(unknown)}. This script "
+            f"generates: {', '.join(owned)}."
+        )
+        raise ValueError(msg)
+    return [name for name in owned if name in only]
+
+
+def sci(value):
+    """Format as the paper does, e.g. 5.4e-02 -> '5.4(-2)'."""
+    if value == 0.0:
+        return "0"
+    exponent = int(np.floor(np.log10(abs(value))))
+    mantissa = value / 10.0**exponent
+    if round(mantissa, 1) >= 10.0:  # rounding can carry: 9.96e-2 prints as 1.0(-1)
+        mantissa /= 10.0
+        exponent += 1
+    return f"{mantissa:.1f}({exponent})"
+
+
+def fragment(latex: str, *, script: str, command: str) -> str:
+    """Wrap a LaTeX table body as the generated Markdown fragment.
+
+    Any ``\\setlength`` line is moved ahead of the table into a colon-form
+    ``raw:latex`` block, which reaches the PDF verbatim and never the site
+    parser. Outside the ``table`` group the setting is global rather than
+    local, which is the same thing here: every generated table uses it and
+    the manuscript has no other tabular.
+    """
+    lines = latex.strip().splitlines()
+    lengths = [line.strip() for line in lines if _SETLENGTH.match(line)]
+    body = "\n".join(line for line in lines if not _SETLENGTH.match(line))
+    preamble = ""
+    if lengths:
+        preamble = ":::{raw:latex}\n" + "\n".join(lengths) + "\n:::\n\n"
+    return (
+        f"<!-- Generated by {script}; do not edit by hand. "
+        f"Regenerate with: {command} -->\n\n"
+        f"{preamble}"
+        "```{raw} latex\n"
+        f"{body}\n"
+        "```\n"
+    )
+
+
+def _normalized(text: str) -> list[str]:
+    """Content lines with indentation and blank lines discarded."""
+    return [stripped for line in text.splitlines() if (stripped := line.strip())]
+
+
+def write(path: Path, text: str) -> int:
+    """Write `text` to `path`, creating the tables directory if needed."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(text, encoding="utf-8")
+    logger.info("Wrote %s", path.relative_to(REPO_ROOT))
+    return 0
+
+
+def check(path: Path, text: str) -> int:
+    """Compare `text` against the committed fragment, ignoring whitespace.
+
+    Returns 0 on a match and 1 on a mismatch, logging a unified diff of the
+    normalized lines so the failure names the entry that moved.
+    """
+    rel = path.relative_to(REPO_ROOT)
+    if not path.exists():
+        logger.error("%s does not exist; run the writer with --write-table.", rel)
+        return 1
+    committed = _normalized(path.read_text(encoding="utf-8"))
+    recomputed = _normalized(text)
+    if committed == recomputed:
+        logger.info("%s is current (recomputed table matches).", rel)
+        return 0
+    diff = difflib.unified_diff(
+        committed,
+        recomputed,
+        fromfile=f"{rel} (committed)",
+        tofile=f"{rel} (recomputed)",
+        lineterm="",
+    )
+    logger.error(
+        "%s is stale; the recomputed table differs from the committed one:\n%s",
+        rel,
+        "\n".join(diff),
+    )
+    return 1
+
+
+def emit(name: str, latex: str, *, script: str, command: str, check_only: bool) -> int:
+    """Write or check the fragment `content/tables/<name>.md`."""
+    text = fragment(latex, script=script, command=command)
+    path = TABLES_DIR / f"{name}.md"
+    return check(path, text) if check_only else write(path, text)

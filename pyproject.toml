@@ -13,9 +13,8 @@ dependencies = [
     "econ-ark",
     "ipywidgets>=8.1.7",
     "jupyterlab-myst",
-    "jupytext>=1.17.2",
     "matplotlib>=3.9.4",
-    "mystmd>=1.9.0",
+    "mystmd>=1.10.1",
     "numba>=0.59.0",  # Ensure Python 3.11 compatibility
     "numpy>=2.0.2",
     "scipy>=1.15.3",
@@ -36,22 +35,24 @@ test = [
 dev = [
   { include-group = "test" },
   "ruff>=0.12.5",
-  "jupytext>=1.17.2",
   "jupyterlab",
   "pre-commit>=4.3.0",
+  "cogapp>=3.4",
 ]
 
 [tool.ruff.lint]
 extend-select = [
   "I",        # isort
+  "T20",      # flake8-print: use logging, not print (T201's fix is UNSAFE: it deletes the call)
   "UP",       # pyupgrade
 ]
 
 [tool.ruff.lint.per-file-ignores]
-# Notebooks have different import conventions
-"*.ipynb" = ["E402", "F404"]
+# Tooling scripts whose stdout is a machine-readable data interface, not
+# status output; logging would send it to stderr and break the consumer.
+".agents/**" = ["T201"]
 
 
 
 [tool.uv.sources]
-econ-ark = { git = "https://github.com/econ-ark/HARK", rev = "master" }
+econ-ark = { git = "https://github.com/econ-ark/HARK", rev = "main" }

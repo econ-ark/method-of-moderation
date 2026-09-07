@@ -1,5 +1,4 @@
-"""
-Word count for Economics Letters submission.
+r"""Word count for Economics Letters submission.
 
 Economics Letters has a 2,000 word limit for the main text.
 This script counts words excluding:
@@ -19,7 +18,9 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import logging
 import re
+import sys
 from pathlib import Path
 
 # Word pattern: words with apostrophes/hyphens, or single letters
@@ -28,6 +29,10 @@ WORD_PATTERN = re.compile(r"[a-zA-Z][a-zA-Z'\-]*[a-zA-Z]|[a-zA-Z]")
 # Project root and content directories
 PROJECT_ROOT = Path(__file__).parent.parent
 EXPORTS_DIR = PROJECT_ROOT / "content" / "exports"
+
+WORD_LIMIT = 2000  # Economics Letters main-text limit
+
+logger = logging.getLogger("wordcount")
 
 
 def find_tex_files() -> list[Path]:
@@ -59,8 +64,7 @@ def find_default_file() -> Path | None:
 
 
 def find_matching_brace(text: str, start: int) -> int:
-    """
-    Find the position of the closing brace matching the opening brace at start.
+    """Find the position of the closing brace matching the opening brace at start.
 
     Args:
         text: The text to search
@@ -68,6 +72,7 @@ def find_matching_brace(text: str, start: int) -> int:
 
     Returns:
         Position of matching '}', or -1 if not found
+
     """
     if start >= len(text) or text[start] != "{":
         return -1
@@ -86,8 +91,7 @@ def find_matching_brace(text: str, start: int) -> int:
 
 
 def extract_braced_content(text: str, command: str) -> tuple[list[str], str]:
-    """
-    Extract content from all instances of \\command{...} handling nested braces.
+    r"""Extract content from all instances of \\command{...} handling nested braces.
 
     Args:
         text: The LaTeX text
@@ -95,6 +99,7 @@ def extract_braced_content(text: str, command: str) -> tuple[list[str], str]:
 
     Returns:
         (list of extracted contents, text with commands removed)
+
     """
     contents = []
     result = text
@@ -128,11 +133,11 @@ def remove_environment(text: str, env_name: str) -> str:
 
 
 def count_latex_words(text: str) -> tuple[int, int]:
-    """
-    Count words in LaTeX text, excluding math and commands.
+    """Count words in LaTeX text, excluding math and commands.
 
     Returns:
         (word_count, footnote_word_count)
+
     """
     # Remove comments (including at end of file without trailing newline)
     text = re.sub(r"%.*?($|\n)", r"\1", text)
@@ -211,7 +216,9 @@ def count_latex_words(text: str) -> tuple[int, int]:
 def count_abstract(tex: str) -> int:
     """Count words in abstract."""
     abstract_match = re.search(
-        r"\\begin\{abstract\}(.*?)\\end\{abstract\}", tex, re.DOTALL
+        r"\\begin\{abstract\}(.*?)\\end\{abstract\}",
+        tex,
+        re.DOTALL,
     )
     if abstract_match:
         abstract_text = abstract_match.group(1)
@@ -219,7 +226,9 @@ def count_abstract(tex: str) -> int:
         abstract_text = re.sub(r"\$[^\$]*\$", "", abstract_text)
         # Remove commands but keep text arguments
         abstract_text = re.sub(
-            r"\\[a-zA-Z]+\*?(\[[^\]]*\])?\{([^}]*)\}", r" \2 ", abstract_text
+            r"\\[a-zA-Z]+\*?(\[[^\]]*\])?\{([^}]*)\}",
+            r" \2 ",
+            abstract_text,
         )
         abstract_text = re.sub(r"\\[a-zA-Z]+\*?", "", abstract_text)
         # Remove special characters
@@ -228,12 +237,15 @@ def count_abstract(tex: str) -> int:
     return 0
 
 
-def main():
+def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        description="Count words for Economics Letters submission (2000 word limit)"
+        description="Count words for Economics Letters submission (2000 word limit)",
     )
     parser.add_argument(
-        "--verbose", "-v", action="store_true", help="Show detailed breakdown"
+        "--verbose",
+        "-v",
+        action="store_true",
+        help="Show detailed breakdown",
     )
     parser.add_argument(
         "--file",
@@ -243,87 +255,116 @@ def main():
         help="LaTeX file to count (auto-detects if not specified)",
     )
     parser.add_argument(
-        "--list", "-l", action="store_true", help="List available .tex files"
+        "--list",
+        "-l",
+        action="store_true",
+        help="List available .tex files",
     )
-    args = parser.parse_args()
+    return parser
 
-    # List mode
-    if args.list:
-        tex_files = find_tex_files()
-        if not tex_files:
-            print("No .tex files found in content/exports/")
-            return 1
-        print("Available .tex files:")
-        default = find_default_file()
-        for f in tex_files:
-            rel_path = f.relative_to(PROJECT_ROOT)
-            marker = " (default)" if f == default else ""
-            print(f"  {rel_path}{marker}")
-        return 0
 
-    # Determine file to count
+def _list_tex_files() -> int:
+    """Log the available .tex files, marking the auto-detected default."""
+    tex_files = find_tex_files()
+    if not tex_files:
+        logger.error("No .tex files found in content/exports/")
+        return 1
+    logger.info("Available .tex files:")
+    default = find_default_file()
+    for f in tex_files:
+        marker = " (default)" if f == default else ""
+        logger.info("  %s%s", f.relative_to(PROJECT_ROOT), marker)
+    return 0
+
+
+def _resolve_target(args: argparse.Namespace) -> Path | None:
+    """Return the .tex file to count, or None after logging why it cannot be."""
     if args.file is None:
         args.file = find_default_file()
         if args.file is None:
-            print("Error: No .tex files found. Use --file to specify one.")
-            return 1
-        print(f"Using: {args.file.relative_to(PROJECT_ROOT)}")
-        print()
-
+            logger.error("No .tex files found. Use --file to specify one.")
+            return None
+        logger.info("Using: %s", args.file.relative_to(PROJECT_ROOT))
+        logger.info("")
     if not args.file.exists():
-        print(f"Error: File not found: {args.file}")
+        logger.error("File not found: %s", args.file)
+        return None
+    return args.file
+
+
+def _log_breakdown(counts: dict[str, int]) -> None:
+    """Log the per-section breakdown shown under ``--verbose``."""
+    logger.info("Abstract:                      %5d words", counts["abstract"])
+    logger.info("Main text (excl. appendices):  %5d words", counts["main"])
+    logger.info("Footnotes in main text:        %5d words", counts["main_fn"])
+    logger.info("Appendices:                    %5d words", counts["app"])
+    logger.info("Footnotes in appendices:       %5d words", counts["app_fn"])
+    logger.info("-" * 60)
+    logger.info(
+        "Main + footnotes:              %5d words",
+        counts["main"] + counts["main_fn"],
+    )
+    logger.info("Total (all):                   %5d words", sum(counts.values()))
+    logger.info("")
+
+
+def _log_summary(main_words: int, main_fn: int) -> None:
+    """Log the main-text count against the Economics Letters limit."""
+    logger.info("ECONOMICS LETTERS REQUIREMENTS")
+    logger.info("-" * 60)
+    logger.info("Limit: %s words (main text)", f"{WORD_LIMIT:,}")
+    logger.info("Excludes: abstract, tables, figures, equations, appendices")
+    logger.info("")
+    logger.info("Main text word count:  %s", f"{main_words:,}")
+    logger.info("With footnotes:        %s", f"{main_words + main_fn:,}")
+    logger.info("")
+    if main_words <= WORD_LIMIT:
+        logger.info("STATUS: UNDER LIMIT by %d words", WORD_LIMIT - main_words)
+    else:
+        logger.info("STATUS: OVER LIMIT by %d words", main_words - WORD_LIMIT)
+    logger.info("")
+
+
+def main() -> int:
+    logging.basicConfig(
+        level=logging.INFO, format="%(message)s", stream=sys.stdout, force=True
+    )
+    args = _build_parser().parse_args()
+    if args.list:
+        return _list_tex_files()
+    target = _resolve_target(args)
+    if target is None:
         return 1
 
-    tex = args.file.read_text()
+    tex = target.read_text()
 
     # Split at appendix
     parts = tex.split(r"\appendix")
     main_tex = parts[0]
     appendix_tex = parts[1] if len(parts) > 1 else ""
 
-    # Count words
     main_words, main_fn = count_latex_words(main_tex)
     app_words, app_fn = count_latex_words(appendix_tex)
-    abstract_words = count_abstract(tex)
 
-    # Print results
-    print("=" * 60)
-    print("WORD COUNT FOR ECONOMICS LETTERS")
-    print("=" * 60)
-    print()
+    logger.info("=" * 60)
+    logger.info("WORD COUNT FOR ECONOMICS LETTERS")
+    logger.info("=" * 60)
+    logger.info("")
 
     if args.verbose:
-        print(f"Abstract:                      {abstract_words:>5} words")
-        print(f"Main text (excl. appendices):  {main_words:>5} words")
-        print(f"Footnotes in main text:        {main_fn:>5} words")
-        print(f"Appendices:                    {app_words:>5} words")
-        print(f"Footnotes in appendices:       {app_fn:>5} words")
-        print("-" * 60)
-        print(f"Main + footnotes:              {main_words + main_fn:>5} words")
-        print(
-            f"Total (all):                   {main_words + main_fn + app_words + app_fn + abstract_words:>5} words"
+        _log_breakdown(
+            {
+                "abstract": count_abstract(tex),
+                "main": main_words,
+                "main_fn": main_fn,
+                "app": app_words,
+                "app_fn": app_fn,
+            },
         )
-        print()
 
-    print("ECONOMICS LETTERS REQUIREMENTS")
-    print("-" * 60)
-    print("Limit: 2,000 words (main text)")
-    print("Excludes: abstract, tables, figures, equations, appendices")
-    print()
-    print(f"Main text word count:  {main_words:,}")
-    print(f"With footnotes:        {main_words + main_fn:,}")
-    print()
-
-    if main_words <= 2000:
-        remaining = 2000 - main_words
-        print(f"STATUS: UNDER LIMIT by {remaining} words")
-    else:
-        over = main_words - 2000
-        print(f"STATUS: OVER LIMIT by {over} words")
-
-    print()
+    _log_summary(main_words, main_fn)
     return 0
 
 
 if __name__ == "__main__":
-    exit(main())
+    sys.exit(main())
