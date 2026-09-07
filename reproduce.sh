@@ -58,7 +58,7 @@ echo "Venv: $(basename "$VENV_PATH")"
 echo ""
 
 # Install dependencies
-echo "Step 1/5: Installing dependencies..."
+echo "Step 1/4: Installing dependencies..."
 uv sync
 # Hard-fail if the core scientific stack didn't actually land in the venv.
 uv run python -c "import HARK, numpy, scipy, matplotlib" || {
@@ -70,25 +70,22 @@ echo "✓ Dependencies installed"
 echo ""
 
 # Run tests to verify installation and code correctness
-echo "Step 2/5: Running test suite..."
-uv run pytest code/test_moderation.py -v
+echo "Step 2/4: Running test suite..."
+uv run pytest code/ -v
 echo "✓ All tests passed"
 echo ""
 
-# Build the paper (HTML and PDF)
-echo "Step 3/5: Building paper and PDFs..."
-uv run myst build --all --pdf
-echo "✓ HTML documentation and PDFs built"
-echo ""
-
-# Execute computational notebook
-echo "Step 4/5: Executing computational notebook..."
-uv run jupyter nbconvert --to notebook --execute --inplace code/method-of-moderation.ipynb
-echo "✓ Notebook executed successfully"
+# Build the paper and execute the notebooks. `--execute` runs every notebook in
+# the myst.yml TOC, so the notebooks are built and run in one pass. It must go
+# through `uv run`: mystmd spawns a bare `python` for the Jupyter kernel, which
+# is not on PATH outside the project environment.
+echo "Step 3/4: Building paper and PDFs, executing notebooks..."
+uv run myst build --all --pdf --execute
+echo "✓ HTML documentation, PDFs and executed notebooks built"
 echo ""
 
 # Verify outputs
-echo "Step 5/5: Verifying outputs..."
+echo "Step 4/4: Verifying outputs..."
 VERIFY_FAILED=0
 check_output() {
     local file="$1"
@@ -101,25 +98,36 @@ check_output() {
     fi
 }
 check_output "_build/html/index.html" "HTML documentation"
-check_output "content/exports/moderation_letters.pdf" "Paper PDF"
-check_output "content/exports/moderation_with_appendix.pdf" "Paper+Appendix PDF"
+check_output "content/exports/moderation_extended.pdf" "Paper PDF (JEDC version)"
 
-# The notebook file is tracked in git, so its mere presence proves nothing.
-# Confirm that at least one code cell actually has an execution_count, which is
-# the cheapest sign that nbconvert --execute did its job.
-if uv run python -c "
+# The notebook sources are tracked in git, so their presence proves nothing.
+# mystmd writes executed results into the built AST rather than back into the
+# source, so check there: an `outputs` node with no children is a cell that was
+# parsed but never run, which is what a missing kernel silently produces.
+for nb in method-of-moderation method-of-moderation-symbolic; do
+    if uv run python -c "
 import json, sys
-nb = json.load(open('code/method-of-moderation.ipynb'))
-executed = any(
-    c.get('execution_count') for c in nb['cells'] if c.get('cell_type') == 'code'
-)
-sys.exit(0 if executed else 1)
-"; then
-    echo "✓ Executed notebook: code/method-of-moderation.ipynb (has populated execution_count)"
-else
-    echo "✗ Notebook code/method-of-moderation.ipynb has no executed cells." >&2
-    VERIFY_FAILED=1
-fi
+doc = json.load(open('_build/site/content/${nb}.json'))
+rendered = 0
+def walk(node):
+    global rendered
+    if isinstance(node, dict):
+        if node.get('type') == 'outputs':
+            rendered += len(node.get('children') or [])
+        for value in node.values():
+            walk(value)
+    elif isinstance(node, list):
+        for value in node:
+            walk(value)
+walk(doc)
+sys.exit(0 if rendered else 1)
+" 2>/dev/null; then
+        echo "✓ Executed notebook: code/${nb}.md (built outputs are populated)"
+    else
+        echo "✗ Notebook code/${nb}.md produced no outputs." >&2
+        VERIFY_FAILED=1
+    fi
+done
 
 if [ "$VERIFY_FAILED" -ne 0 ]; then
     echo "" >&2
@@ -128,8 +136,10 @@ if [ "$VERIFY_FAILED" -ne 0 ]; then
 fi
 echo ""
 
-# Word count check
-echo "Word count for Economics Letters submission:"
+# Word count. The submission target is JEDC, which has no word limit; the
+# Economics Letters version is retained for reference only, so this is
+# reported for information rather than checked against a limit.
+echo "Word count (Economics Letters reference version):"
 uv run python code/wordcount.py
 echo ""
 
@@ -139,6 +149,6 @@ echo "=========================================="
 echo ""
 echo "To view results:"
 echo "  - Open _build/html/index.html in a browser"
-echo "  - Open code/method-of-moderation.ipynb in Jupyter"
+echo "  - Open code/method-of-moderation.md (MyST notebook) in JupyterLab or an editor"
 echo "  - PDFs are in content/exports/"
 echo ""

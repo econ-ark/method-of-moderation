@@ -39,3 +39,16 @@ repos:
     rev: "v0.11.0.1"
     hooks:
       - id: shellcheck
+
+  # README.md carries a copy of the abstract between cog markers; this
+  # regenerates it from content/paper/abstract.md (the single source) and
+  # fails the commit when the copy was stale, so the two cannot drift.
+  - repo: local
+    hooks:
+      - id: cog
+        name: cog (README abstract from content/paper/abstract.md)
+        entry: cog -r README.md
+        language: python
+        additional_dependencies: ["cogapp>=3.4"]
+        files: ^(README\.md|content/paper/abstract\.md)$
+        pass_filenames: false

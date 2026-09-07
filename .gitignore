@@ -165,9 +165,13 @@ Thumbs.db
 *.swp
 
 # MyST build outputs
-# MyST PDF build artifacts (logs, generated files)
-content/exports/*_pdf_logs/
-content/exports/*_log/
+# Only the final PDFs in content/exports/ are tracked. Everything else there is
+# a build artifact: the *_pdf_tex/ LaTeX sources, their copied figures, the
+# *_pdf_logs/ latexmk output. All of it regenerates with `myst build --pdf`
+# (or `--tex` for an Editorial Manager source upload), so tracking it only
+# produces diff noise on every rebuild.
+content/exports/*
+!content/exports/*.pdf
 _build
 
 ## Core latex/pdflatex auxiliary files:
@@ -506,6 +510,5 @@ TSWLatexianTemp*
 .agents/benchmarks/results/latest.json
 REMARK
 
-# MyST PDF build artifacts (generated PNG files in tex export directories)
-content/exports/*/files/*.png
-content/exports/*/files/
+# Exploration result artifacts (regenerable from the scripts alongside them)
+code/explorations/**/*.json

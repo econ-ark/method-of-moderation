@@ -49,6 +49,7 @@ from pathlib import Path
 
 import matplotlib.pyplot as plt
 from cycler import cycler
+from IPython.display import HTML, display
 
 logger = logging.getLogger(__name__)
 
@@ -64,14 +65,14 @@ __all__ = [
     "ARK_BLUE",
     "ARK_GREEN",
     "ARK_GREY",
-    "ARK_LIGHTBLUE",
-    "ARK_PINK",
-    "ARK_YELLOW",
     # Refined styling colors
     "ARK_GRID_SOFT",
+    "ARK_LIGHTBLUE",
     "ARK_PANEL_LIGHT",
+    "ARK_PINK",
     "ARK_SPINE",
     "ARK_TEXT",
+    "ARK_YELLOW",
     # Concept colors mapping
     "CONCEPT_COLORS",
     # Font sizes
@@ -79,7 +80,8 @@ __all__ = [
     "FONT_SIZE_XLARGE",
     # Grid and padding
     "GRID_ALPHA",
-    "PADDING_RATIO",
+    # Notebook styling
+    "HEADER_HTML_NOTEBOOK",
     # Line styles
     "LINE_STYLE_DASHDOT",
     "LINE_STYLE_DASHED",
@@ -94,15 +96,14 @@ __all__ = [
     "MARKER_EDGE_COLOR",
     "MARKER_EDGE_WIDTH_THIN",
     "MARKER_SIZE_STANDARD",
+    # Matplotlib configuration
+    "MATPLOTLIB_STYLE",
+    "NOTEBOOK_CSS",
+    "PADDING_RATIO",
     # Reference line styling
     "REFERENCE_LINE_ALPHA",
     "REFERENCE_LINE_COLOR",
     "REFERENCE_LINE_WIDTH",
-    # Matplotlib configuration
-    "MATPLOTLIB_STYLE",
-    # Notebook styling
-    "HEADER_HTML_NOTEBOOK",
-    "NOTEBOOK_CSS",
     # Theming functions
     "apply_ark_style",
     "apply_notebook_css",
@@ -116,6 +117,10 @@ ARK_BLUE = "#1f476b"
 ARK_LIGHTBLUE = "#00aeef"
 ARK_PINK = "#ed217c"
 ARK_GREEN = "#39b54a"
+# Violet replaced ARK_PINK for the comparator because pink against ARK_GREEN is
+# a red-green pair: under simulated deuteranopia it keeps 21% of its CIELAB
+# separation (dE 139.5 -> 29.1), against 66% for violet (150.0 -> 99.5).
+ARK_VIOLET = "#9b5de5"
 ARK_YELLOW = "#fcb040"
 ARK_GREY = "#676470"
 
@@ -138,11 +143,37 @@ PADDING_RATIO = 0.05  # 5% padding on each side of plots
 CONCEPT_COLORS = {
     "truth": ARK_BLUE,
     "mom": ARK_GREEN,
-    "egm": ARK_PINK,
+    "egm": ARK_VIOLET,
     "optimist": ARK_LIGHTBLUE,
     "pessimist": ARK_YELLOW,
     "tight": ARK_GREY,
+    # Same hue as "egm" on purpose: both are the naive comparator MoM is scored
+    # against. No figure draws both; one that did would render them
+    # identically, so give "linear" its own hue before writing it.
+    "linear": ARK_VIOLET,
 }
+
+# Substring aliases mapped to concepts, in priority order: the first entry whose
+# alias appears in a label wins. Ordered data rather than an if-chain so adding a
+# concept costs one line and no branching.
+CONCEPT_ALIASES = (
+    (("truth", "high-precision", "realist"), "truth"),
+    (("mom", "moderation"), "mom"),
+    (("egm", "endogenous"), "egm"),
+    (("linear",), "linear"),
+    (("optimist", "perfect"), "optimist"),
+    (("pessimist", "worst"), "pessimist"),
+    (("tight",), "tight"),
+)
+
+FALLBACK_COLORS = (
+    ARK_BLUE,
+    ARK_GREEN,
+    ARK_PINK,
+    ARK_LIGHTBLUE,
+    ARK_YELLOW,
+    ARK_GREY,
+)
 
 # Plot styling constants
 # Font sizes
@@ -193,31 +224,12 @@ def get_concept_color(method_name: str) -> str:
 
     """
     name_lower = method_name.lower()
-
-    # Map various method name variants to core concepts
-    if "truth" in name_lower or "high-precision" in name_lower:
-        return CONCEPT_COLORS["truth"]
-    if "mom" in name_lower or "moderation" in name_lower:
-        return CONCEPT_COLORS["mom"]
-    if "egm" in name_lower or "endogenous" in name_lower:
-        return CONCEPT_COLORS["egm"]
-    if "optimist" in name_lower or "perfect" in name_lower:
-        return CONCEPT_COLORS["optimist"]
-    if "pessimist" in name_lower or "worst" in name_lower:
-        return CONCEPT_COLORS["pessimist"]
-    if "tight" in name_lower:
-        return CONCEPT_COLORS["tight"]
-    # Fallback to cycling through colors for unknown methods
-    # Use sum of character ordinals for deterministic indexing (hash() varies across sessions)
-    fallback_colors = [
-        ARK_BLUE,
-        ARK_GREEN,
-        ARK_PINK,
-        ARK_LIGHTBLUE,
-        ARK_YELLOW,
-        ARK_GREY,
-    ]
-    return fallback_colors[sum(ord(c) for c in name_lower) % len(fallback_colors)]
+    for aliases, concept in CONCEPT_ALIASES:
+        if any(alias in name_lower for alias in aliases):
+            return CONCEPT_COLORS[concept]
+    # Unknown label: cycle deterministically. Character ordinals rather than
+    # hash(), which is salted per session and would recolor between runs.
+    return FALLBACK_COLORS[sum(ord(c) for c in name_lower) % len(FALLBACK_COLORS)]
 
 
 def get_concept_linestyle(method_name: str) -> str:
@@ -385,15 +397,10 @@ def apply_ark_style() -> None:
 def apply_notebook_css() -> None:
     """Apply simple notebook CSS styling for Jupyter notebooks.
 
-    No-op when IPython is unavailable (e.g. running inside plain Python tests).
-    The debug log lets a developer distinguish "running outside Jupyter" from
-    "IPython is broken" without surfacing noise to end users.
+    IPython is a resolved dependency of this project (via ipywidgets and voila),
+    so it is imported at module scope rather than guarded: the former ImportError
+    branch could not be reached from any environment `pyproject.toml` describes.
     """
-    try:
-        from IPython.display import HTML, display
-    except ImportError as exc:
-        logger.debug("apply_notebook_css: IPython unavailable (%s); skipping", exc)
-        return
     display(HTML(NOTEBOOK_CSS))
 
 

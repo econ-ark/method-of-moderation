@@ -1,28 +1,21 @@
 ---
-jupyter:
-  description: A pedagogical introduction to the Method of Moderation with interactive
-    code examples.
-  jupytext:
-    formats: ipynb,md
-    notebook_metadata_filter: title,short_title,description,-language_info
-    text_representation:
-      extension: .md
-      format_name: markdown
-      format_version: '1.3'
-      jupytext_version: 1.17.2
-  kernelspec:
-    display_name: .venv
-    language: python
-    name: python3
-  short_title: Notebook
-  title: Illustrative Notebook
+description: A pedagogical introduction to the Method of Moderation with interactive
+  code examples.
+kernelspec:
+  display_name: .venv
+  language: python
+  name: python3
+short_title: Notebook
+title: Illustrative Notebook
 ---
 
 (notebook:illustrative)=
 
 # The Method of Moderation: Illustrative Notebook
 
-```python tags=["hide-input"]
+```{code-cell} ipython3
+:tags: [hide-input]
+
 from IPython.display import HTML, display
 
 # Import Econ-ARK styling and display header
@@ -41,7 +34,7 @@ display(HTML(HEADER_HTML_NOTEBOOK))
 
 **Author:** <span style="color: var(--ark-lightblue); font-weight: bold;">Alan Lujan</span>, <span style="color: var(--ark-blue); font-weight: bold;">Johns Hopkins University</span>
 
-This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves: the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it leverages analytical bounds to ensure economically sensible behavior across the entire state space.
+This notebook provides a pedagogical introduction to the Method of Moderation (MoM), a novel technique for solving consumption-saving models with superior accuracy and stability. We begin by motivating the problem that MoM solves: the "extrapolation problem" inherent in sparse-grid implementations of the Endogenous Grid Method (EGM). We then build the theoretical foundations for MoM, demonstrating how it uses analytical bounds to ensure economically sensible behavior across the entire state space.
 
 ## Model Foundations: The Friedman-Muth Income Process
 
@@ -58,13 +51,13 @@ MoM operates in a transformed space defined by two analytical bounds from the bu
 
 The true consumption function lies between these extremes. MoM interpolates a **moderation ratio** guaranteed to remain within bounds, producing solutions that are economically coherent across the entire state space.
 
-```python
+```{code-cell} ipython3
 from __future__ import annotations
 
 from moderation import (
     IndShockEGMConsumerType,
     IndShockMoMConsumerType,
-    IndShockMoMStochasticRConsumerType,
+    RiskyAssetMoMConsumerType,
 )
 from plotting import (
     GridType,
@@ -129,7 +122,7 @@ The first set of figures will focus on the core of the consumption-saving proble
 
 The **precautionary saving gap** (optimist minus realist consumption) must be positive: income risk induces additional saving. As demonstrated in the paper and shown in [](#fig:egm-extrapolation-problem), standard EGM violates this constraint when extrapolating {cite:p}`carrollEGM`.
 
-```python
+```{code-cell} ipython3
 # | label: fig:egm-extrapolation-problem
 
 # Figure 1: EGM Extrapolation Failure
@@ -157,7 +150,7 @@ A critical step in implementing any numerical solution is the discretization of 
 
 The optimal consumption function is bounded by analytical optimist and pessimist solutions. [](#fig:truth-bounded-by-theory) ({ref}`Figure 2 <fig:IntExpFOCInvPesReaOptNeedHi>` in the paper) confirms the high-precision "truth" lies between these bounds.
 
-```python
+```{code-cell} ipython3
 # | label: fig:truth-bounded-by-theory
 
 # Figure 2: Truth Bounded by Theory
@@ -177,7 +170,7 @@ The constraint $\cFuncPes(\mNrm) \leq \cFuncReal(\mNrm) \leq \cFuncOpt(\mNrm)$ i
 
 MoM interpolates a **moderation ratio** in a transformed space that guarantees bound compliance. [](#fig:mom-solution) ({ref}`Figure 3 <fig:ExtrapProblemSolved>` in the paper) shows MoM maintains positive precautionary saving even far beyond the computed grid.
 
-```python
+```{code-cell} ipython3
 # | label: fig:mom-solution
 
 # Figure 3: Method of Moderation Success
@@ -193,7 +186,7 @@ plot_precautionary_gaps(
 MoM maintains positive precautionary saving when extrapolating far beyond its computed grid, matching high-precision truth.
 ```
 
-MoM builds on EGM's computational efficiency while enforcing theoretical bounds. See [the paper's algorithm](../content/paper/moderation_letters.md#the-method-of-moderation).
+MoM builds on EGM's computational efficiency while enforcing theoretical bounds. See [the paper's algorithm](../content/paper/moderation_extended.md#the-method-of-moderation).
 
 (notebook:algorithm)=
 
@@ -220,7 +213,7 @@ The logit maps $\modRte \in (0,1)$ to $\logitModRte \in (-\infty, +\infty)$ and 
 
 [](#fig:mom-consumption-function) ({ref}`Figure 4 <fig:IntExpFOCInvPesReaOptNeed45>` in the paper) shows MoM consumption between optimist and pessimist bounds, plus a **tighter upper bound** derived from $\MPCmax$ near the borrowing constraint {cite:p}`Carroll2001MPCBound,MaToda2021SavingRateRich,CarrollToche2009`. The cusp intersection is given by {eq}`eq:mNrmCusp`.
 
-```python
+```{code-cell} ipython3
 # | label: fig:mom-consumption-function
 
 # Figure 4: MoM Consumption Function
@@ -239,7 +232,7 @@ plot_consumption_bounds(
 
 [](#fig:direct-comparison) compares EGM and MoM precautionary gaps against the high-precision truth. Both approximations use identical 5-point sparse grids; the difference in extrapolation behavior is attributable solely to the method.
 
-```python
+```{code-cell} ipython3
 # | label: fig:direct-comparison
 
 # Figure 5: Direct Method Comparison
@@ -271,7 +264,7 @@ $$
 This ratio is strictly between 0 and 1 due to prudence {cite:p}`CarrollKimball1996`. At $\modRte = 0$ the realist behaves like the pessimist (maximum precautionary saving); at $\modRte = 1$ like the optimist (no precautionary saving). [](#fig:moderation-ratio) plots this ratio across wealth levels.
 ::::
 
-```python
+```{code-cell} ipython3
 # | label: fig:moderation-ratio
 
 # Figure 6: Moderation Ratio Function
@@ -302,7 +295,7 @@ $$
 where $\logmNrmEx = \log(\mNrm - \mNrmMin)$. As [](#fig:logit-transformation) shows, $\logitModRte$ is nearly linear, making it well-suited for interpolation.
 ::::
 
-```python
+```{code-cell} ipython3
 # | label: fig:logit-transformation
 
 # Figure 7: Logit Transformation Function
@@ -332,7 +325,7 @@ The **MPC** ($\partial \cNrm / \partial \mNrm$) is bounded between $\MPCmin$ (op
 Bounded MPC estimates prevent nonsensical policy multipliers in DSGE models. MoM ensures economically meaningful MPCs for policy analysis.
 ```
 
-```python
+```{code-cell} ipython3
 # | label: fig:mpc-bounds
 
 # Figure 8: MoM MPC Bounds
@@ -351,7 +344,7 @@ MoM MPC declines with $\mNrm$: poor consumers spend windfalls immediately (MPC $
 
 The **value function** $\vFunc(\mNrm)$ is also bounded by optimist and pessimist solutions {cite:p}`Aiyagari1994,Huggett1993`. [](#fig:value-functions) compares truth, EGM, and MoM value functions.
 
-```python
+```{code-cell} ipython3
 # | label: fig:value-functions
 
 # Figure 9: Value Functions
@@ -376,7 +369,7 @@ Uncertainty matters most at low wealth where buffers are small; the optimist-pes
 
 The **inverse value function** $\vInv(\mNrm) = \uFunc^{-1}(\vFunc(\mNrm))$ gives the consumption equivalent of lifetime utility. It is more linear than $\vFunc(\mNrm)$ near the borrowing constraint, making it better suited for interpolation. [](#fig:inverse-value-functions) compares the three solutions.
 
-```python
+```{code-cell} ipython3
 # | label: fig:inverse-value-functions
 
 # Figure 10: Inverse Value Functions
@@ -404,7 +397,7 @@ $$
 
 follows the same pattern as the consumption ratio, as shown in [](#fig:value-moderation-ratio).
 
-```python
+```{code-cell} ipython3
 # | label: fig:value-moderation-ratio
 
 # Figure 11: Value Function Moderation Ratio
@@ -433,8 +426,7 @@ Below the cusp, the tighter bound ($\MPCmax$ slope) constrains; above, the optim
 
 See [](#fig:cusp-point) for a visualization of where $\cFuncOpt$ and the tighter bound intersect.
 
-
-```python
+```{code-cell} ipython3
 # | label: fig:cusp-point
 
 # Figure 12: Cusp Point Visualization
@@ -452,13 +444,13 @@ Below cusp: MPC near $\MPCmax$, tighter bound constrains. Above cusp: behavior a
 
 ## Further Extensions: Stochastic Rate of Return
 
-With i.i.d. returns, {cite:t}`Samuelson1969` and {cite:t}`Merton1969,Merton1971` show the consumption function remains linear for consumers without labor income. MoM extends directly by substituting the stochastic-return MPC {cite:p}`BBZ2016SkewedWealth,CRRA-RateRisk`. Serially correlated returns remain for future research.
+With i.i.d. returns, {cite:t}`Samuelson1969` and {cite:t}`Merton1969,Merton1971` show the consumption function remains linear for consumers without labor income. MoM extends directly by substituting the stochastic-return MPC {cite:p}`BBZ2016SkewedWealth,CRRA-RateRisk`. The return risk treated here is idiosyncratic (household-specific and i.i.d.); serially correlated, state-dependent returns are outside this notebook's scope.
 
 ### Figure 13: Stochastic Returns Comparison
 
-[](#fig:stochastic-bounds) compares bounds under deterministic and stochastic returns using `IndShockMoMStochasticRConsumerType`.
+[](#fig:stochastic-bounds) compares bounds under deterministic and stochastic returns using `RiskyAssetMoMConsumerType`.
 
-```python
+```{code-cell} ipython3
 # | label: fig:stochastic-bounds
 
 # Solve model with stochastic returns (mean-preserving spread)
@@ -468,7 +460,7 @@ stoch_params["RiskyStd"] = (
     0.20  # 20% standard deviation (must satisfy β*E[R^{1-ρ}] < 1)
 )
 
-IndShockStochR = IndShockMoMStochasticRConsumerType(**stoch_params)
+IndShockStochR = RiskyAssetMoMConsumerType(**stoch_params)
 IndShockStochR.solve()
 IndShockStochRSol = IndShockStochR.solution[0]
 
@@ -482,7 +474,7 @@ plot_stochastic_bounds(
 ```
 
 ```{hint} Stochastic Returns Interpretation
-Deterministic optimist uses $\MPCmin = 1 - (\DiscFac \Rfree)^{1/\CRRA}$; stochastic optimist uses $\MPCmin = 1 - (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. Return uncertainty lowers MPC for $\CRRA > 1$: a mean-preserving spread of $\Risky$ makes $\Risky^{1-\CRRA}$ a convex function of $\Risky$, so $\Ex[\Risky^{1-\CRRA}]$ increases, $(\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ increases, and $\MPCmin = 1 - (\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ falls. Consumers facing return risk consume slightly less out of any given level of wealth. See {ref}`stochastic-returns-mgf-derivation` for the MGF derivation.
+Deterministic optimist uses $\MPCmin = 1 - (\DiscFac \Rfree)^{1/\CRRA}$; stochastic optimist uses $\MPCmin = 1 - (\DiscFac \Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$. Return uncertainty lowers MPC for $\CRRA > 1$: a mean-preserving spread of $\Risky$ makes $\Risky^{1-\CRRA}$ a convex function of $\Risky$, so $\Ex[\Risky^{1-\CRRA}]$ increases, $(\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ increases, and $\MPCmin = 1 - (\DiscFac\,\Ex[\Risky^{1-\CRRA}])^{1/\CRRA}$ falls. Consumers facing return risk consume slightly less out of any given level of wealth. The MGF closed form for $\Ex[\Risky^{1-\CRRA}]$ is in {ref}`the paper <idiosyncratic-rate-of-return-risk>`.
 ```
 
 ## Summary
@@ -497,7 +489,8 @@ MoM solves the extrapolation problem by interpolating a **moderation ratio** via
 
 For complete theoretical development see {ref}`the-method-of-moderation`.
 
++++
 
 ## Symbolic Mathematics
 
-The equations in this notebook are also available as SymPy expressions, enabling symbolic differentiation, simplification, and code generation. See [`method-of-moderation-symbolic.ipynb`](method-of-moderation-symbolic.ipynb) for a walk-through, and `.agents/metadata/equations.py` / `.agents/metadata/equations.json` for the underlying definitions.
+The equations in this notebook are also available as SymPy expressions, enabling symbolic differentiation, simplification, and code generation. See [`method-of-moderation-symbolic.md`](method-of-moderation-symbolic.md) for a walk-through, and `.agents/metadata/equations.py` / `.agents/metadata/equations.json` for the underlying definitions.
